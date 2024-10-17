@@ -6,10 +6,12 @@
  * @date Oct 17, 2024
 */
 
+
 #include "grid/octree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
-#include "two-phase.h"
+#include "../src-local/two-phaseVE.h"
+#include "../src-local/log-conform-viscoelastic-3D.h"
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
@@ -25,7 +27,7 @@
 
 // boundary conditions
 u.t[left] = dirichlet(0.);
-u.r[left] = dirichlet(0.);
+// u.r[left] = dirichlet(0.);
 f[left] = dirichlet(0.0);
 
 int MAXlevel;
@@ -36,7 +38,7 @@ int MAXlevel;
 // Ec -> Elasto-capillary number
 // for now there is no viscoelasticity
 
-double We, Oh, Oha, tmax;
+double We, Oh, Oha, De, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
 int main(int argc, char const *argv[]) {
@@ -48,6 +50,8 @@ int main(int argc, char const *argv[]) {
   tmax = 3.0;
   We = 5.0;
   Oh = 1e-2;
+  De = 1e-2;
+  Ec = 1e-2;
 
   init_grid (1 << 4);
 
@@ -62,7 +66,9 @@ int main(int argc, char const *argv[]) {
   rho1 = 1., rho2 = 1e-3;
   Oha = 1e-2 * Oh;
   mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
-
+  G1 = Ec/We, G2 = 0.0;
+  lambda1 = De*sqrt(We), lambda2 = 0.0;
+  
   f.sigma = 1.0/We;
 
   run();
