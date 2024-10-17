@@ -1,4 +1,5 @@
 testCases/pinchOff3D
+testCases/dropImpact3D
 **/*.s
 **/*.tests 
 **/*.deps

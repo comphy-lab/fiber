@@ -1,6 +1,6 @@
 /**
- * @file pinchOff3D.c
- * @brief This file contains the simulation code for the pinch-off of a viscoelastic liquid jet in 3D. 
+ * @file dropImpact3D.c
+ * @brief This file contains the simulation code for the drop impact on a solid surface in 3D. 
  * @author Vatsal Sanjay
  * @version 0.1
  * @date Oct 17, 2024
@@ -20,29 +20,33 @@
 #define KErr (1e-6)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
 #define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
 
-#define epsilon (0.5)
-#define R2(x,y,z,e) (sqrt(sq(y) + sq(z)) + (e*sin(x/4.)))
+#define xDist (5e-2)
+#define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))
 
 // boundary conditions
-// all symmetry planes
+u.t[left] = dirichlet(0.);
+u.r[left] = dirichlet(0.);
+f[left] = dirichlet(0.0);
 
 int MAXlevel;
+// We -> Weber number of the drop
 // Oh -> Solvent Ohnesorge number
 // Oha -> air Ohnesorge number
 // De -> Deborah number
 // Ec -> Elasto-capillary number
 // for now there is no viscoelasticity
 
-double Oh, Oha, tmax;
+double We, Oh, Oha, tmax;
 char nameOut[80], dumpFile[80];
 
 int main(int argc, char const *argv[]) {
 
-  L0 = 2*pi;
+  L0 = 4.0;
   
   // Values taken from the terminal
-  MAXlevel = 8;
-  tmax = 10;
+  MAXlevel = 6;
+  tmax = 3.0;
+  We = 5.0;
   Oh = 1e-2;
 
   init_grid (1 << 4);
@@ -55,11 +59,11 @@ int main(int argc, char const *argv[]) {
   sprintf (dumpFile, "dump");
 
 
-  rho1 = 1., rho2 = 1e-2;
+  rho1 = 1., rho2 = 1e-3;
   Oha = 1e-2 * Oh;
-  mu1 = Oh, mu2 = Oha;
+  mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
 
-  f.sigma = 1.0;
+  f.sigma = 1.0/We;
 
   run();
 
@@ -67,8 +71,11 @@ int main(int argc, char const *argv[]) {
 
 event init (t = 0) {
   if (!restore (file = dumpFile)){
-    refine(R2(x,y,z,epsilon) < (1+epsilon) && R2(x,y,z,epsilon) > (1-epsilon) && level < MAXlevel);
-   fraction (f, (1-R2(x,y,z,epsilon)));
+   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9) && level < MAXlevel);
+   fraction (f, (1-R2(x,y,z)));
+   foreach(){
+    u.x[] = -f[]*1.0;
+   }
   }
 }
 
