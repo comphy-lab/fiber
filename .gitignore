@@ -1,3 +1,10 @@
+testCases/pinchOff3D
+**/*.s
+**/*.tests 
+**/*.deps
+**/*.html
+**/*.tst
+
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -13,6 +20,9 @@ CMakeUserPresets.json
 
 .DS_Store
 **/.DS_Store
+
+# vscode specific files
+.vscode
 
 # Basilisk specific files
 .project_config
