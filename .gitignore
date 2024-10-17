@@ -16,7 +16,7 @@ CMakeUserPresets.json
 
 # Basilisk specific files
 .project_config
-bas
+basilisk/_darcs
 
 # Prerequisites
 *.d
