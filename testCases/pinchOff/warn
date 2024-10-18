@@ -1,0 +1,7 @@
+/Users/vatsal/Documents/CFD-codes/basilisk/src/grid/cartesian-common.h:851:7: warning: variable 'len' set but not used [-Wunused-but-set-variable]
+  851 |   int len = 0;
+      |       ^
+pinchOff.c:127:19: warning: unused variable 'ymin' [-Wunused-variable]
+  127 |   double ke = 0., ymin = 0.;
+      |                   ^~~~
+2 warnings generated.
