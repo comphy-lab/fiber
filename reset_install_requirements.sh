@@ -7,7 +7,14 @@ rm -rf .project_config
 
 darcs clone http://basilisk.fr/basilisk
 cd basilisk/src
-ln -s config.osx config
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Using MacOS"
+    ln -s config.osx config
+else
+    echo "Using Linux"
+    ln -s config.gcc config
+fi
 make
 
 echo "export BASILISK=$PWD" >> ../../.project_config
