@@ -44,6 +44,8 @@ scalar lambdapd[];
 event defaults (i = 0) {
   alpha = alphav;
   rho = rhov;
+  Gp = Gpd;
+  lambda = lambdapd;
 
   /**
   If the viscosity is non-zero, we need to allocate the face-centered

@@ -10,8 +10,8 @@
 // #include "grid/octree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
-// #include "two-phase.h"
 #include "../src-local/two-phaseVE.h"
+#include "../src-local/log-conform-viscoelastic.h"
 
 // #include "../src-local/log-conform-viscoelastic.h"
 // #define VANILA 1
