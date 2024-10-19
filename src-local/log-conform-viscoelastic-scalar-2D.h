@@ -119,47 +119,6 @@ static void diagonalization_2D (pseudo_v * Lambda, pseudo_t * R, pseudo_t * A)
   }
 }
 
-
-/**
-Calculate the omega term. */
-static double calculate_omega(pseudo_t R, pseudo_v Lambda, pseudo_t grad) {
-  if (fabs(Lambda.x - Lambda.y) <= 1e-15) {
-    return 0.;
-  }
-  
-  pseudo_t M;
-  foreach_dimension() {
-    M.x.x = (sq(R.x.x) * (grad.x.x) + sq(R.y.x) * (grad.y.y) +
-             R.x.x * R.y.x * (grad.x.y + grad.y.x));
-    M.x.y = (R.x.x * R.x.y * (grad.x.x) + R.x.y * R.y.x * (grad.y.x) +
-             R.x.x * R.y.y * (grad.x.y) + R.y.x * R.y.y * (grad.y.y));
-  }
-  
-  double omega = (Lambda.y * M.x.y + Lambda.x * M.y.x) / (Lambda.y - Lambda.x);
-  return (R.x.x * R.y.y - R.x.y * R.y.x) * omega;
-}
-
-/**
-Calculate the B term. */
-static pseudo_t calculate_B(pseudo_t R, pseudo_t grad) {
-  pseudo_t B;
-  B.x.y = grad.x.x * R.x.x * R.y.x + grad.y.y * R.y.y * R.x.y;
-  foreach_dimension()
-    B.x.x = grad.x.x * sq(R.x.x) + grad.y.y * sq(R.x.y);
-  return B;
-}
-
-/*
-Update the psi term. */
-static void update_psi(double Psi11, double Psi12, double Psi22, pseudo_t B, double omega, double dt) {
-  double s = -Psi12;
-  Psi12 += dt * (2. * B.x.y + omega * (Psi22 - Psi11));
-  s *= -1;
-  Psi11 += dt * 2. * (B.x.x + s * omega);
-  s *= -1;
-  Psi22 += dt * 2. * (B.y.y + s * omega);
-}
-
 /**
 The stress tensor depends on previous instants and has to be
 integrated in time. In the log-conformation scheme the advection of
@@ -247,20 +206,58 @@ event tracer_advection(i++)
     the traceless, symmetric tensor, $\mathbf{B}$. If the conformation
     tensor is $\mathbf{I}$, $\Omega = 0$ and $\mathbf{B}= \mathbf{D}$.  */
 
-    pseudo_t grad;
-    grad.x.y = (u.y[1,0] - u.y[-1,0] + u.x[0,1] - u.x[0,-1]) / (4. * Delta);
-    foreach_dimension() 
-      grad.x.x = (u.x[1,0] - u.x[-1,0]) / (2. * Delta);
-
     pseudo_t B;
-    double omega = calculate_omega(R, Lambda, grad);
-    B = calculate_B(R, grad);
+    double OM = 0.;
+    if (fabs(Lambda.x - Lambda.y) <= 1e-20) {
+	B.x.y = (u.y[1,0] - u.y[-1,0] +
+		 u.x[0,1] - u.x[0,-1])/(4.*Delta); 
+	foreach_dimension() 
+	  B.x.x = (u.x[1,0] - u.x[-1,0])/(2.*Delta);
+      }
+      else {
+	pseudo_t M;
+	foreach_dimension() {
+	  M.x.x = (sq(R.x.x)*(u.x[1] - u.x[-1]) +
+		   sq(R.y.x)*(u.y[0,1] - u.y[0,-1]) +
+		   R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] + 
+				u.y[1] - u.y[-1]))/(2.*Delta);
+	  M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) + 
+		   R.x.y*R.y.x*(u.y[1] - u.y[-1]) +
+		   R.x.x*R.y.y*(u.x[0,1] - u.x[0,-1]) +
+		   R.y.x*R.y.y*(u.y[0,1] - u.y[0,-1]))/(2.*Delta);
+	}
+	double omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
+	OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega;
+	
+	B.x.y = M.x.x*R.x.x*R.y.x + M.y.y*R.y.y*R.x.y;
+	foreach_dimension()
+	  B.x.x = M.x.x*sq(R.x.x)+M.y.y*sq(R.x.y);	
+      }
 
     /**
     We now advance $\Psi$ in time, adding the upper convective
     contribution. */
 
-    update_psi(Psi11[], Psi12[], Psi22[], B, omega, dt);
+    double s = -Psi12[];
+    Psi12[] += dt * (2. * B.x.y + OM * (Psi22[] - Psi11[]));
+    s *= -1;
+    Psi11[] += dt * 2. * (B.x.x + s * OM);
+    s *= -1;
+    Psi22[] += dt * 2. * (B.y.y + s * OM);
+
+    /**
+    In the axisymmetric case, the governing equation for $\Psi_{\theta
+    \theta}$ only involves that component, 
+    $$ 
+    \Psi_{\theta \theta}|_t - 2 L_{\theta \theta} = 
+    \frac{\mathbf{f}_r(e^{-\Psi_{\theta \theta}})}{\lambda} 
+    $$
+    with $L_{\theta \theta} = u_y/y$. Therefore step (a) for
+    $\Psi_{\theta \theta}$ is */
+
+#if AXI
+    Psiqq[] += dt*2.*u.y[]/max(y, 1e-20);
+#endif
 }
 
   /**

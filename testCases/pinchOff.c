@@ -12,7 +12,7 @@
 #define FILTERED // Smear density and viscosity jumps
 #include "../src-local/two-phaseVE.h"
 
-#define VANILLA 1
+#define VANILLA 0
 #if VANILLA
 #include "../src-local/log-conform-viscoelastic.h"
 #define logFile "logAxi-vanilla.dat"
