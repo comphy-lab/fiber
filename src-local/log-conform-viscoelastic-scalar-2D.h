@@ -42,20 +42,16 @@ event defaults (i = 0) {
   }
 
   for (scalar s in {T11, T12, T22}) {
-    foreach_dimension(){
-      if (s.boundary[left] != periodic_bc) {
+    if (s.boundary[left] != periodic_bc) {
         s[left] = neumann(0);
 	      s[right] = neumann(0);
       }
-    }
   }
 
   for (scalar s in {A11, A12, A22}) {
-    foreach_dimension(){
-      if (s.boundary[left] != periodic_bc) {
+    if (s.boundary[left] != periodic_bc) {
         s[left] = neumann(0);
 	      s[right] = neumann(0);
-      }
     }
   }
 
