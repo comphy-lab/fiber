@@ -11,19 +11,20 @@
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
 #include "../src-local/two-phaseVE.h"
-#include "../src-local/log-conform-viscoelastic.h"
 
-// #include "../src-local/log-conform-viscoelastic.h"
-// #define VANILA 1
-// #if VANILA
-// #include "../src-local/log-conform-viscoelastic.h"
-// #else
-// #if AXI
-// #include "../src-local/log-conform-viscoelastic-scalar-2D.h"
-// #else
-// #include "../src-local/log-conform-viscoelastic-scalar-3D.h"
-// #endif
-// #endif
+#define VANILLA 1
+#if VANILLA
+#include "../src-local/log-conform-viscoelastic.h"
+#define logFile "logAxi-vanilla.dat"
+#else
+#if AXI
+#include "../src-local/log-conform-viscoelastic-scalar-2D.h"
+#define logFile "logAxi-scalar.dat"
+#else
+#include "../src-local/log-conform-viscoelastic-scalar-3D.h"
+#define logFile "log3D-scalar.dat"
+#endif
+#endif
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"
@@ -61,8 +62,8 @@ int main(int argc, char const *argv[]) {
   tmax = 10;
   Oh = 1e-2;
   Oha = 1e-2 * Oh;
-  De = 0.0; // 1e-1;
-  Ec = 0.0; // 1e-2;
+  De = 10.0; // 1e-1;
+  Ec = 0.25; // 1e-2;
 
   init_grid (1 << 4);
 
@@ -76,8 +77,8 @@ int main(int argc, char const *argv[]) {
 
   rho1 = 1., rho2 = 1e-3;
   mu1 = Oh, mu2 = Oha;
-  // lambda1 = De, lambda2 = 0.;
-  // G1 = Ec, G2 = 0.;
+  lambda1 = De, lambda2 = 0.;
+  G1 = Ec, G2 = 0.;
   f.sigma = 1.0;
 
   run();
@@ -132,7 +133,7 @@ event logWriting (i++) {
   static FILE * fp;
   if (pid() == 0) {
     const char* mode = (i == 0) ? "w" : "a";
-    fp = fopen("datafile.dat", mode);
+    fp = fopen(logFile, mode);
     if (fp == NULL) {
       fprintf(ferr, "Error opening log file\n");
       return 1;

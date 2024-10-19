@@ -1,16 +1,20 @@
-/** Title: log-conform-viscoelastic-2DNaxi.h
+#ifndef BASILISK_HEADER_25
+#define BASILISK_HEADER_25
+#line 1 "./../src-local/log-conform-viscoelastic-scalar-3D.h"
+/** Title: log-conform-viscoelastic-3D.h
 # Version: 1.0
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
-# Main feature 2: This is the 2D+axi **scalar** implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
+# Main feature 2: This is the 3D implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
 # Updated: Oct 17, 2024
 
-# change log: Oct 18, 2024 (v1.0)
-- 2D+axi implementation
-- scalar implementation
+# change log: Oct 17, 2024 (v1.0)
+- only starting out. The code is still 2D and should not be used.
+- possible options: either we rewrite the tensor part of the code to have elegant 3D implmentation or we make each component of the tensor a scalar....
+
 */
 
 /** The code is same as http://basilisk.fr/src/log-conform.h but 
@@ -18,30 +22,34 @@
 - It also fixes the bug where [\sigma_p] = 0 & [\sigma_s] = \gamma\kappa instead of [\sigma_s+\sigma_p] = \gamma\kappa.
 */ 
 
+/**
+ * # TODO: 
+ * axi compatibility is not there. 
+ * This is full 3D. To keep the code easy to read, we will not implement axi compatibility. 
+ */
+
+#if AXI
+#error "axi compatibility is not there. To keep the code easy to read, we will not implement axi compatibility just yet."
+#endif
+
 #include "bcg.h"
 
-scalar A11[], A12[], A22[]; // conformation tensor
-scalar T11[], T12[], T22[]; // stress tensor
-#if AXI
-scalar conform_qq[], tau_qq[];
-#endif
+//symmetric tensor conform_p[], tau_p[];
+scalar A11[], A12[], A13[], A22[], A23[], A33[]; // conformation tensor
+scalar T11[], T12[], T13[], T22[], T23[], T33[]; // stress tensor
 
 event defaults (i = 0) {
   if (is_constant (a.x))
     a = new face vector;
 
   foreach() {
-    A11[] = 1.; A22[] = 1.;
-    A12[] = 0.;
-    T11[] = 0.; T22[] = 0.; 
-    T12[] = 0.;
-#if AXI
-    tau_qq[] = 0;
-    conform_qq[] = 1.;
-#endif
+    A11[] = 1.; A22[] = 1.; A33[] = 1.;
+    A12[] = 0.; A13[] = 0.; A23[] = 0.;
+    T11[] = 0.; T22[] = 0.; T33[] = 0.;
+    T12[] = 0.; T13[] = 0.; T23[] = 0.;
   }
 
-  for (scalar s in {T11, T12, T22}) {
+  for (scalar s in {T11, T12, T13, T22, T23, T33}) {
     foreach_dimension(){
       if (s.boundary[left] != periodic_bc) {
         s[left] = neumann(0);
@@ -50,7 +58,7 @@ event defaults (i = 0) {
     }
   }
 
-  for (scalar s in {A11, A12, A22}) {
+  for (scalar s in {A11, A12, A13, A22, A23, A33}) {
     foreach_dimension(){
       if (s.boundary[left] != periodic_bc) {
         s[left] = neumann(0);
@@ -58,20 +66,10 @@ event defaults (i = 0) {
       }
     }
   }
-
-#if AXI
-  scalar s1 = T12;
-  s1[bottom] = dirichlet (0.);  
-#endif 
-
-#if AXI
-  scalar s2 = A12;
-  s2[bottom] = dirichlet (0.);  
-#endif
 }
 
 /**
-## Useful functions in 2D
+## Numerical Scheme
 
 The first step is to implement a routine to calculate the eigenvalues
 and eigenvectors of the conformation tensor $\mathbf{A}$.
@@ -119,47 +117,6 @@ static void diagonalization_2D (pseudo_v * Lambda, pseudo_t * R, pseudo_t * A)
   }
 }
 
-
-/**
-Calculate the omega term. */
-static double calculate_omega(pseudo_t R, pseudo_v Lambda, pseudo_t grad) {
-  if (fabs(Lambda.x - Lambda.y) <= 1e-15) {
-    return 0.;
-  }
-  
-  pseudo_t M;
-  foreach_dimension() {
-    M.x.x = (sq(R.x.x) * (grad.x.x) + sq(R.y.x) * (grad.y.y) +
-             R.x.x * R.y.x * (grad.x.y + grad.y.x));
-    M.x.y = (R.x.x * R.x.y * (grad.x.x) + R.x.y * R.y.x * (grad.y.x) +
-             R.x.x * R.y.y * (grad.x.y) + R.y.x * R.y.y * (grad.y.y));
-  }
-  
-  double omega = (Lambda.y * M.x.y + Lambda.x * M.y.x) / (Lambda.y - Lambda.x);
-  return (R.x.x * R.y.y - R.x.y * R.y.x) * omega;
-}
-
-/**
-Calculate the B term. */
-static pseudo_t calculate_B(pseudo_t R, pseudo_t grad) {
-  pseudo_t B;
-  B.x.y = grad.x.x * R.x.x * R.y.x + grad.y.y * R.y.y * R.x.y;
-  foreach_dimension()
-    B.x.x = grad.x.x * sq(R.x.x) + grad.y.y * sq(R.x.y);
-  return B;
-}
-
-/*
-Update the psi term. */
-static void update_psi(double Psi11, double Psi12, double Psi22, pseudo_t B, double omega, double dt) {
-  double s = -Psi12;
-  Psi12 += dt * (2. * B.x.y + omega * (Psi22 - Psi11));
-  s *= -1;
-  Psi11 += dt * 2. * (B.x.x + s * omega);
-  s *= -1;
-  Psi22 += dt * 2. * (B.y.y + s * omega);
-}
-
 /**
 The stress tensor depends on previous instants and has to be
 integrated in time. In the log-conformation scheme the advection of
@@ -193,10 +150,10 @@ event tracer_advection(i++)
 {
   scalar Psi11 = A11;
   scalar Psi12 = A12;
+  scalar Psi13 = A13;
   scalar Psi22 = A22;
-#if AXI
-  scalar Psiqq = conform_qq;
-#endif
+  scalar Psi23 = A23;
+  scalar Psi33 = A33;
 
   /**
   ### Computation of $\Psi = \log \mathbf{A}$ and upper convective term */
@@ -211,15 +168,13 @@ event tracer_advection(i++)
       $$
     */
 
+  if (dimension == 2) {
+
     pseudo_t A;
 
-    A.x.x = A11[]; A.y.y = A22[];
+    A.x.x = A11[];
     A.x.y = A12[];
-
-#if AXI
-    double Aqq = conform_qq[]; 
-    Psiqq[] = log (Aqq); 
-#endif
+    A.y.y = A22[];
 
     /**
     The conformation tensor is diagonalized through the
@@ -247,20 +202,45 @@ event tracer_advection(i++)
     the traceless, symmetric tensor, $\mathbf{B}$. If the conformation
     tensor is $\mathbf{I}$, $\Omega = 0$ and $\mathbf{B}= \mathbf{D}$.  */
 
-    pseudo_t grad;
-    grad.x.y = (u.y[1,0] - u.y[-1,0] + u.x[0,1] - u.x[0,-1]) / (4. * Delta);
-    foreach_dimension() 
-      grad.x.x = (u.x[1,0] - u.x[-1,0]) / (2. * Delta);
-
     pseudo_t B;
-    double omega = calculate_omega(R, Lambda, grad);
-    B = calculate_B(R, grad);
+    double OM = 0.;
+    if (fabs(Lambda.x - Lambda.y) <= 1e-20) {
+      B.x.y = (u.y[1,0] - u.y[-1,0] + u.x[0,1] - u.x[0,-1])/(4.*Delta); 
+      foreach_dimension() 
+        B.x.x = (u.x[1,0] - u.x[-1,0])/(2.*Delta);
+    } else {
+      pseudo_t M;
+      foreach_dimension() {
+        M.x.x = (sq(R.x.x)*(u.x[1] - u.x[-1]) +
+        sq(R.y.x)*(u.y[0,1] - u.y[0,-1]) +
+        R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] + 
+        u.y[1] - u.y[-1]))/(2.*Delta);
+        M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) + 
+        R.x.y*R.y.x*(u.y[1] - u.y[-1]) +
+        R.x.x*R.y.y*(u.x[0,1] - u.x[0,-1]) +
+        R.y.x*R.y.y*(u.y[0,1] - u.y[0,-1]))/(2.*Delta);
+      }
+      double omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
+      OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega;
+
+      B.x.y = M.x.x*R.x.x*R.y.x + M.y.y*R.y.y*R.x.y;
+      foreach_dimension()
+        B.x.x = M.x.x*sq(R.x.x)+M.y.y*sq(R.x.y);	
+    }
 
     /**
     We now advance $\Psi$ in time, adding the upper convective
     contribution. */
 
-    update_psi(Psi11[], Psi12[], Psi22[], B, omega, dt);
+    double s = - Psi12[];
+    Psi12[] += dt*(2.*B.x.y + OM*(Psi22[] - Psi11[]));
+    s *= -1;
+    Psi11[] += dt*2.*(B.x.x + s*OM);
+    s *= -1;
+    Psi22[] += dt*2.*(B.y.y + s*OM);
+  } else {
+    error("3D diagonalization is not implemented");
+  }
 }
 
   /**
@@ -270,9 +250,9 @@ event tracer_advection(i++)
   conformation tensor $\Psi$. */
 
 #if AXI
-  advection ({Psi11, Psi12, Psi22, Psiqq}, uf, dt);
+  advection ({Psi.x.x, Psi.x.y, Psi.y.y, Psiqq}, uf, dt);
 #else
-  advection ({Psi11, Psi12, Psi22}, uf, dt);
+  advection ({Psi.x.x, Psi.x.y, Psi.y.y}, uf, dt);
 #endif
 
     /**
@@ -284,7 +264,7 @@ event tracer_advection(i++)
       diagonalization, to recover the conformation tensor $\mathbf{A}$
       and to perform step (c).*/
 
-      pseudo_t A = {{Psi11[], Psi12[]}, {Psi12[], Psi22[]}}, R;
+      pseudo_t A = {{Psi.x.x[], Psi.x.y[]}, {Psi.y.x[], Psi.y.y[]}}, R;
       pseudo_v Lambda;
       diagonalization_2D (&Lambda, &R, &A);
       Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
@@ -320,17 +300,18 @@ event tracer_advection(i++)
         Then the Conformation tensor $\mathcal{A}_p^{n+1}$ is restored from
         $\mathbf{A}^{n+1}$.  */
       
-      A12[] = A.x.y;
-      T12[] = Gp[]*A.x.y;
+      conform_p.x.y[] = A.x.y;
+      tau_p.x.y[] = Gp[]*A.x.y;
 #if AXI
       conform_qq[] = Aqq;
       tau_qq[] = Gp[]*(Aqq - 1.);
 #endif
 
-      A11[] = A.x.x;
-      T11[] = Gp[]*(A.x.x - 1.);
-      A22[] = A.y.y;
-      T22[] = Gp[]*(A.y.y - 1.);
+      foreach_dimension(){
+        conform_p.x.x[] = A.x.x;
+        tau_p.x.x[] = Gp[]*(A.x.x - 1.);
+      }
+
   }
 }
 
@@ -352,34 +333,18 @@ involved in the computation of shear. */
 event acceleration (i++)
 {
   face vector av = a;
-
-  foreach_face(x){
+  foreach_face()
     if (fm.x[] > 1e-20) {
-      
-      double shearX = (T12[0,1]*cm[0,1] + T12[-1,1]*cm[-1,1] - 
-      T12[0,-1]*cm[0,-1] - T12[-1,-1]*cm[-1,-1])/4.;
-      
-      av.x[] += (shearX + cm[]*T11[] - cm[-1]*T11[-1])*
-      alpha.x[]/(sq(fm.x[])*Delta);
-    
+      double shear = (tau_p.x.y[0,1]*cm[0,1] + tau_p.x.y[-1,1]*cm[-1,1] -
+		      tau_p.x.y[0,-1]*cm[0,-1] - tau_p.x.y[-1,-1]*cm[-1,-1])/4.;
+      av.x[] += (shear + cm[]*tau_p.x.x[] - cm[-1]*tau_p.x.x[-1])*
+	alpha.x[]/(sq(fm.x[])*Delta);
     }
-  }
-
-  foreach_face(y){
-    if (fm.y[] > 1e-20) {
-
-      double shearY = (T12[1,0]*cm[1,0] + T12[1,-1]*cm[1,-1] - 
-      T12[-1,0]*cm[-1,0] - T12[-1,-1]*cm[-1,-1])/4.;
-      
-      av.y[] += (shearY + cm[]*T22[] - cm[0,-1]*T22[0,-1])*
-      alpha.y[]/(sq(fm.y[])*Delta);
-
-    }
-  }
-
 #if AXI
   foreach_face(y)
-    if (y > 1e-20)
+    if (y > 0.)
       av.y[] -= (tau_qq[] + tau_qq[0,-1])*alpha.y[]/sq(y)/2.;
 #endif
 }
+
+#endif

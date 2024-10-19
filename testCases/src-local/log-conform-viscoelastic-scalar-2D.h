@@ -1,3 +1,6 @@
+#ifndef BASILISK_HEADER_27
+#define BASILISK_HEADER_27
+#line 1 "./../src-local/log-conform-viscoelastic-scalar-2D.h"
 /** Title: log-conform-viscoelastic-2DNaxi.h
 # Version: 1.0
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
@@ -383,3 +386,5 @@ event acceleration (i++)
       av.y[] -= (tau_qq[] + tau_qq[0,-1])*alpha.y[]/sq(y)/2.;
 #endif
 }
+
+#endif
