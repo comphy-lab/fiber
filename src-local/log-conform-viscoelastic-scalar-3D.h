@@ -1,16 +1,17 @@
 /** Title: log-conform-viscoelastic-3D.h
 # Version: 1.0
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
-# Main feature 2: This is the 3D implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
+# Main feature 2: This is the 3D implementation of [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h).
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Oct 17, 2024
+# Updated: Oct 19, 2024
 
-# change log: Oct 17, 2024 (v1.0)
-- only starting out. The code is still 2D and should not be used.
-- possible options: either we rewrite the tensor part of the code to have elegant 3D implmentation or we make each component of the tensor a scalar....
+# change log: Oct 19, 2024 (v1.0)
+- 3D implementation
+- scalar implementation
+- Not tested yet.
 
 */
 
@@ -23,7 +24,7 @@
  * # TODO: 
  * axi compatibility is not there. 
  * This is full 3D. To keep the code easy to read, we will not implement axi compatibility. 
- */
+*/
 
 #if AXI
 #error "axi compatibility is not there. To keep the code easy to read, we will not implement axi compatibility just yet."
@@ -31,38 +32,52 @@
 
 #include "bcg.h"
 
-//symmetric tensor conform_p[], tau_p[];
-scalar A11[], A12[], A13[], A22[], A23[], A33[]; // conformation tensor
-scalar T11[], T12[], T13[], T22[], T23[], T33[]; // stress tensor
+/*
+conformation tensor */
+// diagonal elements
+scalar A11[], A22[], A33[];
+// off-diagonal elements
+scalar A12[], A13[], A23[];
+/*
+stress tensor */
+// diagonal elements
+scalar T11[], T22[], T33[];
+// off-diagonal elements
+scalar T12[], T13[], T23[];
 
 event defaults (i = 0) {
   if (is_constant (a.x))
     a = new face vector;
 
-  foreach() {
-    A11[] = 1.; A22[] = 1.; A33[] = 1.;
-    A12[] = 0.; A13[] = 0.; A23[] = 0.;
-    T11[] = 0.; T22[] = 0.; T33[] = 0.;
-    T12[] = 0.; T13[] = 0.; T23[] = 0.;
+  /*
+  initialize A and T
+  */
+  for (scalar s in {A11, A22, A33}) {
+    foreach () {
+      s[] = 1.;
+    }
   }
-
-  for (scalar s in {T11, T12, T13, T22, T23, T33}) {
-    foreach_dimension(){
-      if (s.boundary[left] != periodic_bc) {
-        s[left] = neumann(0);
-	      s[right] = neumann(0);
-      }
+  for (scalar s in {T11, T12, T13, T22, T23, T33, A12, A13, A23}) {
+    foreach(){
+      s[] = 0.;
     }
   }
 
-  for (scalar s in {A11, A12, A13, A22, A23, A33}) {
-    foreach_dimension(){
-      if (s.boundary[left] != periodic_bc) {
-        s[left] = neumann(0);
-	      s[right] = neumann(0);
-      }
+  for (scalar s in {A11, A22, A33, T11, T22, T33, A12, A13, A23, T12, T13, T23}) {
+    if (s.boundary[left] != periodic_bc) {
+      s[left] = neumann(0);
+	    s[right] = neumann(0);
+    }
+    if (s.boundary[top] != periodic_bc) {
+      s[top] = neumann(0);
+	    s[bottom] = neumann(0);
+    }
+    if (s.boundary[front] != periodic_bc) {
+      s[front] = neumann(0);
+	    s[back] = neumann(0);
     }
   }
+
 }
 
 /**
