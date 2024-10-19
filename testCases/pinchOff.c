@@ -1,15 +1,31 @@
 /**
- * @file dropImpact3D.c
- * @brief This file contains the simulation code for the drop impact on a solid surface in 3D. 
+ * @file pinchOff.c
+ * @brief This file contains the simulation code for the pinch-off of a viscoelastic liquid jet. 
  * @author Vatsal Sanjay
- * @version 0.1
- * @date Oct 17, 2024
+ * @version 0.2
+ * @date Oct 18, 2024
 */
 
-#include "grid/octree.h"
+#include "axi.h"
+// #include "grid/octree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
-#include "two-phase.h"
+#include "../src-local/two-phaseVE.h"
+
+#define VANILLA 0
+#if VANILLA
+#include "../src-local/log-conform-viscoelastic.h"
+#define logFile "logAxi-vanilla.dat"
+#else
+#if AXI
+#include "../src-local/log-conform-viscoelastic-scalar-2D.h"
+#define logFile "logAxi-scalar.dat"
+#else
+#include "../src-local/log-conform-viscoelastic-scalar-3D.h"
+#define logFile "log3D-scalar.dat"
+#endif
+#endif
+
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
@@ -20,34 +36,34 @@
 #define KErr (1e-6)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
 #define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
 
-#define xDist (5e-2)
-#define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))
+#define epsilon (0.5)
+#define R2(x,y,z,e) (sqrt(sq(y) + sq(z)) + (e*sin(x/4.)))
 
 // boundary conditions
-u.t[left] = dirichlet(0.);
-u.r[left] = dirichlet(0.);
-f[left] = dirichlet(0.0);
+u.n[top] = neumann(0.0);
+p[top] = dirichlet(0.0);
 
 int MAXlevel;
-// We -> Weber number of the drop
 // Oh -> Solvent Ohnesorge number
 // Oha -> air Ohnesorge number
 // De -> Deborah number
 // Ec -> Elasto-capillary number
 // for now there is no viscoelasticity
 
-double We, Oh, Oha, tmax;
+double Oh, Oha, De, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
 int main(int argc, char const *argv[]) {
 
-  L0 = 4.0;
+  L0 = 2*pi;
   
   // Values taken from the terminal
-  MAXlevel = 6;
-  tmax = 3.0;
-  We = 5.0;
+  MAXlevel = 8;
+  tmax = 10;
   Oh = 1e-2;
+  Oha = 1e-2 * Oh;
+  De = 10.0; // 1e-1;
+  Ec = 0.25; // 1e-2;
 
   init_grid (1 << 4);
 
@@ -56,14 +72,14 @@ int main(int argc, char const *argv[]) {
   sprintf (comm, "mkdir -p intermediate");
   system(comm);
   // Name of the restart file. See writingFiles event.
-  sprintf (dumpFile, "dump");
+  sprintf (dumpFile, "restart");
 
 
   rho1 = 1., rho2 = 1e-3;
-  Oha = 1e-2 * Oh;
-  mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
-
-  f.sigma = 1.0/We;
+  mu1 = Oh, mu2 = Oha;
+  lambda1 = De, lambda2 = 0.;
+  G1 = Ec, G2 = 0.;
+  f.sigma = 1.0;
 
   run();
 
@@ -71,11 +87,8 @@ int main(int argc, char const *argv[]) {
 
 event init (t = 0) {
   if (!restore (file = dumpFile)){
-   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9) && level < MAXlevel);
-   fraction (f, (1-R2(x,y,z)));
-   foreach(){
-    u.x[] = -f[]*1.0;
-   }
+    refine(R2(x,y,z,epsilon) < (1+epsilon) && R2(x,y,z,epsilon) > (1-epsilon) && level < MAXlevel);
+   fraction (f, (1-R2(x,y,z,epsilon)));
   }
 }
 
@@ -112,31 +125,33 @@ event end (t = end) {
 */
 event logWriting (i++) {
 
-  fprintf(ferr, "i %d, t %g\n", i, t);
-
   double ke = 0.;
   foreach (reduction(+:ke)){
-    ke += (2*pi*y)*(0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])))*sq(Delta);
+    ke += (2*pi*y)*(0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])+ sq(u.z[])))*sq(Delta);
   }
 
   static FILE * fp;
   if (pid() == 0) {
     const char* mode = (i == 0) ? "w" : "a";
-    fp = fopen("log", mode);
+    fp = fopen(logFile, mode);
     if (fp == NULL) {
       fprintf(ferr, "Error opening log file\n");
       return 1;
     }
 
+    scalar pos[];
+    position (f, pos, {0,1,0});
+    double ymin = statsf(pos).min;
+
     if (i == 0) {
-      fprintf(ferr, "Level %d, Oh %2.1e, Oha %2.1e\n", MAXlevel, Oh, Oha);
-      fprintf(ferr, "i dt t ke\n");
-      fprintf(fp, "Level %d, Oh %2.1e, Oha %2.1e\n", MAXlevel, Oh, Oha);
-      fprintf(fp, "i dt t ke rM\n");
+      fprintf(ferr, "Level %d, Oh %2.1e, Oha %2.1e, De %2.1e, Ec %2.1e\n", MAXlevel, Oh, Oha, De, Ec);
+      fprintf(ferr, "i dt t ke ymin\n");
+      fprintf(fp, "Level %d, Oh %2.1e, Oha %2.1e, De %2.1e, Ec %2.1e\n", MAXlevel, Oh, Oha, De, Ec);
+      fprintf(fp, "i dt t ke ymin\n");
     }
 
-    fprintf(fp, "%d %g %g %g\n", i, dt, t, ke);
-    fprintf(ferr, "%d %g %g %g\n", i, dt, t, ke);
+    fprintf(fp, "%d %g %g %g %g\n", i, dt, t, ke, ymin);
+    fprintf(ferr, "%d %g %g %g %g\n", i, dt, t, ke, ymin);
 
     fflush(fp);
     fclose(fp);
