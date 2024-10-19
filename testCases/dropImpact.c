@@ -1,22 +1,36 @@
 /**
- * @file dropImpact3D.c
- * @brief This file contains the simulation code for the drop impact on a solid surface in 3D. 
+ * @file dropImpact.c
+ * @brief This file contains the simulation code for the drop impact on a solid surface. 
  * @author Vatsal Sanjay
- * @version 0.1
- * @date Oct 17, 2024
+ * @version 0.2
+ * @date Oct 18, 2024
 */
 
-
+// #include "axi.h"
+// #include "grid/octree.h"
 #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
-#include "two-phase.h"
-// #include "../src-local/two-phaseVE.h"
-// #include "../src-local/log-conform-viscoelastic-3D.h"
+#include "../src-local/two-phaseVE.h"
+
+#define VANILLA 0
+#if VANILLA
+#include "../src-local/log-conform-viscoelastic.h"
+#define logFile "logAxi-vanilla.dat"
+#else
+#if AXI
+#include "../src-local/log-conform-viscoelastic-scalar-2D.h"
+#define logFile "logAxi-scalar.dat"
+#else
+#include "../src-local/log-conform-viscoelastic-scalar-3D.h"
+#define logFile "log3D-scalar.dat"
+#endif
+#endif
+
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
-#define tsnap (1e-1)
+#define tsnap (1e-2)
 
 // Error tolerancs
 #define fErr (1e-3)                                 // error tolerance in f1 VOF
@@ -47,10 +61,11 @@ int main(int argc, char const *argv[]) {
   L0 = 4.0;
   
   // Values taken from the terminal
-  MAXlevel = 6;
+  MAXlevel = 8;
   tmax = 3.0;
   We = 5.0;
   Oh = 1e-2;
+  Oha = 1e-2 * Oh;
   De = 1e-2;
   Ec = 1e-2;
 
@@ -61,11 +76,10 @@ int main(int argc, char const *argv[]) {
   sprintf (comm, "mkdir -p intermediate");
   system(comm);
   // Name of the restart file. See writingFiles event.
-  sprintf (dumpFile, "dump");
+  sprintf (dumpFile, "restart");
 
 
   rho1 = 1., rho2 = 1e-3;
-  Oha = 1e-2 * Oh;
   mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
   G1 = Ec/We, G2 = 0.0;
   lambda1 = De*sqrt(We), lambda2 = 0.0;
@@ -118,8 +132,6 @@ event end (t = end) {
 ## Log writing
 */
 event logWriting (i++) {
-
-  fprintf(ferr, "i %d, t %g\n", i, t);
 
   double ke = 0.;
   foreach (reduction(+:ke)){

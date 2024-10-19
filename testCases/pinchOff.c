@@ -29,7 +29,7 @@
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
-#define tsnap (1e-1)
+#define tsnap (1e-2)
 
 // Error tolerancs
 #define fErr (1e-3)                                 // error tolerance in f1 VOF
@@ -58,7 +58,7 @@ int main(int argc, char const *argv[]) {
   L0 = 2*pi;
   
   // Values taken from the terminal
-  MAXlevel = 8;
+  MAXlevel = 11;
   tmax = 10;
   Oh = 1e-2;
   Oha = 1e-2 * Oh;

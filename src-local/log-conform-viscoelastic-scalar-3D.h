@@ -81,7 +81,7 @@ event defaults (i = 0) {
 }
 
 /**
-## Numerical Scheme
+## Useful functions in 2D
 
 The first step is to implement a routine to calculate the eigenvalues
 and eigenvectors of the conformation tensor $\mathbf{A}$.
