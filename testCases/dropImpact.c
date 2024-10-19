@@ -141,7 +141,7 @@ event logWriting (i++) {
   static FILE * fp;
   if (pid() == 0) {
     const char* mode = (i == 0) ? "w" : "a";
-    fp = fopen("log", mode);
+    fp = fopen(logFile, mode);
     if (fp == NULL) {
       fprintf(ferr, "Error opening log file\n");
       return 1;

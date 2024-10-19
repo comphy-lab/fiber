@@ -254,7 +254,7 @@ event tracer_advection(i++)
 #if AXI
     Psiqq[] += dt*2.*u.y[]/max(y, 1e-20);
 #endif
-}
+  }
 
   /**
   ### Advection of $\Psi$
@@ -268,62 +268,62 @@ event tracer_advection(i++)
   advection ({Psi11, Psi12, Psi22}, uf, dt);
 #endif
 
+  /**
+  ### Convert back to \conform_p */
+
+  foreach() {
     /**
-    ### Convert back to \conform_p */
+    It is time to undo the log-conformation, again by
+    diagonalization, to recover the conformation tensor $\mathbf{A}$
+    and to perform step (c).*/
 
-    foreach() {
-      /**
-      It is time to undo the log-conformation, again by
-      diagonalization, to recover the conformation tensor $\mathbf{A}$
-      and to perform step (c).*/
-
-      pseudo_t A = {{Psi11[], Psi12[]}, {Psi12[], Psi22[]}}, R;
-      pseudo_v Lambda;
-      diagonalization_2D (&Lambda, &R, &A);
-      Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
-      
-      A.x.y = R.x.x*R.y.x*Lambda.x + R.y.y*R.x.y*Lambda.y;
-      foreach_dimension()
-        A.x.x = sq(R.x.x)*Lambda.x + sq(R.x.y)*Lambda.y;
+    pseudo_t A = {{Psi11[], Psi12[]}, {Psi12[], Psi22[]}}, R;
+    pseudo_v Lambda;
+    diagonalization_2D (&Lambda, &R, &A);
+    Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
+    
+    A.x.y = R.x.x*R.y.x*Lambda.x + R.y.y*R.x.y*Lambda.y;
+    foreach_dimension()
+      A.x.x = sq(R.x.x)*Lambda.x + sq(R.x.y)*Lambda.y;
 #if AXI
       double Aqq = exp(Psiqq[]);
 #endif
 
-      /**
-      We perform now step (c) by integrating 
-      $\mathbf{A}_t = -\mathbf{f}_r (\mathbf{A})/\lambda$ to obtain
-      $\mathbf{A}^{n+1}$. This step is analytic,
-      $$
-      \int_{t^n}^{t^{n+1}}\frac{d \mathbf{A}}{\mathbf{I}- \mathbf{A}} = 
-      \frac{\Delta t}{\lambda}
-      $$
-      */
+    /**
+    We perform now step (c) by integrating 
+    $\mathbf{A}_t = -\mathbf{f}_r (\mathbf{A})/\lambda$ to obtain
+    $\mathbf{A}^{n+1}$. This step is analytic,
+    $$
+    \int_{t^n}^{t^{n+1}}\frac{d \mathbf{A}}{\mathbf{I}- \mathbf{A}} = 
+    \frac{\Delta t}{\lambda}
+    $$
+    */
 
-     double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
+    double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
      
 #if AXI
       Aqq = (1. - intFactor) + intFactor*exp(Psiqq[]);
 #endif
 
-      A.x.y *= intFactor;
-      foreach_dimension()
-        A.x.x = (1. - intFactor) + A.x.x*intFactor;
+    A.x.y *= intFactor;
+    foreach_dimension()
+      A.x.x = (1. - intFactor) + A.x.x*intFactor;
 
-      /**
-        Then the Conformation tensor $\mathcal{A}_p^{n+1}$ is restored from
-        $\mathbf{A}^{n+1}$.  */
-      
-      A12[] = A.x.y;
-      T12[] = Gp[]*A.x.y;
+    /**
+      Then the Conformation tensor $\mathcal{A}_p^{n+1}$ is restored from
+      $\mathbf{A}^{n+1}$.  */
+    
+    A12[] = A.x.y;
+    T12[] = Gp[]*A.x.y;
 #if AXI
       conform_qq[] = Aqq;
       tau_qq[] = Gp[]*(Aqq - 1.);
 #endif
 
-      A11[] = A.x.x;
-      T11[] = Gp[]*(A.x.x - 1.);
-      A22[] = A.y.y;
-      T22[] = Gp[]*(A.y.y - 1.);
+    A11[] = A.x.x;
+    T11[] = Gp[]*(A.x.x - 1.);
+    A22[] = A.y.y;
+    T22[] = Gp[]*(A.y.y - 1.);
   }
 }
 

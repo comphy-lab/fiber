@@ -1,5 +1,6 @@
 testCases/pinchOff
 testCases/dropImpact
+testCases/src-local
 **/*.s
 **/*.tests 
 **/*.deps

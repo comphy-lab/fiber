@@ -72,12 +72,13 @@ event defaults (i = 0) {
       s[top] = neumann(0);
 	    s[bottom] = neumann(0);
     }
+#if DIMENSION == 3
     if (s.boundary[front] != periodic_bc) {
       s[front] = neumann(0);
 	    s[back] = neumann(0);
     }
+#endif
   }
-
 }
 
 /**
@@ -162,10 +163,7 @@ event tracer_advection(i++)
 {
   scalar Psi11 = A11;
   scalar Psi12 = A12;
-  scalar Psi13 = A13;
   scalar Psi22 = A22;
-  scalar Psi23 = A23;
-  scalar Psi33 = A33;
 
   /**
   ### Computation of $\Psi = \log \mathbf{A}$ and upper convective term */
@@ -179,8 +177,6 @@ event tracer_advection(i++)
       G_p (\mathbf{A} - I)
       $$
     */
-
-  if (dimension == 2) {
 
     pseudo_t A;
 
@@ -244,86 +240,66 @@ event tracer_advection(i++)
     We now advance $\Psi$ in time, adding the upper convective
     contribution. */
 
-    double s = - Psi12[];
-    Psi12[] += dt*(2.*B.x.y + OM*(Psi22[] - Psi11[]));
+    double s = -Psi12[];
+    Psi12[] += dt * (2. * B.x.y + OM * (Psi22[] - Psi11[]));
     s *= -1;
-    Psi11[] += dt*2.*(B.x.x + s*OM);
+    Psi11[] += dt * 2. * (B.x.x + s * OM);
     s *= -1;
-    Psi22[] += dt*2.*(B.y.y + s*OM);
-  } else {
-    error("3D diagonalization is not implemented");
+    Psi22[] += dt * 2. * (B.y.y + s * OM);
   }
-}
 
   /**
   ### Advection of $\Psi$
-  
+ 
   We proceed with step (b), the advection of the log of the
   conformation tensor $\Psi$. */
 
-#if AXI
-  advection ({Psi.x.x, Psi.x.y, Psi.y.y, Psiqq}, uf, dt);
-#else
-  advection ({Psi.x.x, Psi.x.y, Psi.y.y}, uf, dt);
-#endif
+  advection ({Psi11, Psi12, Psi22}, uf, dt);
+
+  /**
+  ### Convert back to \conform_p */
+
+  foreach() {
+    /**
+    It is time to undo the log-conformation, again by
+    diagonalization, to recover the conformation tensor $\mathbf{A}$
+    and to perform step (c).*/
+
+    pseudo_t A = {{Psi11[], Psi12[]}, {Psi12[], Psi22[]}}, R;
+    pseudo_v Lambda;
+    diagonalization_2D (&Lambda, &R, &A);
+    Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
+    
+    A.x.y = R.x.x*R.y.x*Lambda.x + R.y.y*R.x.y*Lambda.y;
+    foreach_dimension()
+      A.x.x = sq(R.x.x)*Lambda.x + sq(R.x.y)*Lambda.y;
 
     /**
-    ### Convert back to \conform_p */
+    We perform now step (c) by integrating 
+    $\mathbf{A}_t = -\mathbf{f}_r (\mathbf{A})/\lambda$ to obtain
+    $\mathbf{A}^{n+1}$. This step is analytic,
+    $$
+    \int_{t^n}^{t^{n+1}}\frac{d \mathbf{A}}{\mathbf{I}- \mathbf{A}} = 
+    \frac{\Delta t}{\lambda}
+    $$
+    */
 
-    foreach() {
-      /**
-      It is time to undo the log-conformation, again by
-      diagonalization, to recover the conformation tensor $\mathbf{A}$
-      and to perform step (c).*/
+    double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
+    
+    A.x.y *= intFactor;
+    foreach_dimension()
+      A.x.x = (1. - intFactor) + A.x.x*intFactor;
 
-      pseudo_t A = {{Psi.x.x[], Psi.x.y[]}, {Psi.y.x[], Psi.y.y[]}}, R;
-      pseudo_v Lambda;
-      diagonalization_2D (&Lambda, &R, &A);
-      Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
-      
-      A.x.y = R.x.x*R.y.x*Lambda.x + R.y.y*R.x.y*Lambda.y;
-      foreach_dimension()
-        A.x.x = sq(R.x.x)*Lambda.x + sq(R.x.y)*Lambda.y;
-#if AXI
-      double Aqq = exp(Psiqq[]);
-#endif
-
-      /**
-      We perform now step (c) by integrating 
-      $\mathbf{A}_t = -\mathbf{f}_r (\mathbf{A})/\lambda$ to obtain
-      $\mathbf{A}^{n+1}$. This step is analytic,
-      $$
-      \int_{t^n}^{t^{n+1}}\frac{d \mathbf{A}}{\mathbf{I}- \mathbf{A}} = 
-      \frac{\Delta t}{\lambda}
-      $$
-      */
-
-     double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
-     
-#if AXI
-      Aqq = (1. - intFactor) + intFactor*exp(Psiqq[]);
-#endif
-
-      A.x.y *= intFactor;
-      foreach_dimension()
-        A.x.x = (1. - intFactor) + A.x.x*intFactor;
-
-      /**
-        Then the Conformation tensor $\mathcal{A}_p^{n+1}$ is restored from
-        $\mathbf{A}^{n+1}$.  */
-      
-      conform_p.x.y[] = A.x.y;
-      tau_p.x.y[] = Gp[]*A.x.y;
-#if AXI
-      conform_qq[] = Aqq;
-      tau_qq[] = Gp[]*(Aqq - 1.);
-#endif
-
-      foreach_dimension(){
-        conform_p.x.x[] = A.x.x;
-        tau_p.x.x[] = Gp[]*(A.x.x - 1.);
-      }
-
+    /**
+      Then the Conformation tensor $\mathcal{A}_p^{n+1}$ is restored from
+      $\mathbf{A}^{n+1}$.  */
+    
+    A12[] = A.x.y;
+    T12[] = Gp[]*A.x.y;
+    A11[] = A.x.x;
+    T11[] = Gp[]*(A.x.x - 1.);
+    A22[] = A.y.y;
+    T22[] = Gp[]*(A.y.y - 1.);
   }
 }
 
@@ -345,16 +321,29 @@ involved in the computation of shear. */
 event acceleration (i++)
 {
   face vector av = a;
-  foreach_face()
+
+  foreach_face(x){
     if (fm.x[] > 1e-20) {
-      double shear = (tau_p.x.y[0,1]*cm[0,1] + tau_p.x.y[-1,1]*cm[-1,1] -
-		      tau_p.x.y[0,-1]*cm[0,-1] - tau_p.x.y[-1,-1]*cm[-1,-1])/4.;
-      av.x[] += (shear + cm[]*tau_p.x.x[] - cm[-1]*tau_p.x.x[-1])*
-	alpha.x[]/(sq(fm.x[])*Delta);
+      
+      double shearX = (T12[0,1]*cm[0,1] + T12[-1,1]*cm[-1,1] - 
+      T12[0,-1]*cm[0,-1] - T12[-1,-1]*cm[-1,-1])/4.;
+      
+      av.x[] += (shearX + cm[]*T11[] - cm[-1]*T11[-1])*
+      alpha.x[]/(sq(fm.x[])*Delta);
+    
     }
-#if AXI
-  foreach_face(y)
-    if (y > 0.)
-      av.y[] -= (tau_qq[] + tau_qq[0,-1])*alpha.y[]/sq(y)/2.;
-#endif
+  }
+
+  foreach_face(y){
+    if (fm.y[] > 1e-20) {
+
+      double shearY = (T12[1,0]*cm[1,0] + T12[1,-1]*cm[1,-1] - 
+      T12[-1,0]*cm[-1,0] - T12[-1,-1]*cm[-1,-1])/4.;
+      
+      av.y[] += (shearY + cm[]*T22[] - cm[0,-1]*T22[0,-1])*
+      alpha.y[]/(sq(fm.y[])*Delta);
+
+    }
+  }
+
 }
