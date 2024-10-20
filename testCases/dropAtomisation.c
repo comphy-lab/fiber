@@ -1,9 +1,9 @@
 /**
- * @file dropImpact.c
- * @brief This file contains the simulation code for the drop impact on a solid surface. 
- * @author Vatsal Sanjay
- * @version 0.2
- * @date Oct 18, 2024
+ * @file .c
+ * @brief This file contains the simulation code for the drop atomisation. 
+ * @author Ayush Dixit & Vatsal Sanjay
+ * @version 5.0
+ * @date Oct 20, 2024
 */
 
 // #include "axi.h"
@@ -11,9 +11,10 @@
 // #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
-#include "../src-local/two-phaseVE.h"
 
-#define VANILLA 0
+#include "../src-local/two-phase.h"
+
+#define VANILLA 0 // vanilla cannot do 3D
 #if VANILLA
 #include "../src-local/log-conform-viscoelastic.h"
 #define logFile "logAxi-vanilla.dat"
@@ -30,48 +31,45 @@
 #include "navier-stokes/conserving.h"
 #include "tension.h"
 
-#define tsnap (1e-2)
-
+#define tsnap (0.1) // 0.001 only for some cases. 
 // Error tolerancs
-#define fErr (1e-3)                                 // error tolerance in f1 VOF
-#define KErr (1e-6)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
+#define fErr (1e-2)                                 // error tolerance in f1 VOF
+#define KErr (1e-4)                                 // error tolerance in VoF curvature calculated using heigh function method (see adapt event)
 #define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
-
-#define xDist (5e-2)
-#define R2(x,y,z)  (sq(x-1.-xDist) + sq(y) + sq(z))
+#define AErr (1e-3)                             // error tolerances in conformation inside the liquid
 
 // boundary conditions
-// u.t[left] = dirichlet(0.); // todo: later on use no-slip. For testing, free-slip is faster.
-// u.r[left] = dirichlet(0.); // todo: later on use no-slip. For testing, free-slip is faster.
-f[left] = dirichlet(0.0);
+u.n[left]  = dirichlet(1.);
+// p[left] = dirichlet(0);
+u.n[right] = neumann(0.);
+p[right] = dirichlet(0);
 
 int MAXlevel;
-// We -> Weber number of the drop
+// We -> Weber number
 // Oh -> Solvent Ohnesorge number
 // Oha -> air Ohnesorge number
 // De -> Deborah number
 // Ec -> Elasto-capillary number
-// for now there is no viscoelasticity
 
-double We, Oh, Oha, De, Ec, tmax;
+double Oh, Oha, De, We, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
-int main(int argc, char const *argv[]) {
+int  main(int argc, char const *argv[]) {
+  dtmax = 1e-5; //  BEWARE of this for stability issues. 
 
-  dtmax = 1e-5;
+  L0 = 20;
+  init_grid (1 << 4);
+  origin (0, -L0/2, -L0/2);
 
-  L0 = 4.0;
-  
   // Values taken from the terminal
   MAXlevel = 6;
-  tmax = 3.0;
-  We = 5.0;
-  Oh = 1e-2;
-  Oha = 1e-2 * Oh;
-  De = 1.0;
-  Ec = 1.0;
+  De = 0.0;
+  Ec = 0.0;
 
-  init_grid (1 << 4);
+  We = 1e3;
+  Oh = 3e-3;
+  Oha = 1e-1*Oh;
+  tmax = 200;
 
   // Create a folder named intermediate where all the simulation snapshots are stored.
   char comm[80];
@@ -81,24 +79,19 @@ int main(int argc, char const *argv[]) {
   sprintf (dumpFile, "restart");
 
 
-  rho1 = 1., rho2 = 1e-3;
+  rho1 = 1., rho2 = 1e-1;
   mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
-  G1 = Ec/We, G2 = 0.0;
-  lambda1 = De*sqrt(We), lambda2 = 0.0;
+  // G1 = Ec/We, G2 = 0.0;
+  // lambda1 = De*sqrt(We), lambda2 = 0.0;
   
   f.sigma = 1.0/We;
 
   run();
-
 }
 
 event init (t = 0) {
   if (!restore (file = dumpFile)){
-   refine(R2(x,y,z) < (1.1) && R2(x,y,z) > (0.9) && level < MAXlevel);
-   fraction (f, (1-R2(x,y,z)));
-   foreach(){
-    u.x[] = -f[]*1.0;
-   }
+   fraction (f, 1 - (x-3)*(x-3) - y*y - z*z);
   }
 }
 
@@ -106,9 +99,11 @@ event init (t = 0) {
 ## Adaptive Mesh Refinement
 */
 event adapt(i++){
-  adapt_wavelet ((scalar *){f, u.x, u.y, u.z},
+  scalar KAPPA[];
+  curvature(f, KAPPA);
+   adapt_wavelet ((scalar *){f, u.x, u.y, u.z},
       (double[]){fErr, VelErr, VelErr, VelErr},
-      MAXlevel, 4);
+      MAXlevel, MAXlevel-4);
 }
 
 /**
