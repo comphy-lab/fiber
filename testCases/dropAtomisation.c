@@ -1,5 +1,5 @@
 /**
- * @file .c
+ * @file dropAtomisation.c
  * @brief This file contains the simulation code for the drop atomisation. 
  * @author Ayush Dixit & Vatsal Sanjay
  * @version 5.0
@@ -12,7 +12,7 @@
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
 
-#include "../src-local/two-phase.h"
+#include "../src-local/two-phaseVE.h"
 
 #define VANILLA 0 // vanilla cannot do 3D
 #if VANILLA
@@ -38,6 +38,7 @@
 #define VelErr (1e-2)                               // error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J
 #define AErr (1e-3)                             // error tolerances in conformation inside the liquid
 
+#define R2(x,y,z)  (sq(x-3.) + sq(y) + sq(z))
 // boundary conditions
 u.n[left]  = dirichlet(1.);
 // p[left] = dirichlet(0);
@@ -59,11 +60,16 @@ int  main(int argc, char const *argv[]) {
 
   L0 = 20;
   init_grid (1 << 4);
-  origin (0, -L0/2, -L0/2);
+
+  origin (0, -L0/2
+  #if dimension == 3
+  , -L0/2
+  #endif
+  );
 
   // Values taken from the terminal
-  MAXlevel = 6;
-  De = 0.0;
+  MAXlevel = 8;
+  De = 1.0;
   Ec = 0.0;
 
   We = 1e3;
@@ -81,8 +87,8 @@ int  main(int argc, char const *argv[]) {
 
   rho1 = 1., rho2 = 1e-1;
   mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
-  // G1 = Ec/We, G2 = 0.0;
-  // lambda1 = De*sqrt(We), lambda2 = 0.0;
+  G1 = Ec/We, G2 = 0.0;
+  lambda1 = De*sqrt(We), lambda2 = 0.0;
   
   f.sigma = 1.0/We;
 
@@ -91,7 +97,8 @@ int  main(int argc, char const *argv[]) {
 
 event init (t = 0) {
   if (!restore (file = dumpFile)){
-   fraction (f, 1 - (x-3)*(x-3) - y*y - z*z);
+    refine(R2(x,y,z) < 1.1 && R2(x,y,z) > 0.9 && level < MAXlevel);
+    fraction (f, 1. - R2(x,y,z));
   }
 }
 
@@ -99,11 +106,15 @@ event init (t = 0) {
 ## Adaptive Mesh Refinement
 */
 event adapt(i++){
-  scalar KAPPA[];
-  curvature(f, KAPPA);
-   adapt_wavelet ((scalar *){f, u.x, u.y, u.z},
-      (double[]){fErr, VelErr, VelErr, VelErr},
-      MAXlevel, MAXlevel-4);
+   adapt_wavelet ((scalar *){f, u.x, u.y
+   #if dimension == 3
+    ,u.z
+   #endif
+   },(double[]){fErr, VelErr, VelErr,
+   #if dimension == 3
+    VelErr
+   #endif
+   },MAXlevel, MAXlevel-4);
 }
 
 /**
@@ -130,7 +141,11 @@ event logWriting (i++) {
 
   double ke = 0.;
   foreach (reduction(+:ke)){
-    ke += (2*pi*y)*(0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])))*sq(Delta);
+    ke += (2*pi*y)*(0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])
+   #if dimension == 3
+    + sq(u.z[])
+   #endif
+   ))*sq(Delta);
   }
 
   static FILE * fp;
