@@ -72,7 +72,7 @@ event defaults (i = 0) {
       s[top] = neumann(0);
 	    s[bottom] = neumann(0);
     }
-#if DIMENSION == 3
+#if dimension == 3
     if (s.boundary[front] != periodic_bc) {
       s[front] = neumann(0);
 	    s[back] = neumann(0);
@@ -90,6 +90,7 @@ and eigenvectors of the conformation tensor $\mathbf{A}$.
 These structs ressemble Basilisk vectors and tensors but are just
 arrays not related to the grid. */
 
+#if dimension == 2
 typedef struct { double x, y;}   pseudo_v;
 typedef struct { pseudo_v x, y;} pseudo_t;
 
@@ -129,6 +130,47 @@ static void diagonalization_2D (pseudo_v * Lambda, pseudo_t * R, pseudo_t * A)
     Ry[i] /= mod;
   }
 }
+#endif
+
+/*
+Now this is the 3D implementation.
+*/
+#if dimension == 3
+
+#include "eigen_decomposition.h"
+
+typedef struct { double x, y, z; }   pseudo_v3d;
+typedef struct { pseudo_v3d x, y, z; } pseudo_t3d;
+
+static void diagonalization_3D (pseudo_v3d * Lambda, pseudo_t3d * R, pseudo_t3d * A)
+{
+  // Check if the matrix is already diagonal
+  if (sq(A->x.y) + sq(A->x.z) + sq(A->y.z) < 1e-15) {
+    R->x.x = R->y.y = R->z.z = 1.;
+    R->y.x = R->x.y = R->z.x = R->x.z = R->z.y = R->y.z = 0.;
+    Lambda->x = A->x.x; Lambda->y = A->y.y; Lambda->z = A->z.z;
+    return;
+  }
+
+  // Compute eigenvalues using the eigen_decomposition function
+  double matrix[3][3] = {{A->x.x, A->x.y, A->x.z},
+                         {A->x.y, A->y.y, A->y.z},
+                         {A->x.z, A->y.z, A->z.z}};
+  double eigenvectors[3][3];
+  double eigenvalues[3];
+  
+  compute_eigensystem_symmetric_3x3(matrix, eigenvectors, eigenvalues);
+
+  // Store eigenvalues and eigenvectors
+  Lambda->x = eigenvalues[0];
+  Lambda->y = eigenvalues[1];
+  Lambda->z = eigenvalues[2];
+
+  R->x.x = eigenvectors[0][0]; R->x.y = eigenvectors[0][1]; R->x.z = eigenvectors[0][2];
+  R->y.x = eigenvectors[1][0]; R->y.y = eigenvectors[1][1]; R->y.z = eigenvectors[1][2];
+  R->z.x = eigenvectors[2][0]; R->z.y = eigenvectors[2][1]; R->z.z = eigenvectors[2][2];
+}
+#endif
 
 /**
 The stress tensor depends on previous instants and has to be
@@ -159,6 +201,7 @@ $\conform_p$ are never needed simultaneously. This means that $\conform_p$ can
 be used to store (temporarily) the values of $\Psi$ (i.e. $\Psi$ is
 just an alias for $\conform_p$). */
 
+#if dimension == 2
 event tracer_advection(i++)
 {
   scalar Psi11 = A11;
@@ -302,6 +345,135 @@ event tracer_advection(i++)
     T22[] = Gp[]*(A.y.y - 1.);
   }
 }
+#endif
+
+#if dimension == 3
+event tracer_advection(i++)
+{
+  scalar Psi11 = A11, Psi12 = A12, Psi13 = A13,
+         Psi22 = A22, Psi23 = A23, Psi33 = A33;
+
+  foreach() {
+    pseudo_t3d A, R;
+    pseudo_v3d Lambda;
+
+    A.x.x = A11[]; A.x.y = A12[]; A.x.z = A13[];
+    A.y.x = A12[]; A.y.y = A22[]; A.y.z = A23[];
+    A.z.x = A13[]; A.z.y = A23[]; A.z.z = A33[];
+
+    diagonalization_3D (&Lambda, &R, &A);
+    
+    // Compute Psi = log(A)
+    Psi11[] = R.x.x*R.x.x*log(Lambda.x) + R.x.y*R.x.y*log(Lambda.y) + R.x.z*R.x.z*log(Lambda.z);
+    Psi22[] = R.y.x*R.y.x*log(Lambda.x) + R.y.y*R.y.y*log(Lambda.y) + R.y.z*R.y.z*log(Lambda.z);
+    Psi33[] = R.z.x*R.z.x*log(Lambda.x) + R.z.y*R.z.y*log(Lambda.y) + R.z.z*R.z.z*log(Lambda.z);
+    Psi12[] = R.x.x*R.y.x*log(Lambda.x) + R.x.y*R.y.y*log(Lambda.y) + R.x.z*R.y.z*log(Lambda.z);
+    Psi13[] = R.x.x*R.z.x*log(Lambda.x) + R.x.y*R.z.y*log(Lambda.y) + R.x.z*R.z.z*log(Lambda.z);
+    Psi23[] = R.y.x*R.z.x*log(Lambda.x) + R.y.y*R.z.y*log(Lambda.y) + R.y.z*R.z.z*log(Lambda.z);
+
+    // Compute B and Omega tensors (3D version)
+    pseudo_t3d B, M, Omega;
+    double OM[3] = {0., 0., 0.};
+
+    if (fabs(Lambda.x - Lambda.y) <= 1e-20 && fabs(Lambda.y - Lambda.z) <= 1e-20) {
+      // If all eigenvalues are equal, simplify calculations
+      B.x.y = (u.y[1,0,0] - u.y[-1,0,0] + u.x[0,1,0] - u.x[0,-1,0])/(4.*Delta);
+      B.x.z = (u.z[1,0,0] - u.z[-1,0,0] + u.x[0,0,1] - u.x[0,0,-1])/(4.*Delta);
+      B.y.z = (u.z[0,1,0] - u.z[0,-1,0] + u.y[0,0,1] - u.y[0,0,-1])/(4.*Delta);
+      B.x.x = (u.x[1,0,0] - u.x[-1,0,0])/(2.*Delta);
+      B.y.y = (u.y[0,1,0] - u.y[0,-1,0])/(2.*Delta);
+      B.z.z = (u.z[0,0,1] - u.z[0,0,-1])/(2.*Delta);
+      
+      // Set Omega to zero for equal eigenvalues
+      foreach_dimension()
+        foreach_dimension()
+          Omega.x.y = 0.;
+    } else {
+      // General case
+      foreach_dimension() {
+        M.x.x = (sq(R.x.x)*(u.x[1,0,0] - u.x[-1,0,0]) +
+                sq(R.y.x)*(u.y[1,0,0] - u.y[-1,0,0]) +
+                sq(R.z.x)*(u.z[1,0,0] - u.z[-1,0,0]))/(2.*Delta);
+        M.x.y = (R.x.x*R.x.y*(u.x[1,0,0] - u.x[-1,0,0]) +
+                R.y.x*R.y.y*(u.y[1,0,0] - u.y[-1,0,0]) +
+                R.z.x*R.z.y*(u.z[1,0,0] - u.z[-1,0,0]))/(2.*Delta);
+        M.x.z = (R.x.x*R.x.z*(u.x[1,0,0] - u.x[-1,0,0]) +
+                R.y.x*R.y.z*(u.y[1,0,0] - u.y[-1,0,0]) +
+                R.z.x*R.z.z*(u.z[1,0,0] - u.z[-1,0,0]))/(2.*Delta);
+      }
+
+      // Compute full Omega tensor
+      double omega_xy = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
+      double omega_xz = (Lambda.z*M.x.z + Lambda.x*M.z.x)/(Lambda.z - Lambda.x);
+      double omega_yz = (Lambda.z*M.y.z + Lambda.y*M.z.y)/(Lambda.z - Lambda.y);
+
+      Omega.x.y =  omega_xy; Omega.x.z =  omega_xz;
+      Omega.y.x = -omega_xy; Omega.y.z =  omega_yz;
+      Omega.z.x = -omega_xz; Omega.z.y = -omega_yz;
+      Omega.x.x = Omega.y.y = Omega.z.z = 0.;
+
+      // Compute B
+      foreach_dimension() {
+        B.x.x = M.x.x;
+        B.x.y = 0.5 * (M.x.y + M.y.x);
+        B.x.z = 0.5 * (M.x.z + M.z.x);
+      }
+    }
+
+    Update Psi with upper convective term
+    double dt2 = 2. * dt;
+    Psi11[] += dt2 * (B.x.x + Omega.x.y*Psi12[] - Omega.y.x*Psi12[] + Omega.x.z*Psi13[] - Omega.z.x*Psi13[]);
+    Psi22[] += dt2 * (B.y.y + Omega.y.x*Psi12[] - Omega.x.y*Psi12[] + Omega.y.z*Psi23[] - Omega.z.y*Psi23[]);
+    Psi33[] += dt2 * (B.z.z + Omega.z.x*Psi13[] - Omega.x.z*Psi13[] + Omega.z.y*Psi23[] - Omega.y.z*Psi23[]);
+    Psi12[] += dt2 * (B.x.y + Omega.x.x*Psi12[] - Omega.x.y*Psi11[] + Omega.x.y*Psi22[] - Omega.y.y*Psi12[] + Omega.x.z*Psi23[] - Omega.z.y*Psi13[]);
+    Psi13[] += dt2 * (B.x.z + Omega.x.x*Psi13[] - Omega.x.z*Psi11[] + Omega.x.y*Psi23[] - Omega.y.z*Psi12[] + Omega.x.z*Psi33[] - Omega.z.z*Psi13[]);
+    Psi23[] += dt2 * (B.y.z + Omega.y.x*Psi13[] - Omega.x.z*Psi12[] + Omega.y.y*Psi23[] - Omega.y.z*Psi22[] + Omega.y.z*Psi33[] - Omega.z.z*Psi23[]);
+  }
+
+  // Advection of Psi
+  // advection ({Psi11, Psi12, Psi13, Psi22, Psi23, Psi33}, uf, dt);
+  advection ({A11, A12, A13, A22, A23, A33}, uf, dt);
+
+  // Convert back to A and T
+  // foreach() {
+  //   pseudo_t3d A, R;
+  //   pseudo_v3d Lambda;
+    
+  //   A.x.x = Psi11[]; A.x.y = Psi12[]; A.x.z = Psi13[];
+  //   A.y.x = Psi12[]; A.y.y = Psi22[]; A.y.z = Psi23[];
+  //   A.z.x = Psi13[]; A.z.y = Psi23[]; A.z.z = Psi33[];
+
+  //   diagonalization_3D (&Lambda, &R, &A);
+    
+  //   Lambda.x = exp(Lambda.x); Lambda.y = exp(Lambda.y); Lambda.z = exp(Lambda.z);
+
+  //   // Reconstruct A
+  //   A11[] = R.x.x*R.x.x*Lambda.x + R.x.y*R.x.y*Lambda.y + R.x.z*R.x.z*Lambda.z;
+  //   A22[] = R.y.x*R.y.x*Lambda.x + R.y.y*R.y.y*Lambda.y + R.y.z*R.y.z*Lambda.z;
+  //   A33[] = R.z.x*R.z.x*Lambda.x + R.z.y*R.z.y*Lambda.y + R.z.z*R.z.z*Lambda.z;
+  //   A12[] = R.x.x*R.y.x*Lambda.x + R.x.y*R.y.y*Lambda.y + R.x.z*R.y.z*Lambda.z;
+  //   A13[] = R.x.x*R.z.x*Lambda.x + R.x.y*R.z.y*Lambda.y + R.x.z*R.z.z*Lambda.z;
+  //   A23[] = R.y.x*R.z.x*Lambda.x + R.y.y*R.z.y*Lambda.y + R.y.z*R.z.z*Lambda.z;
+
+  //   // Apply relaxation
+  //   double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
+    
+  //   foreach_dimension()
+  //     A11[] = 1. + (A11[] - 1.)*intFactor;
+  //   A12[] *= intFactor;
+  //   A13[] *= intFactor;
+  //   A23[] *= intFactor;
+
+  //   // Compute T
+  //   T11[] = Gp[]*(A11[] - 1.);
+  //   T22[] = Gp[]*(A22[] - 1.);
+  //   T33[] = Gp[]*(A33[] - 1.);
+  //   T12[] = Gp[]*A12[];
+  //   T13[] = Gp[]*A13[];
+  //   T23[] = Gp[]*A23[];
+  // }
+}
+#endif
 
 /**
 ### Divergence of the viscoelastic stress tensor
@@ -322,28 +494,29 @@ event acceleration (i++)
 {
   face vector av = a;
 
-  foreach_face(x){
-    if (fm.x[] > 1e-20) {
+  // foreach_face(x){
+  //   if (fm.x[] > 1e-20) {
       
-      double shearX = (T12[0,1]*cm[0,1] + T12[-1,1]*cm[-1,1] - 
-      T12[0,-1]*cm[0,-1] - T12[-1,-1]*cm[-1,-1])/4.;
+  //     double shearX = (T12[0,1]*cm[0,1] + T12[-1,1]*cm[-1,1] - 
+  //     T12[0,-1]*cm[0,-1] - T12[-1,-1]*cm[-1,-1])/4.;
       
-      av.x[] += (shearX + cm[]*T11[] - cm[-1]*T11[-1])*
-      alpha.x[]/(sq(fm.x[])*Delta);
+  //     av.x[] += (shearX + cm[]*T11[] - cm[-1]*T11[-1])*
+  //     alpha.x[]/(sq(fm.x[])*Delta);
     
-    }
-  }
+  //   }
+  // }
 
-  foreach_face(y){
-    if (fm.y[] > 1e-20) {
+  // foreach_face(y){
+  //   if (fm.y[] > 1e-20) {
 
-      double shearY = (T12[1,0]*cm[1,0] + T12[1,-1]*cm[1,-1] - 
-      T12[-1,0]*cm[-1,0] - T12[-1,-1]*cm[-1,-1])/4.;
+  //     double shearY = (T12[1,0]*cm[1,0] + T12[1,-1]*cm[1,-1] - 
+  //     T12[-1,0]*cm[-1,0] - T12[-1,-1]*cm[-1,-1])/4.;
       
-      av.y[] += (shearY + cm[]*T22[] - cm[0,-1]*T22[0,-1])*
-      alpha.y[]/(sq(fm.y[])*Delta);
+  //     av.y[] += (shearY + cm[]*T22[] - cm[0,-1]*T22[0,-1])*
+  //     alpha.y[]/(sq(fm.y[])*Delta);
 
-    }
-  }
+  //   }
+  // }
 
 }
+

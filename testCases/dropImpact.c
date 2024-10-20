@@ -7,8 +7,8 @@
 */
 
 // #include "axi.h"
-// #include "grid/octree.h"
-#include "grid/quadtree.h"
+#include "grid/octree.h"
+// #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
 #include "../src-local/two-phaseVE.h"
@@ -61,7 +61,7 @@ int main(int argc, char const *argv[]) {
   L0 = 4.0;
   
   // Values taken from the terminal
-  MAXlevel = 8;
+  MAXlevel = 6;
   tmax = 3.0;
   We = 5.0;
   Oh = 1e-2;
