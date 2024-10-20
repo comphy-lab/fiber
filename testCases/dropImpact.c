@@ -66,8 +66,8 @@ int main(int argc, char const *argv[]) {
   We = 5.0;
   Oh = 1e-2;
   Oha = 1e-2 * Oh;
-  De = 1e-2;
-  Ec = 1e-2;
+  De = 1.0;
+  Ec = 0.0;
 
   init_grid (1 << 4);
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 #include "../src-local/eigen_decomposition.h"
 
 #define EPSILON 1e-9
@@ -228,7 +229,7 @@ int verify_reconstruction(const pseudo_t3d* A, const pseudo_t3d* R, const pseudo
     return 1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     pseudo_t3d A, R;
     pseudo_v3d Lambda;
 
@@ -251,9 +252,9 @@ int main() {
     /*
     this is a non-diagonal matrix
     */
-    A.x.x = 1;  A.x.y = 2; A.x.z = 3;
-    A.y.x = 2; A.y.y = 4;  A.y.z = 5;
-    A.z.x = 3;  A.z.y = 5;  A.z.z = -6;
+    // A.x.x = 1;  A.x.y = 2; A.x.z = 3;
+    // A.y.x = 2; A.y.y = 4;  A.y.z = 5;
+    // A.z.x = 3;  A.z.y = 5;  A.z.z = -6;
 
     /*
     this is a small matrix
@@ -268,6 +269,17 @@ int main() {
     // A.x.x = 100;  A.x.y = 100; A.x.z = 10;
     // A.y.x = 100; A.y.y = 10;  A.y.z = 1;
     // A.z.x = 10;  A.z.y = 1;  A.z.z = 0.1;
+
+    if (argc != 7) {
+        A.x.x = 1;  A.x.y = 2; A.x.z = 3;
+        A.y.x = 2; A.y.y = 4;  A.y.z = 5;
+        A.z.x = 3;  A.z.y = 5;  A.z.z = -6;
+    } else {
+        // get Aij from terminal 
+        A.x.x = atof(argv[1]);  A.x.y = atof(argv[2]); A.x.z = atof(argv[3]);
+        A.y.x = atof(argv[2]); A.y.y = atof(argv[4]);  A.y.z = atof(argv[5]);
+        A.z.x = atof(argv[3]);  A.z.y = atof(argv[5]);  A.z.z = atof(argv[6]);
+    }
 
     print_pseudo_t3d("Original matrix A", &A);
 

@@ -6,8 +6,9 @@
  * @date Oct 18, 2024
 */
 
-#include "axi.h"
-// #include "grid/octree.h"
+// #include "axi.h"
+#include "grid/octree.h"
+// #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
 #define FILTERED // Smear density and viscosity jumps
 #include "../src-local/two-phaseVE.h"
@@ -58,12 +59,12 @@ int main(int argc, char const *argv[]) {
   L0 = 2*pi;
   
   // Values taken from the terminal
-  MAXlevel = 11;
+  MAXlevel = 6;
   tmax = 10;
   Oh = 1e-2;
   Oha = 1e-2 * Oh;
-  De = 10.0; // 1e-1;
-  Ec = 0.25; // 1e-2;
+  De = 1.0; // 1e-1;
+  Ec = 1.0; // 1e-2;
 
   init_grid (1 << 4);
 

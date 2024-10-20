@@ -1,17 +1,21 @@
 /** Title: log-conform-viscoelastic-3D.h
-# Version: 1.0
+# Version: 1.1
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Main feature 2: This is the 3D implementation of [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h).
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Oct 19, 2024
+# Updated: Oct 20, 2024
 
 # change log: Oct 19, 2024 (v1.0)
 - 3D implementation
 - scalar implementation
-- Not tested yet.
+
+# change log: Oct 20, 2024 (v1.1)
+- Added a check for negative eigenvalues. If any are found, print the location and value of the offending eigenvalue.
+- Please report this bug by opening an issue on the GitHub repository. 
+- The code works!!! :) 
 
 */
 
@@ -21,9 +25,8 @@
 */ 
 
 /**
- * # TODO: 
- * axi compatibility is not there. 
- * This is full 3D. To keep the code easy to read, we will not implement axi compatibility. 
+ * # TODO: (non-critical, non-urgent)
+ * axi compatibility is not there. This will not be fixed. To use axi, please use: [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h).
 */
 
 #if AXI
@@ -153,9 +156,11 @@ static void diagonalization_3D (pseudo_v3d * Lambda, pseudo_t3d * R, pseudo_t3d 
   }
 
   // Compute eigenvalues using the eigen_decomposition function
-  double matrix[3][3] = {{A->x.x, A->x.y, A->x.z},
-                         {A->x.y, A->y.y, A->y.z},
-                         {A->x.z, A->y.z, A->z.z}};
+  double matrix[3][3] = {
+    {A->x.x, A->x.y, A->x.z},
+    {A->y.x, A->y.y, A->y.z},
+    {A->z.x, A->z.y, A->z.z}
+  };
   double eigenvectors[3][3];
   double eigenvalues[3];
   
@@ -169,6 +174,7 @@ static void diagonalization_3D (pseudo_v3d * Lambda, pseudo_t3d * R, pseudo_t3d 
   R->x.x = eigenvectors[0][0]; R->x.y = eigenvectors[0][1]; R->x.z = eigenvectors[0][2];
   R->y.x = eigenvectors[1][0]; R->y.y = eigenvectors[1][1]; R->y.z = eigenvectors[1][2];
   R->z.x = eigenvectors[2][0]; R->z.y = eigenvectors[2][1]; R->z.z = eigenvectors[2][2];
+
 }
 #endif
 
@@ -350,6 +356,10 @@ event tracer_advection(i++)
 #if dimension == 3
 event tracer_advection(i++)
 {
+  /**
+  ### Computation of $\Psi = \log \mathbf{A}$ and upper convective term */
+
+  // start by declaring the scalar variables that will store the components of $\Psi$
   scalar Psi11 = A11, Psi12 = A12, Psi13 = A13,
          Psi22 = A22, Psi23 = A23, Psi33 = A33;
 
@@ -361,117 +371,240 @@ event tracer_advection(i++)
     A.y.x = A12[]; A.y.y = A22[]; A.y.z = A23[];
     A.z.x = A13[]; A.z.y = A23[]; A.z.z = A33[];
 
+    // Diagonalize the conformation tensor A to obtain the eigenvalues Lambda and eigenvectors R
     diagonalization_3D (&Lambda, &R, &A);
+
+    /*
+    Check for negative eigenvalues -- this should never happen. If it does, print the location and value of the offending eigenvalue.
+    Please report this bug by opening an issue on the GitHub repository. 
+    */
+    if (Lambda.x <= 0. || Lambda.y <= 0. || Lambda.z <= 0.) {
+      fprintf(ferr, "Negative eigenvalue detected: Lambda.x = %g, Lambda.y = %g, Lambda.z = %g\n", Lambda.x, Lambda.y, Lambda.z);
+      fprintf(ferr, "x = %g, y = %g, z = %g, f = %g\n", x, y, z, f[]);
+      exit(1);
+    }
     
     // Compute Psi = log(A)
-    Psi11[] = R.x.x*R.x.x*log(Lambda.x) + R.x.y*R.x.y*log(Lambda.y) + R.x.z*R.x.z*log(Lambda.z);
-    Psi22[] = R.y.x*R.y.x*log(Lambda.x) + R.y.y*R.y.y*log(Lambda.y) + R.y.z*R.y.z*log(Lambda.z);
-    Psi33[] = R.z.x*R.z.x*log(Lambda.x) + R.z.y*R.z.y*log(Lambda.y) + R.z.z*R.z.z*log(Lambda.z);
-    Psi12[] = R.x.x*R.y.x*log(Lambda.x) + R.x.y*R.y.y*log(Lambda.y) + R.x.z*R.y.z*log(Lambda.z);
-    Psi13[] = R.x.x*R.z.x*log(Lambda.x) + R.x.y*R.z.y*log(Lambda.y) + R.x.z*R.z.z*log(Lambda.z);
-    Psi23[] = R.y.x*R.z.x*log(Lambda.x) + R.y.y*R.z.y*log(Lambda.y) + R.y.z*R.z.z*log(Lambda.z);
+    Psi11[] = R.x.x*R.x.x*log(Lambda.x) + R.y.x*R.y.x*log(Lambda.y) + R.z.x*R.z.x*log(Lambda.z);
+    Psi22[] = R.x.y*R.x.y*log(Lambda.x) + R.y.y*R.y.y*log(Lambda.y) + R.z.y*R.z.y*log(Lambda.z);
+    Psi33[] = R.x.z*R.x.z*log(Lambda.x) + R.y.z*R.y.z*log(Lambda.y) + R.z.z*R.z.z*log(Lambda.z);
+
+    Psi12[] = R.x.x*R.x.y*log(Lambda.x) + R.y.x*R.y.y*log(Lambda.y) + R.z.x*R.z.y*log(Lambda.z);
+    Psi13[] = R.x.x*R.x.z*log(Lambda.x) + R.y.x*R.y.z*log(Lambda.y) + R.z.x*R.z.z*log(Lambda.z);
+    Psi23[] = R.x.y*R.x.z*log(Lambda.x) + R.y.y*R.y.z*log(Lambda.y) + R.z.y*R.z.z*log(Lambda.z);
 
     // Compute B and Omega tensors (3D version)
     pseudo_t3d B, M, Omega;
-    double OM[3] = {0., 0., 0.};
 
-    if (fabs(Lambda.x - Lambda.y) <= 1e-20 && fabs(Lambda.y - Lambda.z) <= 1e-20) {
-      // If all eigenvalues are equal, simplify calculations
-      B.x.y = (u.y[1,0,0] - u.y[-1,0,0] + u.x[0,1,0] - u.x[0,-1,0])/(4.*Delta);
-      B.x.z = (u.z[1,0,0] - u.z[-1,0,0] + u.x[0,0,1] - u.x[0,0,-1])/(4.*Delta);
-      B.y.z = (u.z[0,1,0] - u.z[0,-1,0] + u.y[0,0,1] - u.y[0,0,-1])/(4.*Delta);
-      B.x.x = (u.x[1,0,0] - u.x[-1,0,0])/(2.*Delta);
-      B.y.y = (u.y[0,1,0] - u.y[0,-1,0])/(2.*Delta);
-      B.z.z = (u.z[0,0,1] - u.z[0,0,-1])/(2.*Delta);
-      
-      // Set Omega to zero for equal eigenvalues
-      foreach_dimension()
-        foreach_dimension()
-          Omega.x.y = 0.;
+    // Check if any pair of eigenvalues are numerically equal (within a small tolerance)
+    if (fabs(Lambda.x - Lambda.y) <= 1e-20 || fabs(Lambda.y - Lambda.z) <= 1e-20 || fabs(Lambda.z - Lambda.x) <= 1e-20) {
+      // In case of equal eigenvalues, the calculations for B and Omega simplify significantly
+
+      // Compute off-diagonal elements of B using central differences
+      // These represent the symmetric part of the velocity gradient tensor
+      B.x.y = (u.y[1,0,0] - u.y[-1,0,0] + u.x[0,1,0] - u.x[0,-1,0])/(4.*Delta);  // (dv/dx + du/dy)/2
+      B.x.z = (u.z[1,0,0] - u.z[-1,0,0] + u.x[0,0,1] - u.x[0,0,-1])/(4.*Delta);  // (dw/dx + du/dz)/2
+      B.y.z = (u.z[0,1,0] - u.z[0,-1,0] + u.y[0,0,1] - u.y[0,0,-1])/(4.*Delta);  // (dw/dy + dv/dz)/2
+
+      // Compute diagonal elements of B
+      // These represent the normal strain rates
+      B.x.x = (u.x[1,0,0] - u.x[-1,0,0])/(2.*Delta);  // du/dx
+      B.y.y = (u.y[0,1,0] - u.y[0,-1,0])/(2.*Delta);  // dv/dy
+      B.z.z = (u.z[0,0,1] - u.z[0,0,-1])/(2.*Delta);  // dw/dz
+
+      // Set all components of Omega to zero
+      // This is because Omega represents the antisymmetric part of the velocity gradient tensor,
+      // which vanishes when eigenvalues are equal
+      Omega.x.y = Omega.x.z = Omega.y.z = Omega.y.x = Omega.z.x = Omega.z.y = 0.;
+
     } else {
-      // General case
-      foreach_dimension() {
-        M.x.x = (sq(R.x.x)*(u.x[1,0,0] - u.x[-1,0,0]) +
-                sq(R.y.x)*(u.y[1,0,0] - u.y[-1,0,0]) +
-                sq(R.z.x)*(u.z[1,0,0] - u.z[-1,0,0]))/(2.*Delta);
-        M.x.y = (R.x.x*R.x.y*(u.x[1,0,0] - u.x[-1,0,0]) +
-                R.y.x*R.y.y*(u.y[1,0,0] - u.y[-1,0,0]) +
-                R.z.x*R.z.y*(u.z[1,0,0] - u.z[-1,0,0]))/(2.*Delta);
-        M.x.z = (R.x.x*R.x.z*(u.x[1,0,0] - u.x[-1,0,0]) +
-                R.y.x*R.y.z*(u.y[1,0,0] - u.y[-1,0,0]) +
-                R.z.x*R.z.z*(u.z[1,0,0] - u.z[-1,0,0]))/(2.*Delta);
-      }
+      
+      /*
+      ### Compute the velocity gradient tensor components using central differences
+      - These represent the spatial derivatives of each velocity component
+      - These gradients form the velocity gradient tensor (nablaU):
+      [ dudx  dudy  dudz ]
+      [ dvdx  dvdy  dvdz ]
+      [ dwdx  dwdy  dwdz ]
+      */
 
-      // Compute full Omega tensor
+      // Derivatives of u (x-component of velocity)
+      double dudx = (u.x[1,0,0] - u.x[-1,0,0])/(2.0*Delta);  // du/dx
+      double dudy = (u.x[0,1,0] - u.x[0,-1,0])/(2.0*Delta);  // du/dy
+      double dudz = (u.x[0,0,1] - u.x[0,0,-1])/(2.0*Delta);  // du/dz
+
+      // Derivatives of v (y-component of velocity)
+      double dvdx = (u.y[1,0,0] - u.y[-1,0,0])/(2.0*Delta);  // dv/dx
+      double dvdy = (u.y[0,1,0] - u.y[0,-1,0])/(2.0*Delta);  // dv/dy
+      double dvdz = (u.y[0,0,1] - u.y[0,0,-1])/(2.0*Delta);  // dv/dz
+
+      // Derivatives of w (z-component of velocity)
+      double dwdx = (u.z[1,0,0] - u.z[-1,0,0])/(2.0*Delta);  // dw/dx
+      double dwdy = (u.z[0,1,0] - u.z[0,-1,0])/(2.0*Delta);  // dw/dy
+      double dwdz = (u.z[0,0,1] - u.z[0,0,-1])/(2.0*Delta);  // dw/dz
+
+      /*
+      Calculate M tensor: M = R^T * (nablaU)^T * R
+      - This transforms the velocity gradient tensor to the eigenvector basis
+      */
+
+      // First, compute intermediate products of R^T and (nablaU)^T
+      double Rx_gradU_x = R.x.x*dudx + R.x.y*dvdx + R.x.z*dwdx;
+      double Rx_gradU_y = R.x.x*dudy + R.x.y*dvdy + R.x.z*dwdy;
+      double Rx_gradU_z = R.x.x*dudz + R.x.y*dvdz + R.x.z*dwdz;
+
+      double Ry_gradU_x = R.y.x*dudx + R.y.y*dvdx + R.y.z*dwdx;
+      double Ry_gradU_y = R.y.x*dudy + R.y.y*dvdy + R.y.z*dwdy;
+      double Ry_gradU_z = R.y.x*dudz + R.y.y*dvdz + R.y.z*dwdz;
+
+      double Rz_gradU_x = R.z.x*dudx + R.z.y*dvdx + R.z.z*dwdx;
+      double Rz_gradU_y = R.z.x*dudy + R.z.y*dvdy + R.z.z*dwdy;
+      double Rz_gradU_z = R.z.x*dudz + R.z.y*dvdz + R.z.z*dwdz;
+
+      // Now compute M components by multiplying the intermediate products with R
+      M.x.x = R.x.x*Rx_gradU_x + R.x.y*Rx_gradU_y + R.x.z*Rx_gradU_z;
+      M.x.y = R.x.x*Ry_gradU_x + R.x.y*Ry_gradU_y + R.x.z*Ry_gradU_z;
+      M.x.z = R.x.x*Rz_gradU_x + R.x.y*Rz_gradU_y + R.x.z*Rz_gradU_z;
+
+      M.y.x = R.y.x*Rx_gradU_x + R.y.y*Rx_gradU_y + R.y.z*Rx_gradU_z;
+      M.y.y = R.y.x*Ry_gradU_x + R.y.y*Ry_gradU_y + R.y.z*Ry_gradU_z;
+      M.y.z = R.y.x*Rz_gradU_x + R.y.y*Rz_gradU_y + R.y.z*Rz_gradU_z;
+
+      M.z.x = R.z.x*Rx_gradU_x + R.z.y*Rx_gradU_y + R.z.z*Rx_gradU_z;
+      M.z.y = R.z.x*Ry_gradU_x + R.z.y*Ry_gradU_y + R.z.z*Ry_gradU_z;
+      M.z.z = R.z.x*Rz_gradU_x + R.z.y*Rz_gradU_y + R.z.z*Rz_gradU_z;
+
+      // Compute the off-diagonal elements of the Omega tensor in the eigenvector basis
       double omega_xy = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
       double omega_xz = (Lambda.z*M.x.z + Lambda.x*M.z.x)/(Lambda.z - Lambda.x);
       double omega_yz = (Lambda.z*M.y.z + Lambda.y*M.z.y)/(Lambda.z - Lambda.y);
 
-      Omega.x.y =  omega_xy; Omega.x.z =  omega_xz;
-      Omega.y.x = -omega_xy; Omega.y.z =  omega_yz;
-      Omega.z.x = -omega_xz; Omega.z.y = -omega_yz;
-      Omega.x.x = Omega.y.y = Omega.z.z = 0.;
+      // Calculate intermediate terms for the transformation back to the original coordinate system
+      double omega_xy_term_x = R.x.x*omega_xy - R.x.z*omega_yz;
+      double omega_xy_term_y = R.y.x*omega_xy + R.y.z*omega_xz;
+      double omega_xz_term_x = R.x.x*omega_xz + R.y.x*omega_yz;
+      double omega_xy_term_xy = R.x.y*omega_xy - R.x.z*omega_yz;
+      double omega_xy_term_yy = R.y.y*omega_xy + R.y.z*omega_xz;
+      double omega_xz_term_xy = R.x.y*omega_xz + R.y.y*omega_yz;
+      double omega_xy_term_xz = R.x.z*omega_xy - R.x.z*omega_yz;
+      double omega_xz_term_yz = R.y.z*omega_xy + R.z.z*omega_xz;
+      double omega_yz_term_z = R.x.z*omega_xz + R.y.z*omega_yz;
 
-      // Compute B
-      foreach_dimension() {
-        B.x.x = M.x.x;
-        B.x.y = 0.5 * (M.x.y + M.y.x);
-        B.x.z = 0.5 * (M.x.z + M.z.x);
-      }
+      // Compute Omega components by transforming back to the original coordinate system: Omega = R * omega * R^T
+      Omega.x.x = R.x.y*omega_xy_term_x - R.x.x*omega_xy_term_xy + R.x.z*omega_xy_term_xz;
+      Omega.x.y = R.y.y*omega_xy_term_x - R.y.x*omega_xy_term_xy + R.y.z*omega_xy_term_xz;
+      Omega.x.z = R.z.y*omega_xy_term_x - R.z.x*omega_xy_term_xy + R.z.z*omega_xy_term_xz;
+
+      Omega.y.x = R.x.y*omega_xy_term_y - R.x.x*omega_xy_term_yy + R.x.z*omega_xz_term_yz;
+      Omega.y.y = R.y.y*omega_xy_term_y - R.y.x*omega_xy_term_yy + R.y.z*omega_xz_term_yz;
+      Omega.y.z = R.z.y*omega_xy_term_y - R.z.x*omega_xy_term_yy + R.z.z*omega_xz_term_yz;
+
+      Omega.z.x = R.x.y*omega_xz_term_x - R.x.x*omega_xz_term_xy + R.x.z*omega_yz_term_z;
+      Omega.z.y = R.y.y*omega_xz_term_x - R.y.x*omega_xz_term_xy + R.y.z*omega_yz_term_z;
+      Omega.z.z = R.z.y*omega_xz_term_x - R.z.x*omega_xz_term_xy + R.z.z*omega_yz_term_z;
+      
+      // Extract diagonal components of M (velocity gradient tensor in eigenvector basis)
+      double M_diag_x = M.x.x, M_diag_y = M.y.y, M_diag_z = M.z.z;
+
+      /*
+      Compute B tensor: B = R * diag(M) * R^T
+      - This transforms the diagonal velocity gradient tensor back to the original coordinate system
+      - B is symmetric, so we only need to compute the upper triangle
+      */
+
+      // Compute diagonal elements of B
+      B.x.x = M_diag_x*sq(R.x.x) + M_diag_y*sq(R.y.x) + M_diag_z*sq(R.z.x);
+      B.y.y = M_diag_x*sq(R.x.y) + M_diag_y*sq(R.y.y) + M_diag_z*sq(R.z.y);
+      B.z.z = M_diag_x*sq(R.x.z) + M_diag_y*sq(R.y.z) + M_diag_z*sq(R.z.z);
+
+      // Compute off-diagonal elements of B (upper triangle)
+      B.x.y = M_diag_x*R.x.x*R.x.y + M_diag_y*R.y.x*R.y.y + M_diag_z*R.z.x*R.z.y;
+      B.x.z = M_diag_x*R.x.x*R.x.z + M_diag_y*R.y.x*R.y.z + M_diag_z*R.z.x*R.z.z;
+      B.y.z = M_diag_x*R.x.y*R.x.z + M_diag_y*R.y.y*R.y.z + M_diag_z*R.z.y*R.z.z;
+
+      // Fill in lower triangle using symmetry of B
+      B.y.x = B.x.y;
+      B.z.x = B.x.z;
+      B.z.y = B.y.z;
     }
 
-    Update Psi with upper convective term
-    double dt2 = 2. * dt;
-    Psi11[] += dt2 * (B.x.x + Omega.x.y*Psi12[] - Omega.y.x*Psi12[] + Omega.x.z*Psi13[] - Omega.z.x*Psi13[]);
-    Psi22[] += dt2 * (B.y.y + Omega.y.x*Psi12[] - Omega.x.y*Psi12[] + Omega.y.z*Psi23[] - Omega.z.y*Psi23[]);
-    Psi33[] += dt2 * (B.z.z + Omega.z.x*Psi13[] - Omega.x.z*Psi13[] + Omega.z.y*Psi23[] - Omega.y.z*Psi23[]);
-    Psi12[] += dt2 * (B.x.y + Omega.x.x*Psi12[] - Omega.x.y*Psi11[] + Omega.x.y*Psi22[] - Omega.y.y*Psi12[] + Omega.x.z*Psi23[] - Omega.z.y*Psi13[]);
-    Psi13[] += dt2 * (B.x.z + Omega.x.x*Psi13[] - Omega.x.z*Psi11[] + Omega.x.y*Psi23[] - Omega.y.z*Psi12[] + Omega.x.z*Psi33[] - Omega.z.z*Psi13[]);
-    Psi23[] += dt2 * (B.y.z + Omega.y.x*Psi13[] - Omega.x.z*Psi12[] + Omega.y.y*Psi23[] - Omega.y.z*Psi22[] + Omega.y.z*Psi33[] - Omega.z.z*Psi23[]);
+    // Update Psi components
+    double old_Psi11 = Psi11[];
+    double old_Psi22 = Psi22[];
+    double old_Psi33 = Psi33[];
+    double old_Psi12 = Psi12[];
+    double old_Psi13 = Psi13[];
+    double old_Psi23 = Psi23[];
+
+    // Psi11
+    Psi11[] += dt * (2.0 * B.x.x + 2 * Omega.x.y * old_Psi12 + 2 * Omega.x.z * old_Psi13);
+    // Psi22
+    Psi22[] += dt * (2.0 * B.y.y - 2 * Omega.x.y * old_Psi12 + 2 * Omega.y.z * old_Psi23);
+    // Psi33
+    Psi33[] += dt * (2.0 * B.z.z - 2 * Omega.x.z * old_Psi13 - 2 * Omega.y.z * old_Psi23);
+    // Psi12
+    Psi12[] += dt * (2.0 * B.x.y - Omega.x.y * old_Psi11 + Omega.x.y * old_Psi22 + Omega.x.z * old_Psi23 + Omega.x.z * old_Psi13);
+    // Psi13
+    Psi13[] += dt * (2.0 * B.x.z - Omega.x.z * old_Psi11 + Omega.x.z * old_Psi33 + Omega.x.y * old_Psi23 + Omega.x.y * old_Psi12);
+    // Psi23
+    Psi23[] += dt * (2.0 * B.y.z - Omega.y.z * old_Psi22 + Omega.y.z * old_Psi33 - Omega.x.y * old_Psi13 - Omega.x.z * old_Psi12);
+
   }
 
-  // Advection of Psi
-  // advection ({Psi11, Psi12, Psi13, Psi22, Psi23, Psi33}, uf, dt);
-  advection ({A11, A12, A13, A22, A23, A33}, uf, dt);
+  // Advection of Psi, which is the log-conformation tensor
+  advection ({Psi11, Psi12, Psi13, Psi22, Psi23, Psi33}, uf, dt);
 
-  // Convert back to A and T
-  // foreach() {
-  //   pseudo_t3d A, R;
-  //   pseudo_v3d Lambda;
+  /**
+  ### Convert back to A and T
+
+  We now convert the log-conformation tensor Psi back to the conformation tensor A
+  and compute the stress tensor T. This process involves diagonalization,
+  exponentiation of eigenvalues, and application of the relaxation factor.
+  */
+
+  foreach() {
+    pseudo_t3d A, R;
+    pseudo_v3d Lambda;
+
+    // Reconstruct the log-conformation tensor from its components
+    A.x.x = Psi11[]; A.x.y = Psi12[]; A.x.z = Psi13[];
+    A.y.x = Psi12[]; A.y.y = Psi22[]; A.y.z = Psi23[];
+    A.z.x = Psi13[]; A.z.y = Psi23[]; A.z.z = Psi33[];
+
+    // Diagonalize A to obtain eigenvalues and eigenvectors
+    diagonalization_3D(&Lambda, &R, &A);
     
-  //   A.x.x = Psi11[]; A.x.y = Psi12[]; A.x.z = Psi13[];
-  //   A.y.x = Psi12[]; A.y.y = Psi22[]; A.y.z = Psi23[];
-  //   A.z.x = Psi13[]; A.z.y = Psi23[]; A.z.z = Psi33[];
+    // Exponentiate eigenvalues
+    Lambda.x = exp(Lambda.x);
+    Lambda.y = exp(Lambda.y);
+    Lambda.z = exp(Lambda.z);
 
-  //   diagonalization_3D (&Lambda, &R, &A);
+    // Reconstruct A using A = R * diag(Lambda) * R^T
+    A11[] = Lambda.x * R.x.x * R.x.x + Lambda.y * R.x.y * R.x.y + Lambda.z * R.x.z * R.x.z;
+    A12[] = Lambda.x * R.x.x * R.y.x + Lambda.y * R.x.y * R.y.y + Lambda.z * R.x.z * R.y.z;
+    A13[] = Lambda.x * R.x.x * R.z.x + Lambda.y * R.x.y * R.z.y + Lambda.z * R.x.z * R.z.z;
+    A22[] = Lambda.x * R.y.x * R.y.x + Lambda.y * R.y.y * R.y.y + Lambda.z * R.y.z * R.y.z;
+    A23[] = Lambda.x * R.y.x * R.z.x + Lambda.y * R.y.y * R.z.y + Lambda.z * R.y.z * R.z.z;
+    A33[] = Lambda.x * R.z.x * R.z.x + Lambda.y * R.z.y * R.z.y + Lambda.z * R.z.z * R.z.z;
+
+    // Apply relaxation using the relaxation time lambda
+    double intFactor = lambda[] != 0. ? exp(-dt/lambda[]) : 0.;
     
-  //   Lambda.x = exp(Lambda.x); Lambda.y = exp(Lambda.y); Lambda.z = exp(Lambda.z);
+    A11[] = 1. + (A11[] - 1.)*intFactor;
+    A22[] = 1. + (A22[] - 1.)*intFactor;
+    A33[] = 1. + (A33[] - 1.)*intFactor;
+    A12[] *= intFactor;
+    A13[] *= intFactor;
+    A23[] *= intFactor;
 
-  //   // Reconstruct A
-  //   A11[] = R.x.x*R.x.x*Lambda.x + R.x.y*R.x.y*Lambda.y + R.x.z*R.x.z*Lambda.z;
-  //   A22[] = R.y.x*R.y.x*Lambda.x + R.y.y*R.y.y*Lambda.y + R.y.z*R.y.z*Lambda.z;
-  //   A33[] = R.z.x*R.z.x*Lambda.x + R.z.y*R.z.y*Lambda.y + R.z.z*R.z.z*Lambda.z;
-  //   A12[] = R.x.x*R.y.x*Lambda.x + R.x.y*R.y.y*Lambda.y + R.x.z*R.y.z*Lambda.z;
-  //   A13[] = R.x.x*R.z.x*Lambda.x + R.x.y*R.z.y*Lambda.y + R.x.z*R.z.z*Lambda.z;
-  //   A23[] = R.y.x*R.z.x*Lambda.x + R.y.y*R.z.y*Lambda.y + R.y.z*R.z.z*Lambda.z;
-
-  //   // Apply relaxation
-  //   double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
-    
-  //   foreach_dimension()
-  //     A11[] = 1. + (A11[] - 1.)*intFactor;
-  //   A12[] *= intFactor;
-  //   A13[] *= intFactor;
-  //   A23[] *= intFactor;
-
-  //   // Compute T
-  //   T11[] = Gp[]*(A11[] - 1.);
-  //   T22[] = Gp[]*(A22[] - 1.);
-  //   T33[] = Gp[]*(A33[] - 1.);
-  //   T12[] = Gp[]*A12[];
-  //   T13[] = Gp[]*A13[];
-  //   T23[] = Gp[]*A23[];
-  // }
+    // Compute the stress tensor T using the polymer modulus Gp
+    T11[] = Gp[]*(A11[] - 1.);
+    T22[] = Gp[]*(A22[] - 1.);
+    T33[] = Gp[]*(A33[] - 1.);
+    T12[] = Gp[]*A12[];
+    T13[] = Gp[]*A13[];
+    T23[] = Gp[]*A23[];
+  }
 }
 #endif
 
