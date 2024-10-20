@@ -61,13 +61,13 @@ int main(int argc, char const *argv[]) {
   L0 = 4.0;
   
   // Values taken from the terminal
-  MAXlevel = 6;
+  MAXlevel = 7;
   tmax = 3.0;
   We = 5.0;
   Oh = 1e-2;
   Oha = 1e-2 * Oh;
   De = 1.0;
-  Ec = 0.0;
+  Ec = 1.0;
 
   init_grid (1 << 4);
 
@@ -104,10 +104,8 @@ event init (t = 0) {
 ## Adaptive Mesh Refinement
 */
 event adapt(i++){
-  scalar KAPPA[];
-  curvature(f, KAPPA);
-  adapt_wavelet ((scalar *){f, u.x, u.y, KAPPA},
-      (double[]){fErr, VelErr, VelErr, KErr},
+  adapt_wavelet ((scalar *){f, u.x, u.y, u.z},
+      (double[]){fErr, VelErr, VelErr, VelErr},
       MAXlevel, 4);
 }
 

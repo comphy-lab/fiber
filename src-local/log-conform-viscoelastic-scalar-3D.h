@@ -26,7 +26,7 @@
 
 /**
  * # TODO: (non-critical, non-urgent)
- * axi compatibility is not there. This will not be fixed. To use axi, please use: [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h).
+ * axi compatibility is not there. This will not be fixed. To use axi, please use: [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h) for a scalar formulation, or better yet, use [log-conform-viscoelastic.h](log-conform-viscoelastic.h) which is more efficient.
 */
 
 #if AXI
@@ -351,9 +351,9 @@ event tracer_advection(i++)
     T22[] = Gp[]*(A.y.y - 1.);
   }
 }
-#endif
 
-#if dimension == 3
+#elif dimension == 3
+
 event tracer_advection(i++)
 {
   /**
@@ -609,47 +609,100 @@ event tracer_advection(i++)
 #endif
 
 /**
-### Divergence of the viscoelastic stress tensor
+## Divergence of the viscoelastic stress tensor
 
-The viscoelastic stress tensor $\mathbf{\tau}_p$ is defined at cell centers
-while the corresponding force (acceleration) will be defined at cell
-faces. Two terms contribute to each component of the momentum
-equation. For example the $x$-component in Cartesian coordinates has
-the following terms: $\partial_x \mathbf{\tau}_{p_{xx}} + \partial_y
-\mathbf{\tau}_{p_{xy}}$. The first term is easy to compute since it can be
-calculated directly from center values of cells sharing the face. The
-other one is harder. It will be computed from vertex values. The
-vertex values are obtained by averaging centered values.  Note that as
-a result of the vertex averaging cells `[]` and `[-1,0]` are not
-involved in the computation of shear. */
+The viscoelastic stress tensor $\mathbf{T}$ is defined at cell centers,
+while the corresponding force (acceleration) is defined at cell faces. 
+For each component of the momentum equation, we need to compute the 
+divergence of the corresponding row of the stress tensor.
+
+For example, for the x-component in 3D:
+
+$$
+(\nabla \cdot \mathbf{T})_x = \partial_x T_{xx} + \partial_y T_{xy} + \partial_z T_{xz}
+$$
+
+The normal stress gradient (e.g. $\partial_x T_{xx}$) is computed directly 
+from cell-centered values. The shear stress gradients (e.g. $\partial_y T_{xy}$) 
+are computed using vertex-averaged values to avoid checkerboard instabilities.
+*/
 
 event acceleration (i++)
 {
   face vector av = a;
 
-  // foreach_face(x){
-  //   if (fm.x[] > 1e-20) {
+#if dimension == 2
+  // 2D implementation
+  foreach_face(x) {
+    if (fm.x[] > 1e-20) {
+      // y-gradient of T12 (shear stress)
+      double shearX = (T12[0,1]*cm[0,1] + T12[-1,1]*cm[-1,1] - 
+                       T12[0,-1]*cm[0,-1] - T12[-1,-1]*cm[-1,-1])/4.;
+      // x-gradient of T11 (normal stress)
+      double gradX_T11 = cm[]*T11[] - cm[-1]*T11[-1];
       
-  //     double shearX = (T12[0,1]*cm[0,1] + T12[-1,1]*cm[-1,1] - 
-  //     T12[0,-1]*cm[0,-1] - T12[-1,-1]*cm[-1,-1])/4.;
+      av.x[] += (shearX + gradX_T11)*alpha.x[]/(sq(fm.x[])*Delta);
+    }
+  }
+  
+  foreach_face(y) {
+    if (fm.y[] > 1e-20) {
+      // x-gradient of T12 (shear stress)
+      double shearY = (T12[1,0]*cm[1,0] + T12[1,-1]*cm[1,-1] - 
+                       T12[-1,0]*cm[-1,0] - T12[-1,-1]*cm[-1,-1])/4.;
+      // y-gradient of T22 (normal stress)
+      double gradY_T22 = cm[]*T22[] - cm[0,-1]*T22[0,-1];
       
-  //     av.x[] += (shearX + cm[]*T11[] - cm[-1]*T11[-1])*
-  //     alpha.x[]/(sq(fm.x[])*Delta);
-    
-  //   }
-  // }
+      av.y[] += (shearY + gradY_T22)*alpha.y[]/(sq(fm.y[])*Delta);
+    }
+  }
 
-  // foreach_face(y){
-  //   if (fm.y[] > 1e-20) {
-
-  //     double shearY = (T12[1,0]*cm[1,0] + T12[1,-1]*cm[1,-1] - 
-  //     T12[-1,0]*cm[-1,0] - T12[-1,-1]*cm[-1,-1])/4.;
+#elif dimension == 3
+  // 3D implementation
+  foreach_face(x) {
+    if (fm.x[] > 1e-20) {
+      // y-gradient of T12
+      double shearY = (T12[0,1,0]*cm[0,1,0] + T12[-1,1,0]*cm[-1,1,0] - 
+                       T12[0,-1,0]*cm[0,-1,0] - T12[-1,-1,0]*cm[-1,-1,0])/4.;
+      // z-gradient of T13
+      double shearZ = (T13[0,0,1]*cm[0,0,1] + T13[-1,0,1]*cm[-1,0,1] - 
+                       T13[0,0,-1]*cm[0,0,-1] - T13[-1,0,-1]*cm[-1,0,-1])/4.;
+      // x-gradient of T11
+      double gradX_T11 = cm[]*T11[] - cm[-1,0,0]*T11[-1,0,0];
       
-  //     av.y[] += (shearY + cm[]*T22[] - cm[0,-1]*T22[0,-1])*
-  //     alpha.y[]/(sq(fm.y[])*Delta);
+      av.x[] += (shearY + shearZ + gradX_T11)*alpha.x[]/(sq(fm.x[])*Delta);
+    }
+  }
 
-  //   }
-  // }
+  foreach_face(y) {
+    if (fm.y[] > 1e-20) {
+      // x-gradient of T12
+      double shearX = (T12[1,0,0]*cm[1,0,0] + T12[1,-1,0]*cm[1,-1,0] - 
+                       T12[-1,0,0]*cm[-1,0,0] - T12[-1,-1,0]*cm[-1,-1,0])/4.;
+      // z-gradient of T23
+      double shearZ = (T23[0,0,1]*cm[0,0,1] + T23[0,-1,1]*cm[0,-1,1] - 
+                       T23[0,0,-1]*cm[0,0,-1] - T23[0,-1,-1]*cm[0,-1,-1])/4.;
+      // y-gradient of T22
+      double gradY_T22 = cm[]*T22[] - cm[0,-1,0]*T22[0,-1,0];
+      
+      av.y[] += (shearX + shearZ + gradY_T22)*alpha.y[]/(sq(fm.y[])*Delta);
+    }
+  }
 
+  foreach_face(z) {
+    if (fm.z[] > 1e-20) {
+      // x-gradient of T13
+      double shearX = (T13[1,0,0]*cm[1,0,0] + T13[1,0,-1]*cm[1,0,-1] - 
+                       T13[-1,0,0]*cm[-1,0,0] - T13[-1,0,-1]*cm[-1,0,-1])/4.;
+      // y-gradient of T23
+      double shearY = (T23[0,1,0]*cm[0,1,0] + T23[0,1,-1]*cm[0,1,-1] - 
+                       T23[0,-1,0]*cm[0,-1,0] - T23[0,-1,-1]*cm[0,-1,-1])/4.;
+      // z-gradient of T33
+      double gradZ_T33 = cm[]*T33[] - cm[0,0,-1]*T33[0,0,-1];
+      
+      av.z[] += (shearX + shearY + gradZ_T33)*alpha.z[]/(sq(fm.z[])*Delta);
+    }
+  }
+#endif
 }
 
