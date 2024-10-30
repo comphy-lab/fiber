@@ -1,4 +1,7 @@
 # Viscoelastic3D
+
+[![DOI](https://zenodo.org/badge/874384071.svg)](https://doi.org/10.5281/zenodo.14011692)
+
 This is the 3D extension of Basilisk C viscoelastic solver
 
 
