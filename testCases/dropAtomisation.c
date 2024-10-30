@@ -39,9 +39,13 @@
 #define AErr (1e-3)                             // error tolerances in conformation inside the liquid
 
 #define R2(x,y,z)  (sq(x-3.) + sq(y) + sq(z))
+
 // boundary conditions
+// inflow: left
 u.n[left]  = dirichlet(1.);
 // p[left] = dirichlet(0);
+
+// outflow: right
 u.n[right] = neumann(0.);
 p[right] = dirichlet(0);
 
@@ -52,14 +56,14 @@ int MAXlevel;
 // De -> Deborah number
 // Ec -> Elasto-capillary number
 
-double Oh, Oha, De, We, Ec, tmax;
+double Oh, Oha, De, We, RhoInOut, Ec, tmax;
 char nameOut[80], dumpFile[80];
 
 int  main(int argc, char const *argv[]) {
-  dtmax = 1e-5; //  BEWARE of this for stability issues. 
+  // dtmax = 1e-5; //  BEWARE of this for stability issues. 
 
   L0 = 20;
-  init_grid (1 << 4);
+  init_grid (1 << 6);
 
   origin (0, -L0/2
   #if dimension == 3
@@ -68,13 +72,17 @@ int  main(int argc, char const *argv[]) {
   );
 
   // Values taken from the terminal
-  MAXlevel = 8;
-  De = 1.0;
+  MAXlevel = 7;
+  RhoInOut = 830.;
+
+  // elastic parts
+  De = 0.0;
   Ec = 0.0;
 
-  We = 1e3;
-  Oh = 3e-3;
-  Oha = 1e-1*Oh;
+  // Newtonian parts
+  We = 1e1; // based on the density of the gas
+  Oh = 1e0; // based on the density of the liquid
+  Oha = 0.018*Oh; // based on the density of the liquid
   tmax = 200;
 
   // Create a folder named intermediate where all the simulation snapshots are stored.
@@ -85,11 +93,18 @@ int  main(int argc, char const *argv[]) {
   sprintf (dumpFile, "restart");
 
 
-  rho1 = 1., rho2 = 1e-1;
-  mu1 = Oh/sqrt(We), mu2 = Oha/sqrt(We);
+  rho1 = RhoInOut, rho2 = 1e0;
+
+  // as both densities are based on the density of the liquid, we must multiply the Ohnesorge number by the square root of the density ratio
+  mu1 = sqrt(RhoInOut)*Oh/sqrt(We), mu2 = sqrt(RhoInOut)*Oha/sqrt(We);
+
+  // elastic parts
+  // in G1, we need to mutiply by the density ratio (again, because Ec is based on the density of the liquid but in the code it is based on the density of the gas)
   G1 = Ec/We, G2 = 0.0;
+  // Here, lambda is essentially the Weissenberg number, so there is no density in the expression. 
   lambda1 = De*sqrt(We), lambda2 = 0.0;
   
+  // surface tension -- the Weber number is based on the density of the gas! So, all good. 
   f.sigma = 1.0/We;
 
   run();
@@ -106,15 +121,18 @@ event init (t = 0) {
 ## Adaptive Mesh Refinement
 */
 event adapt(i++){
-   adapt_wavelet ((scalar *){f, u.x, u.y
-   #if dimension == 3
-    ,u.z
-   #endif
-   },(double[]){fErr, VelErr, VelErr,
-   #if dimension == 3
-    VelErr
-   #endif
-   },MAXlevel, MAXlevel-4);
+  scalar KAPPA[];
+  curvature(f, KAPPA);
+
+  adapt_wavelet ((scalar *){f, KAPPA, u.x, u.y
+  #if dimension == 3
+  ,u.z
+  #endif
+  },(double[]){fErr, KErr, VelErr, VelErr,
+  #if dimension == 3
+  VelErr
+  #endif
+  },MAXlevel, 4);
 }
 
 /**
@@ -141,11 +159,11 @@ event logWriting (i++) {
 
   double ke = 0.;
   foreach (reduction(+:ke)){
-    ke += (2*pi*y)*(0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])
+    ke += (0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])
    #if dimension == 3
     + sq(u.z[])
    #endif
-   ))*sq(Delta);
+   ))*pow(Delta, dimension);
   }
 
   static FILE * fp;
@@ -174,8 +192,8 @@ event logWriting (i++) {
   assert(ke > -1e-10);
 
   if (i > 1e1 && pid() == 0) {
-    if (ke > 1e2 || ke < 1e-8) {
-      const char* message = (ke > 1e2) ? 
+    if (ke > 1e6 || ke < 1e-6) {
+      const char* message = (ke > 1e6) ? 
         "The kinetic energy blew up. Stopping simulation\n" : 
         "kinetic energy too small now! Stopping!\n";
       
