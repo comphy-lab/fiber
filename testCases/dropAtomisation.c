@@ -80,8 +80,8 @@ int  main(int argc, char const *argv[]) {
   Ec = 0.0;
 
   // Newtonian parts
-  We = 1e1; // based on the density of the gas
-  Oh = 1e0; // based on the density of the liquid
+  We = 15000; // based on the density of the gas
+  Oh = 3e-3; // based on the density of the liquid
   Oha = 0.018*Oh; // based on the density of the liquid
   tmax = 200;
 
