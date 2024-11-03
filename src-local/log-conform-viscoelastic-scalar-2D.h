@@ -1,12 +1,12 @@
 /** Title: log-conform-viscoelastic-2DNaxi.h
-# Version: 1.0
+# Version: 2.0
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Main feature 2: This is the 2D+axi **scalar** implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Oct 17, 2024
+# Updated: Nov 3, 2024
 
 # change log: Oct 18, 2024 (v1.0)
 - 2D+axi implementation
@@ -16,30 +16,190 @@
 /** The code is same as http://basilisk.fr/src/log-conform.h but 
 - written with G-\lambda formulation. 
 - It also fixes the bug where [\sigma_p] = 0 & [\sigma_s] = \gamma\kappa instead of [\sigma_s+\sigma_p] = \gamma\kappa.
+
+# change log: Nov 3, 2024 (v2.0)
+- Added documentation and made the code an axi mirror version of [log-conform-viscoelastic-scalar-3D.h](log-conform-viscoelastic-scalar-3D.h).
+- v2.0 is documentation only change to keep version number in sync with [log-conform-viscoelastic-scalar-3D.h](log-conform-viscoelastic-scalar-3D.h).
+
+Other under the hood changes:
+- Added a check for negative eigenvalues. If any are found, print the location and value of the offending eigenvalue. Please report this bug by opening an issue on the GitHub repository. 
+- Added some initialization functions for pseudo_v and pseudo_t.
+
+
 */ 
+
+/** The code is same as http://basilisk.fr/src/log-conform.h but 
+- written with G-\lambda formulation. 
+- It also fixes the bug where [\sigma_p] = 0 & [\sigma_s] = \gamma\kappa instead of [\sigma_s+\sigma_p] = \gamma\kappa.
+*/ 
+
+/**
+ * # TODO: (non-critical, non-urgent)
+ * Ideally, we would like to consistently use tensor formulation to leverage ease of readability and maintainability. Also, tensors will be more efficient and would avoid bugs. It is also a prerequisite for axi compatibility of the 3D version of this code: [log-conform-viscoelastic-scalar-3D.h](log-conform-viscoelastic-scalar-3D.h). See: https://github.com/comphy-lab/Viscoelastic3D/issues/11 and https://github.com/comphy-lab/Viscoelastic3D/issues/5. 
+ * - [ ] enfore all tensors and make the code generally compatible using foreach_dimensions
+*/
+
+/**
+# The log-conformation method for some viscoelastic constitutive models
+
+## Introduction
+
+Viscoelastic fluids exhibit both viscous and elastic behaviour when
+subjected to deformation. Therefore these materials are governed by
+the Navier--Stokes equations enriched with an extra *elastic* stress
+$Tij$
+$$
+\rho\left[\partial_t\mathbf{u}+\nabla\cdot(\mathbf{u}\otimes\mathbf{u})\right] = 
+- \nabla p + \nabla\cdot(2\mu_s\mathbf{D}) + \nabla\cdot\mathbf{T}
++ \rho\mathbf{a}
+$$
+where $\mathbf{D}=[\nabla\mathbf{u} + (\nabla\mathbf{u})^T]/2$ is the
+deformation tensor and $\mu_s$ is the solvent viscosity of the
+viscoelastic fluid.
+
+The *polymeric* stress $\mathbf{T}$ represents memory effects due to
+the polymers. Several constitutive rheological models are available in
+the literature where the polymeric stress $\mathbf{T}$ is typically a 
+function $\mathbf{f_s}(\cdot)$ of the conformation tensor $\mathbf{A}$ such as
+$$
+\mathbf{T} = G_p \mathbf{f_s}(\mathbf{A})
+$$
+where $G_p$ is the elastic modulus and $\mathbf{f_s}(\cdot)$ is the relaxation function.
+
+The conformation tensor $\mathbf{A}$ is related to the deformation of
+the polymer chains. $\mathbf{A}$ is governed by the equation
+$$
+D_t \mathbf{A} - \mathbf{A} \cdot \nabla \mathbf{u} - \nabla
+\mathbf{u}^{T} \cdot \mathbf{A} =
+-\frac{\mathbf{f_r}(\mathbf{A})}{\lambda} 
+$$
+where $D_t$ denotes the material derivative and
+$\mathbf{f_r}(\cdot)$ is the relaxation function. Here, $\lambda$ is the relaxation time.
+
+In the case of an Oldroyd-B viscoelastic fluid, $\mathbf{f}_s
+(\mathbf{A}) = \mathbf{f}_r (\mathbf{A}) = \mathbf{A} -\mathbf{I}$,
+and the above equations can be combined to avoid the use of
+$\mathbf{A}$
+$$
+\mathbf{T} + \lambda (D_t \mathbf{T} -
+\mathbf{T} \cdot \nabla \mathbf{u} -
+\nabla \mathbf{u}^{T} \cdot \mathbf{T})  = 2 G_p\lambda \mathbf{D}
+$$
+
+[Comminal et al. (2015)](#comminal2015) gathered the functions
+$\mathbf{f}_s (\mathbf{A})$ and $\mathbf{f}_r (\mathbf{A})$ for
+different constitutive models.
+
+## Parameters
+
+The primary parameters are the relaxation time
+$\lambda$ and the elastic modulus $G_p$. The solvent viscosity
+$\mu_s$ is defined in the [Navier-Stokes
+solver](navier-stokes/centered.h). 
+
+Gp and lambda are defined in [two-phaseVE.h](two-phaseVE.h).
+*/
+
+/**
+## The log conformation approach
+
+The numerical resolution of viscoelastic fluid problems often faces the
+[High-Weissenberg Number
+Problem](http://www.ma.huji.ac.il/~razk/iWeb/My_Site/Research_files/Visco1.pdf). 
+This is a numerical instability appearing when strongly elastic flows
+create regions of high stress and fine features. This instability
+poses practical limits to the values of the relaxation time of the
+viscoelastic fluid, $\lambda$.  [Fattal \& Kupferman (2004,
+2005)](#fattal2004) identified the exponential nature of the solution
+as the origin of the instability. They proposed to use the logarithm
+of the conformation tensor $\Psi = \log \, \mathbf{A}$ rather than the
+viscoelastic stress tensor to circumvent the instability.
+
+The constitutive equation for the log of the conformation tensor is
+$$ 
+D_t \Psi = (\Omega \cdot \Psi -\Psi \cdot \Omega) + 2 \mathbf{B} +
+\frac{e^{-\Psi} \mathbf{f}_r (e^{\Psi})}{\lambda}
+$$
+where $\Omega$ and $\mathbf{B}$ are tensors that result from the
+decomposition of the transpose of the tensor gradient of the
+velocity
+$$ 
+(\nabla \mathbf{u})^T = \Omega + \mathbf{B} + N
+\mathbf{A}^{-1} 
+$$ 
+
+The antisymmetric tensor $\Omega$ requires only the memory of a scalar
+in 2D since,
+$$ 
+\Omega = \left( 
+\begin{array}{cc}
+0 & \Omega_{12} \\
+-\Omega_{12} & 0
+\end{array} 
+\right)
+$$
+
+For 3D, $\Omega$ is a skew-symmetric tensor given by
+
+$$
+\Omega = \left( 
+\begin{array}{ccc}
+0 & \Omega_{12} & \Omega_{13} \\
+-\Omega_{12} & 0 & \Omega_{23} \\
+-\Omega_{13} & -\Omega_{23} & 0
+\end{array} 
+\right)
+$$
+
+The log-conformation tensor, $\Psi$, is related to the
+polymeric stress tensor $\mathbf{T}$, by the strain function 
+$\mathbf{f}_s (\mathbf{A})$
+$$ 
+\Psi = \log \, \mathbf{A} \quad \mathrm{and} \quad \mathbf{T} =
+\frac{G_p}{\lambda} \mathbf{f}_s (\mathbf{A})
+$$
+where $Tr$ denotes the trace of the tensor and $L$ is an additional
+property of the viscoelastic fluid.
+
+We will use the Bell--Collela--Glaz scheme to advect the log-conformation 
+tensor $\Psi$. */
+
+/*
+TODO: 
+- Perhaps, instead of the Bell--Collela--Glaz scheme, we can use the conservative form of the advection equation and transport the log-conformation tensor with the VoF color function, similar to [http://basilisk.fr/src/navier-stokes/conserving.h](http://basilisk.fr/src/navier-stokes/conserving.h)
+*/
 
 #include "bcg.h"
 
 scalar A11[], A12[], A22[]; // conformation tensor
 scalar T11[], T12[], T22[]; // stress tensor
 #if AXI
-scalar conform_qq[], tau_qq[];
+scalar Aqq[], T_ThTh[];
 #endif
 
 event defaults (i = 0) {
   if (is_constant (a.x))
     a = new face vector;
 
-  foreach() {
-    A11[] = 1.; A22[] = 1.;
-    A12[] = 0.;
-    T11[] = 0.; T22[] = 0.; 
-    T12[] = 0.;
-#if AXI
-    tau_qq[] = 0;
-    conform_qq[] = 1.;
-#endif
+  /*
+  initialize A and T
+  */
+  for (scalar s in {A11, A22}) {
+    foreach () {
+      s[] = 1.;
+    }
   }
+  for (scalar s in {T11, T12, T22, A12}) {
+    foreach(){
+      s[] = 0.;
+    }
+  }
+#if AXI
+  foreach(){
+    T_ThTh[] = 0;
+    AThTh[] = 1.;
+  }
+#endif
 
   for (scalar s in {T11, T12, T22}) {
     if (s.boundary[left] != periodic_bc) {
@@ -56,13 +216,8 @@ event defaults (i = 0) {
   }
 
 #if AXI
-  scalar s1 = T12;
-  s1[bottom] = dirichlet (0.);  
-#endif 
-
-#if AXI
-  scalar s2 = A12;
-  s2[bottom] = dirichlet (0.);  
+  T12[bottom] = dirichlet (0.);  
+  A12[bottom] = dirichlet (0.);  
 #endif
 }
 
@@ -150,7 +305,7 @@ event tracer_advection(i++)
   scalar Psi12 = A12;
   scalar Psi22 = A22;
 #if AXI
-  scalar Psiqq = conform_qq;
+  scalar Psiqq = AThTh;
 #endif
 
   /**
@@ -172,7 +327,7 @@ event tracer_advection(i++)
     A.x.y = A12[];
 
 #if AXI
-    double Aqq = conform_qq[]; 
+    double Aqq = AThTh[]; 
     Psiqq[] = log (Aqq); 
 #endif
 
@@ -316,8 +471,8 @@ event tracer_advection(i++)
     A12[] = A.x.y;
     T12[] = Gp[]*A.x.y;
 #if AXI
-      conform_qq[] = Aqq;
-      tau_qq[] = Gp[]*(Aqq - 1.);
+      AThTh[] = Aqq;
+      T_ThTh[] = Gp[]*(Aqq - 1.);
 #endif
 
     A11[] = A.x.x;
@@ -373,6 +528,6 @@ event acceleration (i++)
 #if AXI
   foreach_face(y)
     if (y > 1e-20)
-      av.y[] -= (tau_qq[] + tau_qq[0,-1])*alpha.y[]/sq(y)/2.;
+      av.y[] -= (T_ThTh[] + T_ThTh[0,-1])*alpha.y[]/sq(y)/2.;
 #endif
 }
