@@ -1,12 +1,12 @@
 /** Title: log-conform-viscoelastic-3D.h
-# Version: 2.1
+# Version: 2.2
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Main feature 2: This is the 3D implementation of [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h).
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Oct 29, 2024
+# Updated: Nov 3, 2024
 
 # change log: Oct 19, 2024 (v1.0)
 - 3D implementation
@@ -30,6 +30,13 @@
 
 # change log: Oct 29, 2024 (v2.1)
 - Added some initialization functions for pseudo_v and pseudo_t and their 3D counterparts.
+
+# change log: Nov 3, 2024 (v2.2)
+- Refactored tensor operations to use intermediate tensor structure A for improved clarity and maintainability
+- Unified A-tensor-based approach throughout the code for consistent tensor manipulation
+- Added explicit symmetry enforcement in tensor operations
+- Improved readability by separating tensor transformation steps
+- Enhanced extensibility for future tensor-only implementations
 */
 
 /** The code is same as http://basilisk.fr/src/log-conform.h but 
@@ -848,30 +855,48 @@ event tracer_advection(i++)
     Lambda.z = exp(Lambda.z);
 
     // Reconstruct A using A = R * diag(Lambda) * R^T
-    A11[] = Lambda.x * sq(R.x.x) + Lambda.y * sq(R.x.y) + Lambda.z * sq(R.x.z);
-    A12[] = Lambda.x * R.x.x * R.y.x + Lambda.y * R.x.y * R.y.y + Lambda.z * R.x.z * R.y.z;
-    A13[] = Lambda.x * R.x.x * R.z.x + Lambda.y * R.x.y * R.z.y + Lambda.z * R.x.z * R.z.z;
-    A22[] = Lambda.x * sq(R.y.x) + Lambda.y * sq(R.y.y) + Lambda.z * sq(R.y.z);
-    A23[] = Lambda.x * R.y.x * R.z.x + Lambda.y * R.y.y * R.z.y + Lambda.z * R.y.z * R.z.z;
-    A33[] = Lambda.x * sq(R.z.x) + Lambda.y * sq(R.z.y) + Lambda.z * sq(R.z.z);
+    A.x.x = Lambda.x * sq(R.x.x) + Lambda.y * sq(R.x.y) + Lambda.z * sq(R.x.z);
+    A.x.y = Lambda.x * R.x.x * R.y.x + Lambda.y * R.x.y * R.y.y + Lambda.z * R.x.z * R.y.z;
+    A.y.x = A.x.y;
+    A.x.z = Lambda.x * R.x.x * R.z.x + Lambda.y * R.x.y * R.z.y + Lambda.z * R.x.z * R.z.z;
+    A.z.x = A.x.z;
+    A.y.y = Lambda.x * sq(R.y.x) + Lambda.y * sq(R.y.y) + Lambda.z * sq(R.y.z);
+    A.y.z = Lambda.x * R.y.x * R.z.x + Lambda.y * R.y.y * R.z.y + Lambda.z * R.y.z * R.z.z;
+    A.z.y = A.y.z;
+    A.z.z = Lambda.x * sq(R.z.x) + Lambda.y * sq(R.z.y) + Lambda.z * sq(R.z.z);
 
     // Apply relaxation using the relaxation time lambda
     double intFactor = lambda[] != 0. ? exp(-dt/lambda[]) : 0.;
-    
-    A11[] = 1. + (A11[] - 1.)*intFactor;
-    A22[] = 1. + (A22[] - 1.)*intFactor;
-    A33[] = 1. + (A33[] - 1.)*intFactor;
-    A12[] *= intFactor;
-    A13[] *= intFactor;
-    A23[] *= intFactor;
+
+    A.x.y *= intFactor;
+    A.y.x = A.x.y;
+    A.x.z *= intFactor;
+    A.z.x = A.x.z;
+    A.y.z *= intFactor;
+    A.z.y = A.y.z;
+    foreach_dimension()
+      A.x.x = 1. + (A.x.x - 1.)*intFactor;
+
+    /*
+    Get Aij from A. These commands might look repetitive. But, I do this so that in the future, generalization to tensor only form is easier.
+    */
+
+    // diagonal terms:
+    A11[] = A.x.x;
+    A22[] = A.y.y;
+    A33[] = A.z.z;
+    // off-diagonal terms:
+    A12[] = A.x.y;
+    A13[] = A.x.z;
+    A23[] = A.y.z;
 
     // Compute the stress tensor T using the polymer modulus Gp
-    T11[] = Gp[]*(A11[] - 1.);
-    T22[] = Gp[]*(A22[] - 1.);
-    T33[] = Gp[]*(A33[] - 1.);
-    T12[] = Gp[]*A12[];
-    T13[] = Gp[]*A13[];
-    T23[] = Gp[]*A23[];
+    T11[] = Gp[]*(A.x.x - 1.);
+    T22[] = Gp[]*(A.y.y - 1.);
+    T33[] = Gp[]*(A.z.z - 1.);
+    T12[] = Gp[]*A.x.y;
+    T13[] = Gp[]*A.x.z;
+    T23[] = Gp[]*A.y.z;
   }
 }
 #endif
