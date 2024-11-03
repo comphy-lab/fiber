@@ -40,7 +40,7 @@
 /**
  * # TODO: (non-critical, non-urgent)
  * axi compatibility is not there. This will not be fixed. To use axi, please use: [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h) for a scalar formulation, or better yet, use [log-conform-viscoelastic.h](log-conform-viscoelastic.h) which is more efficient.
- * I have (wherever I could) use the metric terms: cm and fm. Of course, that alone does not guarentee axi compatibility. Proposed steps to do: 
+ * I have (wherever I could) used the metric terms: cm and fm. Of course, that alone does not guarentee axi compatibility. Proposed steps to do: 
  * - [ ] enfore all tensors and make the code generally compatible using foreach_dimensions
  * - [ ] use metric terms: cm and fm.
 */
