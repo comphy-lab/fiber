@@ -233,6 +233,18 @@ arrays not related to the grid. */
 typedef struct { double x, y;}   pseudo_v;
 typedef struct { pseudo_v x, y;} pseudo_t;
 
+// Function to initialize pseudo_v
+static inline void init_pseudo_v(pseudo_v *v, double value) {
+    v->x = value;
+    v->y = value;
+}
+
+// Function to initialize pseudo_t
+static inline void init_pseudo_t(pseudo_t *t, double value) {
+    init_pseudo_v(&t->x, value);
+    init_pseudo_v(&t->y, value);
+}
+
 static void diagonalization_2D (pseudo_v * Lambda, pseudo_t * R, pseudo_t * A)
 {
   /**
@@ -293,11 +305,7 @@ tensor $\mathbf{A}$). In an Oldroyd-B viscoelastic fluid, the model is
 $$ 
 \partial_t \mathbf{A} = -\frac{\mathbf{f}_r (\mathbf{A})}{\lambda}
 $$
-
-The implementation below assumes that the values of $\Psi$ and
-$\conform_p$ are never needed simultaneously. This means that $\conform_p$ can
-be used to store (temporarily) the values of $\Psi$ (i.e. $\Psi$ is
-just an alias for $\conform_p$). */
+*/
 
 event tracer_advection(i++)
 {
@@ -337,8 +345,20 @@ event tracer_advection(i++)
     tensor, $\Lambda$. */
 
     pseudo_v Lambda;
+    init_pseudo_v(&Lambda, 0.0); 
     pseudo_t R;
+    init_pseudo_t(&R, 0.0);
     diagonalization_2D (&Lambda, &R, &A);
+
+    /*
+    Check for negative eigenvalues -- this should never happen. If it does, print the location and value of the offending eigenvalue.
+    Please report this bug by opening an issue on the GitHub repository. 
+    */
+    if (Lambda.x <= 0. || Lambda.y <= 0.) {
+      fprintf(ferr, "Negative eigenvalue detected: Lambda.x = %g, Lambda.y = %g\n", Lambda.x, Lambda.y);
+      fprintf(ferr, "x = %g, y = %g, f = %g\n", x, y, f[]);
+      exit(1);
+    }
     
     /**
     $\Psi = \log \mathbf{A}$ is easily obtained after diagonalization, 

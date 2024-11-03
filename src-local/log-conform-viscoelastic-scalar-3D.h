@@ -407,6 +407,16 @@ event tracer_advection(i++)
     pseudo_t R;
     init_pseudo_t(&R, 0.0);
     diagonalization_2D (&Lambda, &R, &A);
+
+    /*
+    Check for negative eigenvalues -- this should never happen. If it does, print the location and value of the offending eigenvalue.
+    Please report this bug by opening an issue on the GitHub repository. 
+    */
+    if (Lambda.x <= 0. || Lambda.y <= 0.) {
+      fprintf(ferr, "Negative eigenvalue detected: Lambda.x = %g, Lambda.y = %g\n", Lambda.x, Lambda.y);
+      fprintf(ferr, "x = %g, y = %g, f = %g\n", x, y, f[]);
+      exit(1);
+    }
     
     /**
     $\Psi = \log \mathbf{A}$ is easily obtained after diagonalization, 
