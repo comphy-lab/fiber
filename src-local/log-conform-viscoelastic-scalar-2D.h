@@ -375,35 +375,61 @@ event tracer_advection(i++)
     The diagonalization will be applied to the velocity gradient
     $(\nabla u)^T$ to obtain the antisymmetric tensor $\Omega$ and
     the traceless, symmetric tensor, $\mathbf{B}$. If the conformation
-    tensor is $\mathbf{I}$, $\Omega = 0$ and $\mathbf{B}= \mathbf{D}$.  */
+    tensor is $\mathbf{I}$, $\Omega = 0$ and $\mathbf{B}= \mathbf{D}$.  
+
+    Otherwise, compute M = R * (nablaU)^T * R^T, where nablaU is the velocity gradient tensor. Then, 
+    
+    1. Calculate omega using the off-diagonal elements of M and eigenvalues:
+       omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x)
+       This represents the rotation rate in the eigenvector basis.
+    
+    2. Transform omega back to physical space to get OM:
+       OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega
+       This gives us the rotation tensor Omega in the original coordinate system.
+    
+    3. Compute B tensor components using M and R: B is related to M and R through:
+       
+       In 2D:
+       $$
+       B_{xx} = R_{xx}^2 M_{xx} + R_{xy}^2 M_{yy} \\
+       B_{xy} = R_{xx}R_{yx} M_{xx} + R_{xy}R_{yy} M_{yy} \\
+       B_{yx} = B_{xy} \\
+       B_{yy} = -B_{xx}
+       $$
+       
+       Where:
+       - R is the eigenvector matrix of the conformation tensor
+       - M is the velocity gradient tensor in the eigenvector basis
+       - The construction ensures B is symmetric and traceless
+    */
 
     pseudo_t B;
+    init_pseudo_t(&B, 0.0);
     double OM = 0.;
     if (fabs(Lambda.x - Lambda.y) <= 1e-20) {
-	B.x.y = (u.y[1,0] - u.y[-1,0] +
-		 u.x[0,1] - u.x[0,-1])/(4.*Delta); 
-	foreach_dimension() 
-	  B.x.x = (u.x[1,0] - u.x[-1,0])/(2.*Delta);
+      B.x.y = (u.y[1,0] - u.y[-1,0] + u.x[0,1] - u.x[0,-1])/(4.*Delta); 
+      foreach_dimension() 
+        B.x.x = (u.x[1,0] - u.x[-1,0])/(2.*Delta);
+    } else {
+      pseudo_t M;
+      init_pseudo_t(&M, 0.0);
+      foreach_dimension() {
+        M.x.x = (sq(R.x.x)*(u.x[1] - u.x[-1]) +
+        sq(R.y.x)*(u.y[0,1] - u.y[0,-1]) +
+        R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] + 
+        u.y[1] - u.y[-1]))/(2.*Delta);
+        M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) + 
+        R.x.y*R.y.x*(u.y[1] - u.y[-1]) +
+        R.x.x*R.y.y*(u.x[0,1] - u.x[0,-1]) +
+        R.y.x*R.y.y*(u.y[0,1] - u.y[0,-1]))/(2.*Delta);
       }
-      else {
-	pseudo_t M;
-	foreach_dimension() {
-	  M.x.x = (sq(R.x.x)*(u.x[1] - u.x[-1]) +
-		   sq(R.y.x)*(u.y[0,1] - u.y[0,-1]) +
-		   R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] + 
-				u.y[1] - u.y[-1]))/(2.*Delta);
-	  M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) + 
-		   R.x.y*R.y.x*(u.y[1] - u.y[-1]) +
-		   R.x.x*R.y.y*(u.x[0,1] - u.x[0,-1]) +
-		   R.y.x*R.y.y*(u.y[0,1] - u.y[0,-1]))/(2.*Delta);
-	}
-	double omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
-	OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega;
-	
-	B.x.y = M.x.x*R.x.x*R.y.x + M.y.y*R.y.y*R.x.y;
-	foreach_dimension()
-	  B.x.x = M.x.x*sq(R.x.x)+M.y.y*sq(R.x.y);	
-      }
+      double omega = (Lambda.y*M.x.y + Lambda.x*M.y.x)/(Lambda.y - Lambda.x);
+      OM = (R.x.x*R.y.y - R.x.y*R.y.x)*omega;
+
+      B.x.y = M.x.x*R.x.x*R.y.x + M.y.y*R.y.y*R.x.y;
+      foreach_dimension()
+        B.x.x = M.x.x*sq(R.x.x)+M.y.y*sq(R.x.y);	
+    }
 
     /**
     We now advance $\Psi$ in time, adding the upper convective
@@ -444,7 +470,7 @@ event tracer_advection(i++)
 #endif
 
   /**
-  ### Convert back to \conform_p */
+  ### Convert back to Aij */
 
   foreach() {
     /**
@@ -453,7 +479,9 @@ event tracer_advection(i++)
     and to perform step (c).*/
 
     pseudo_t A = {{Psi11[], Psi12[]}, {Psi12[], Psi22[]}}, R;
+    init_pseudo_t(&R, 0.0);
     pseudo_v Lambda;
+    init_pseudo_v(&Lambda, 0.0);
     diagonalization_2D (&Lambda, &R, &A);
     Lambda.x = exp(Lambda.x), Lambda.y = exp(Lambda.y);
     
