@@ -174,7 +174,7 @@ TODO:
 scalar A11[], A12[], A22[]; // conformation tensor
 scalar T11[], T12[], T22[]; // stress tensor
 #if AXI
-scalar Aqq[], T_ThTh[];
+scalar AThTh[], T_ThTh[];
 #endif
 
 event defaults (i = 0) {
