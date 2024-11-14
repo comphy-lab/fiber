@@ -1,10 +1,10 @@
 /** Title: log-conform-viscoelastic.h
-# Version: 10.0
+# Version: 10.1
 # Main feature: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Jul 23, 2024
+# Updated: Nov 14, 2024
 */
 
 /** The code is same as http://basilisk.fr/src/log-conform.h but 
@@ -306,7 +306,7 @@ event tracer_advection(i++)
       $$
       */
 
-     double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
+     double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
      
 #if AXI
       Aqq = (1. - intFactor) + intFactor*exp(Psiqq[]);
