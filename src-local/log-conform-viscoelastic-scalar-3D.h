@@ -1,12 +1,12 @@
 /** Title: log-conform-viscoelastic-3D.h
-# Version: 2.2
+# Version: 2.3
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Main feature 2: This is the 3D implementation of [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h).
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Nov 3, 2024
+# Updated: Nov 14, 2024
 
 # change log: Oct 19, 2024 (v1.0)
 - 3D implementation
@@ -37,6 +37,9 @@
 - Added explicit symmetry enforcement in tensor operations
 - Improved readability by separating tensor transformation steps
 - Enhanced extensibility for future tensor-only implementations
+
+# change log: Nov 14, 2024 (v2.3)
+- added a way to do infinite De
 */
 
 /** The code is same as http://basilisk.fr/src/log-conform.h but 
@@ -547,7 +550,7 @@ event tracer_advection(i++)
     $$
     */
 
-    double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
+    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
     
     A.x.y *= intFactor;
     foreach_dimension()
