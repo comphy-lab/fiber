@@ -502,7 +502,7 @@ event tracer_advection(i++)
     $$
     */
 
-    double intFactor = lambda[] != 0. ? exp(-dt/lambda[]): 0.;
+    double intFactor = (lambda[] != 0. ? (lambda[] == 1e30 ? 1: exp(-dt/lambda[])): 0.);
      
 #if AXI
       Aqq = (1. - intFactor) + intFactor*exp(Psiqq[]);
