@@ -1,12 +1,12 @@
 /** Title: log-conform-viscoelastic-2DNaxi.h
-# Version: 2.0
+# Version: 2.1
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Main feature 2: This is the 2D+axi **scalar** implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Nov 3, 2024
+# Updated: Nov 14, 2024
 
 # change log: Oct 18, 2024 (v1.0)
 - 2D+axi implementation
@@ -25,6 +25,8 @@ Other under the hood changes:
 - Added a check for negative eigenvalues. If any are found, print the location and value of the offending eigenvalue. Please report this bug by opening an issue on the GitHub repository. 
 - Added some initialization functions for pseudo_v and pseudo_t.
 
+# change log: Nov 14, 2024 (v2.1)
+- added a way to do infinite De
 
 */ 
 
