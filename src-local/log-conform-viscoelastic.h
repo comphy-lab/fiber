@@ -1,22 +1,18 @@
 /** Title: log-conform-viscoelastic.h
-# Version: 10.1
+# Version: 10.5
 # Main feature: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
+
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Nov 14, 2024
+# Updated: Nov 23, 2024
 
-# Important Note: This implementation is limited to 2D and axisymmetric cases only.
-# The boundary conditions for symmetric tensors are not implemented in Basilisk's core
-# for 3D cases. This limitation is documented in basilisk/src/grid/cartesian-common.h
-# around [line 230-251](https://github.com/comphy-lab/Viscoelastic3D/blob/main/basilisk/src/grid/cartesian-common.h#L230-L251) with the comment "fixme: boundary conditions don't work!".
-# This is a fundamental limitation of the current implementation.
-#
-# For 3D simulations, please use log-conform-viscoelastic-scalar-3D.h which uses
-# individual scalar components instead of tensors.
-*/
+# Important Note: 
+- This implementation is limited to 2D and axisymmetric cases only.
+- The boundary conditions for symmetric tensors are not implemented in Basilisk's core for 3D cases. This limitation is documented in basilisk/src/grid/cartesian-common.h around [line 230-251](https://github.com/comphy-lab/Viscoelastic3D/blob/main/basilisk/src/grid/cartesian-common.h#L230-L251) with the comment "fixme: boundary conditions don't work!".
+- For 3D simulations, please use log-conform-viscoelastic-scalar-3D.h which uses individual scalar components instead of tensors.
 
-/** The code is same as http://basilisk.fr/src/log-conform.h but 
+# The code is same as http://basilisk.fr/src/log-conform.h but 
 - written with G-\lambda formulation. 
 - It also fixes the bug where [\sigma_p] = 0 & [\sigma_s] = \gamma\kappa instead of [\sigma_s+\sigma_p] = \gamma\kappa.
 */ 

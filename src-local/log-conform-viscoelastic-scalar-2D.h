@@ -1,19 +1,18 @@
-/** Title: log-conform-viscoelastic-2DNaxi.h
-# Version: 2.1
+/** Title: log-conform-viscoelastic-scalar-2D.h
+# Version: 2.5
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
 # Main feature 2: This is the 2D+axi **scalar** implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
 # Physics of Fluids
-# Updated: Nov 14, 2024
+# Updated: Nov 23, 2024
 
 # change log: Oct 18, 2024 (v1.0)
 - 2D+axi implementation
 - scalar implementation
-*/
 
-/** The code is same as http://basilisk.fr/src/log-conform.h but 
+# The code is same as http://basilisk.fr/src/log-conform.h but 
 - written with G-\lambda formulation. 
 - It also fixes the bug where [\sigma_p] = 0 & [\sigma_s] = \gamma\kappa instead of [\sigma_s+\sigma_p] = \gamma\kappa.
 
@@ -28,15 +27,10 @@ Other under the hood changes:
 # change log: Nov 14, 2024 (v2.1)
 - added a way to do infinite De
 
-*/ 
+# change log: Nov 23, 2024 (v2.5)
+- improved documentation.
 
-/** The code is same as http://basilisk.fr/src/log-conform.h but 
-- written with G-\lambda formulation. 
-- It also fixes the bug where [\sigma_p] = 0 & [\sigma_s] = \gamma\kappa instead of [\sigma_s+\sigma_p] = \gamma\kappa.
-*/ 
-
-/**
- * # TODO: (non-critical, non-urgent)
+# TODO: (non-critical, non-urgent)
  * Ideally, we would like to consistently use tensor formulation to leverage ease of readability and maintainability. Also, tensors will be more efficient and would avoid bugs. It is also a prerequisite for axi compatibility of the 3D version of this code: [log-conform-viscoelastic-scalar-3D.h](log-conform-viscoelastic-scalar-3D.h). See: https://github.com/comphy-lab/Viscoelastic3D/issues/11 and https://github.com/comphy-lab/Viscoelastic3D/issues/5. 
  * - [ ] enfore all tensors and make the code generally compatible using foreach_dimensions
 */
