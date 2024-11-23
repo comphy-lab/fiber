@@ -1,7 +1,7 @@
 /** Title: log-conform-viscoelastic-scalar-2D.h
 # Version: 2.5
 # Main feature 1: A exists in across the domain and relaxes according to \lambda. The stress only acts according to G.
-# Main feature 2: This is the 2D+axi **scalar** implementation of https://github.com/VatsalSy/BurstingBubble_VE_coated/blob/main/log-conform-viscoelastic.h.
+# Main feature 2: This is the 2D+axi **scalar** implementation of [log-conform-viscoelastic.h](log-conform-viscoelastic.h).
 
 # Author: Vatsal Sanjay
 # vatsalsanjay@gmail.com
