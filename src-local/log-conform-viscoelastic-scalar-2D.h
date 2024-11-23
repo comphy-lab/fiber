@@ -36,7 +36,7 @@ Other under the hood changes:
 */
 
 /**
-# The log-conformation method for some viscoelastic constitutive models
+# The log-conformation method for viscoelastic constitutive models
 
 ## Introduction
 
@@ -417,6 +417,7 @@ event tracer_advection(i++)
         sq(R.y.x)*(u.y[0,1] - u.y[0,-1]) +
         R.x.x*R.y.x*(u.x[0,1] - u.x[0,-1] + 
         u.y[1] - u.y[-1]))/(2.*Delta);
+        
         M.x.y = (R.x.x*R.x.y*(u.x[1] - u.x[-1]) + 
         R.x.y*R.y.x*(u.y[1] - u.y[-1]) +
         R.x.x*R.y.y*(u.x[0,1] - u.x[0,-1]) +
@@ -454,7 +455,8 @@ event tracer_advection(i++)
 #if AXI
     Psiqq[] += dt*2.*u.y[]/max(y, 1e-20);
 #endif
-  }
+
+}
 
   /**
   ### Advection of $\Psi$
