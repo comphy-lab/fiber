@@ -10,8 +10,6 @@
 #include "grid/octree.h"
 // #include "grid/quadtree.h"
 #include "navier-stokes/centered.h"
-#define FILTERED // Smear density and viscosity jumps
-#include "../src-local/two-phaseVE.h"
 
 #define VANILLA 0
 #if VANILLA
@@ -26,6 +24,9 @@
 #define logFile "log3D-scalar.dat"
 #endif
 #endif
+
+#define FILTERED // Smear density and viscosity jumps
+#include "../src-local/two-phaseVE.h"
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"

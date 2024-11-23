@@ -173,6 +173,9 @@ TODO:
 
 #include "bcg.h"
 
+(const) scalar Gp = unity; // elastic modulus
+(const) scalar lambda = unity; // relaxation time
+
 scalar A11[], A12[], A22[]; // conformation tensor
 scalar T11[], T12[], T22[]; // stress tensor
 #if AXI

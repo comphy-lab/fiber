@@ -16,6 +16,9 @@
 
 #include "bcg.h"
 
+(const) scalar Gp = unity; // elastic modulus
+(const) scalar lambda = unity; // relaxation time
+
 symmetric tensor conform_p[], tau_p[];
 #if AXI
 scalar conform_qq[], tau_qq[];

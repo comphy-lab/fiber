@@ -191,6 +191,9 @@ TODO:
 
 #include "bcg.h"
 
+(const) scalar Gp = unity; // elastic modulus
+(const) scalar lambda = unity; // relaxation time
+
 /*
 conformation tensor */
 // diagonal elements
