@@ -5,6 +5,15 @@
 # vatsalsanjay@gmail.com
 # Physics of Fluids
 # Updated: Nov 14, 2024
+
+# Important Note: This implementation is limited to 2D and axisymmetric cases only.
+# The boundary conditions for symmetric tensors are not implemented in Basilisk's core
+# for 3D cases. This limitation is documented in basilisk/src/grid/cartesian-common.h
+# around [line 230-251](https://github.com/comphy-lab/Viscoelastic3D/blob/main/basilisk/src/grid/cartesian-common.h#L230-L251) with the comment "fixme: boundary conditions don't work!".
+# This is a fundamental limitation of the current implementation.
+#
+# For 3D simulations, please use log-conform-viscoelastic-scalar-3D.h which uses
+# individual scalar components instead of tensors.
 */
 
 /** The code is same as http://basilisk.fr/src/log-conform.h but 
@@ -15,6 +24,10 @@
 // In this code, conform_p, conform_qq are in fact the Conformation tensor.  
 
 #include "bcg.h"
+
+#if dimension == 3
+#error "This implementation does not support 3D due to missing tensor boundary conditions in Basilisk (see cartesian-common.h line ~246). Use log-conform-viscoelastic-scalar-3D.h for 3D simulations."
+#endif
 
 (const) scalar Gp = unity; // elastic modulus
 (const) scalar lambda = unity; // relaxation time
