@@ -423,6 +423,16 @@ $$
 */
 
 #if dimension == 2
+/**
+ * @brief Advances the log-conformation tensor and updates the corresponding conformation and stress tensors.
+ *
+ * This event function performs three primary steps within the viscoelastic fluid simulation:
+ * - Diagonalizes the conformation tensor and computes its logarithm (Ψ) while applying eigenvalue clamping to ensure numerical stability.
+ * - Advances Ψ in time by incorporating the upper convective term computed from the velocity gradient, which is used to update the log-conformation tensor.
+ * - Recovers the physical conformation tensor and stress tensor by exponentiating the diagonalized eigenvalues and integrating the relaxation term.
+ *
+ * @note Although the overall simulation targets 3D viscoelastic fluids, this implementation uses a 2D diagonalization routine.
+ */
 event tracer_advection(i++)
 {
   scalar Psi11 = A11;
@@ -614,6 +624,20 @@ event tracer_advection(i++)
 
 #elif dimension == 3
 
+/**
+ * @brief Advances the log-conformation tensor and computes the corresponding conformation and stress tensors for 3D viscoelastic fluid simulations.
+ *
+ * This event function performs a two-step update for the viscoelastic fluid model using the log-conformation method. In the first part, it computes the logarithm of the conformation tensor Ψ from A by:
+ * - Diagonalizing A to obtain eigenvalues (Λ) and eigenvectors (R).
+ * - Clamping any negative eigenvalues to prevent numerical instabilities (using EIGENVALUE_MIN).
+ * - Evaluating Ψ = log(A) and incorporating the upper convective contribution via the symmetric tensor B and the skew-symmetric tensor Ω.
+ *
+ * Ψ is then advanced in time using central difference approximations for the velocity gradients, where degenerate eigenvalue cases are handled with simplified calculations.
+ *
+ * In the second part, the function converts the updated log-conformation tensor back to the conformation tensor A by exponentiating the eigenvalues and applies the relaxation factor derived from the relaxation time. Finally, it computes the polymeric stress tensor T from A.
+ *
+ * Warnings are printed if negative eigenvalues are detected, and a debug counter is incremented when debugging is enabled.
+ */
 event tracer_advection(i++)
 {
   /**
