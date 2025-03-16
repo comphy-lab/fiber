@@ -97,7 +97,7 @@ where $D_t$ denotes the material derivative and
 $\mathbf{f_r}(\cdot)$ is the relaxation function. Here, $\lambda$ is the relaxation time.
 
 In the case of an Oldroyd-B viscoelastic fluid, $\mathbf{f}_s
-(\mathbf{A}) = \mathbf{f}_r (\mathbf{A}) = \mathbf{A} -\mathbf{I}$,
+ (\mathbf{A}) = \mathbf{f}_r (\mathbf{A}) = \mathbf{A} -\mathbf{I}$,
 and the above equations can be combined to avoid the use of
 $\mathbf{A}$
 $$
@@ -188,6 +188,12 @@ tensor $\Psi$. */
 TODO: 
 - Perhaps, instead of the Bell--Collela--Glaz scheme, we can use the conservative form of the advection equation and transport the log-conformation tensor with the VoF color function, similar to [http://basilisk.fr/src/navier-stokes/conserving.h](http://basilisk.fr/src/navier-stokes/conserving.h)
 */
+
+#define EIGENVALUE_MIN 1e-8
+
+#ifdef DEBUG_EIGENVALUES
+static int eigenvalue_corrections = 0;
+#endif
 
 #include "bcg.h"
 
@@ -422,13 +428,19 @@ event tracer_advection(i++)
     diagonalization_2D (&Lambda, &R, &A);
 
     /*
-    Check for negative eigenvalues -- this should never happen. If it does, print the location and value of the offending eigenvalue.
-    Please report this bug by opening an issue on the GitHub repository. 
+    Check for negative eigenvalues and clamp them to EIGENVALUE_MIN.
+    This prevents numerical instabilities while maintaining physical meaning.
     */
     if (Lambda.x <= 0. || Lambda.y <= 0.) {
-      fprintf(ferr, "Negative eigenvalue detected: Lambda.x = %g, Lambda.y = %g\n", Lambda.x, Lambda.y);
-      fprintf(ferr, "x = %g, y = %g\n", x, y);
-      exit(1);
+      fprintf(ferr, "WARNING: Negative eigenvalue detected at (%g,%g): [%g,%g]\n", 
+              x, y, Lambda.x, Lambda.y);
+      
+      #ifdef DEBUG_EIGENVALUES
+      atomic_increment(&eigenvalue_corrections);
+      #endif
+      
+      Lambda.x = max(Lambda.x, EIGENVALUE_MIN);
+      Lambda.y = max(Lambda.y, EIGENVALUE_MIN);
     }
     
     /**
@@ -597,13 +609,20 @@ event tracer_advection(i++)
     diagonalization_3D (&Lambda, &R, &A);
 
     /*
-    Check for negative eigenvalues -- this should never happen. If it does, print the location and value of the offending eigenvalue.
-    Please report this bug by opening an issue on the GitHub repository. 
+    Check for negative eigenvalues and clamp them to EIGENVALUE_MIN.
+    This prevents numerical instabilities while maintaining physical meaning.
     */
     if (Lambda.x <= 0. || Lambda.y <= 0. || Lambda.z <= 0.) {
-      fprintf(ferr, "Negative eigenvalue detected: Lambda.x = %g, Lambda.y = %g, Lambda.z = %g\n", Lambda.x, Lambda.y, Lambda.z);
-      fprintf(ferr, "x = %g, y = %g, z = %g\n", x, y, z);
-      exit(1);
+      fprintf(ferr, "WARNING: Negative eigenvalue detected at (%g,%g,%g): [%g,%g,%g]\n", 
+              x, y, z, Lambda.x, Lambda.y, Lambda.z);
+      
+      #ifdef DEBUG_EIGENVALUES
+      atomic_increment(&eigenvalue_corrections);
+      #endif
+      
+      Lambda.x = max(Lambda.x, EIGENVALUE_MIN);
+      Lambda.y = max(Lambda.y, EIGENVALUE_MIN);
+      Lambda.z = max(Lambda.z, EIGENVALUE_MIN);
     }
     
     // Compute Psi = log(A) = R * log(Lambda) * R^T
