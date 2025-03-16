@@ -84,7 +84,3 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-
-CLAUDE.md
-.cursorrules
-.windsurfrules
