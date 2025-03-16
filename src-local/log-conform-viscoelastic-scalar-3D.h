@@ -788,7 +788,7 @@ event tracer_advection(i++)
       // Compute diagonal elements of B
       B.x.x = M_diag_x*sq(R.x.x) + M_diag_y*sq(R.x.y) + M_diag_z*sq(R.x.z);
       B.y.y = M_diag_x*sq(R.y.x) + M_diag_y*sq(R.y.y) + M_diag_z*sq(R.y.z);
-      B.z.z = M_diag_x*sq(R.z.x) + M_diag_y*sq(R.x.y) + M_diag_z*sq(R.z.z);
+      B.z.z = M_diag_x*sq(R.z.x) + M_diag_y*sq(R.z.y) + M_diag_z*sq(R.z.z);
 
       // Compute off-diagonal elements of B (upper triangle)
       B.x.y = M_diag_x*R.x.x*R.y.x + M_diag_y*R.x.y*R.y.y + M_diag_z*R.x.z*R.y.z;
