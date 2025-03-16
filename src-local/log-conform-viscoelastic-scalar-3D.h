@@ -48,6 +48,13 @@
 # change log: Nov 23, 2024 (v2.5)
 - improved documentation.
 
+# change log: Mar 16, 2025 (v2.6)
+- Implemented eigenvalue clamping to handle numerical instabilities
+- Added minimum eigenvalue threshold (EIGENVALUE_MIN = 1e-8)
+- Replaced error exits with warning messages and value correction
+- Added optional DEBUG_EIGENVALUES counter for diagnostic purposes
+- Fixed a bug in 3D velocity gradient calculation (Rz_gradU_y)
+
 # TODO: (non-critical, non-urgent)
  * axi compatibility is not there. This will not be fixed. To use axi, please use: [log-conform-viscoelastic-scalar-2D.h](log-conform-viscoelastic-scalar-2D.h) for a scalar formulation, or better yet, use [log-conform-viscoelastic.h](log-conform-viscoelastic.h) which is more efficient.
  * I have (wherever I could) used the metric terms: cm and fm. Of course, that alone does not guarentee axi compatibility. Proposed steps to do: 
