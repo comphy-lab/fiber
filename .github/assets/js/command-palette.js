@@ -110,7 +110,13 @@ function renderSections(sections, container) {
       iconContainer.className = 'command-palette-icon';
       // This still uses innerHTML for icons because they're expected to be HTML
       // To be fully secure, icons should be sanitized before being added to commandData
-      iconContainer.innerHTML = cmd.icon || '';
+      // Use DOMParser to whitelist SVG, otherwise fall back to text
+      if (cmd.icon?.trim().startsWith('<svg')) {
+        const svgDoc = new DOMParser().parseFromString(cmd.icon, 'image/svg+xml');
+        iconContainer.appendChild(svgDoc.documentElement);
+      } else {
+        iconContainer.textContent = cmd.icon ?? '';
+      }
       cmdEl.appendChild(iconContainer);
       
       // Create title element with safe text content
