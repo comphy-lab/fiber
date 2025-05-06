@@ -37,6 +37,7 @@
 │   ├── dropAtomisation.c                     # 3D drop atomisation simulation
 │   ├── pinchOff.c                            # Pinch-off of viscoelastic jet (2D/axi)
 │   ├── testEigenDecomposition.c              # Eigenvalue solver test/verification
+│   ├── dropImpact.c                          # Drop impact simulation
 │   └── verifyWtihPlots.ipynb                 # Jupyter notebook for verification/plots
 ├── postProcess/                # Project-specific post-processing tools and utilities
     ├── getData-elastic-scalar2D.c            # Data extraction utility
