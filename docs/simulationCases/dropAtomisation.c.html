@@ -201,7 +201,7 @@
   <meta name="description" content="This file contains the simulation code for multiphase drop atomisation processes, with capabilities for both axisymmetric (2D) and full 3D simulations of vis...">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
-  <meta name="keywords" content="../src-local/log-conform-viscoelastic-scalar-2d.h, ../src-local/log-conform-viscoelastic-scalar-3d.h, axi.h, dropatomisation, from, grid/octree.h, grid/quadtree.h, navier-stokes/conserving.h, tension.h, tolerance">
+  <meta name="keywords" content="axi.h, from, grid/quadtree.h, log-conform-viscoelastic-scalar-3d.h, log-conform-viscoelastic.h, navier-stokes/centered.h, navier-stokes/conserving.h, tension.h, tolerance, two-phaseve.h">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
@@ -431,13 +431,13 @@
                 and Elasto-capillary numbers) - Adaptive mesh refinement
                 to efficiently resolve interfaces and high gradient
                 regions</p>
-                <p><span class="citation" data-cites="file">@file</span>
-                dropAtomisation.c <span class="citation"
-                data-cites="author">@author</span> Ayush Dixit &amp;
-                Vatsal Sanjay <span class="citation"
-                data-cites="version">@version</span> 5.0 <span
-                class="citation" data-cites="date">@date</span> Oct 20,
-                2024</p>
+                <h2 id="file-information">File information</h2>
+                <ul>
+                <li>File: dropAtomisation.c</li>
+                <li>Author: Ayush Dixit &amp; Vatsal Sanjay</li>
+                <li>Version: 5.0</li>
+                <li>Date: Oct 20, 2024</li>
+                </ul>
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><span class="co">// #include &quot;axi.h&quot;</span></span>
 <span id="cb1-2"><span class="pp">#include </span><a href="http://basilisk.fr/src/grid/octree.h" title="Link to Basilisk source for grid/octree.h"><span class="im">"grid/octree.h"</span></a></span>
@@ -453,21 +453,21 @@
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><span class="pp">#define VANILLA </span><span class="dv">0</span><span class="pp">  </span><span class="co">// vanilla cannot do 3D</span></span>
 <span id="cb2-2"><span class="pp">#if VANILLA</span></span>
-<span id="cb2-3"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic.h"><span class="im">"../src-local/log-conform-viscoelastic.h"</span></a></span>
-<span id="cb2-4"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-vanilla.dat&quot;</span><span class="pp"></span><span class="dv">38</span><span class="pp"></span></span>
+<span id="cb2-3"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic.h.html" title="Link to local documentation for log-conform-viscoelastic.h"><span class="im">"log-conform-viscoelastic.h"</span></a></span>
+<span id="cb2-4"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-vanilla.dat&quot;</span><span class="pp"></span><span class="dv">39</span><span class="pp"></span></span>
 <span id="cb2-5"><span class="pp">#else</span></span>
 <span id="cb2-6"><span class="pp">#if AXI</span></span>
-<span id="cb2-7"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic-scalar-2D.h"><span class="im">"../src-local/log-conform-viscoelastic-scalar-2D.h"</span></a></span>
-<span id="cb2-8"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-scalar.dat&quot;</span><span class="pp"></span><span class="dv">42</span><span class="pp"></span></span>
+<span id="cb2-7"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-2D.h"><span class="im">"log-conform-viscoelastic-scalar-2D.h"</span></a></span>
+<span id="cb2-8"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-scalar.dat&quot;</span><span class="pp"></span><span class="dv">43</span><span class="pp"></span></span>
 <span id="cb2-9"><span class="pp">#else</span></span>
-<span id="cb2-10"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-3D.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic-scalar-3D.h"><span class="im">"../src-local/log-conform-viscoelastic-scalar-3D.h"</span></a></span>
-<span id="cb2-11"><span class="pp">#define logFile </span><span class="st">&quot;log3D-scalar.dat&quot;</span><span class="pp"></span><span class="dv">45</span><span class="pp"></span></span>
+<span id="cb2-10"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-3D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-3D.h"><span class="im">"log-conform-viscoelastic-scalar-3D.h"</span></a></span>
+<span id="cb2-11"><span class="pp">#define logFile </span><span class="st">&quot;log3D-scalar.dat&quot;</span><span class="pp"></span><span class="dv">46</span><span class="pp"></span></span>
 <span id="cb2-12"><span class="pp">#endif</span></span>
 <span id="cb2-13"><span class="pp">#endif</span></span>
 <span id="cb2-14"></span>
 <span id="cb2-15"><span class="pp">#define FILTERED  </span><span class="co">// Smear density and viscosity jumps</span></span>
 <span id="cb2-16"></span>
-<span id="cb2-17"><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for ../src-local/two-phaseVE.h"><span class="im">"../src-local/two-phaseVE.h"</span></a></span>
+<span id="cb2-17"><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for two-phaseVE.h"><span class="im">"two-phaseVE.h"</span></a></span>
 <span id="cb2-18"></span>
 <span id="cb2-19"><span class="pp">#include </span><a href="http://basilisk.fr/src/navier-stokes/conserving.h" title="Link to Basilisk source for navier-stokes/conserving.h"><span class="im">"navier-stokes/conserving.h"</span></a></span>
 <span id="cb2-20"><span class="pp">#include </span><a href="http://basilisk.fr/src/tension.h" title="Link to Basilisk source for tension.h"><span class="im">"tension.h"</span></a><span class="pp"></span></span></code></pre></div></div>
@@ -497,7 +497,7 @@
                 <p>R2 defines a spherical distance function from point
                 (3,0,0)</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><span class="pp">#define R2</span><span class="op">(</span><span class="pp">x</span><span class="op">,</span><span class="pp"> y</span><span class="op">,</span><span class="pp"> z</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">sq</span><span class="op">(</span><span class="pp">x</span><span class="op">-</span><span class="fl">3.</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">y</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">z</span><span class="op">))</span><span class="pp"></span><span class="dv">79</span><span class="pp"></span><span class="dv">80</span><span class="pp"></span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><span class="pp">#define R2</span><span class="op">(</span><span class="pp">x</span><span class="op">,</span><span class="pp"> y</span><span class="op">,</span><span class="pp"> z</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">sq</span><span class="op">(</span><span class="pp">x</span><span class="op">-</span><span class="fl">3.</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">y</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">z</span><span class="op">))</span><span class="pp"></span><span class="dv">80</span><span class="pp"></span><span class="dv">81</span><span class="pp"></span></span></code></pre></div></div>
                 <h2 id="boundary-conditions">Boundary Conditions</h2>
                 <ul>
                 <li>Left boundary: Inflow with fixed velocity</li>

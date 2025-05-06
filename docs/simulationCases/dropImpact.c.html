@@ -201,7 +201,7 @@
   <meta name="description" content="This file contains the simulation code for drop impact on a solid surface using a Volume of Fluid (VOF) method with viscoelastic fluid modeling capabilities....">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
-  <meta name="keywords" content="../src-local/log-conform-viscoelastic-scalar-2d.h, ../src-local/log-conform-viscoelastic-scalar-3d.h, ../src-local/log-conform-viscoelastic.h, axi.h, dropimpact, grid/octree.h, grid/quadtree.h, method, navier-stokes/conserving.h, tension.h">
+  <meta name="keywords" content="axi.h, dropimpact, grid/quadtree.h, log-conform-viscoelastic-scalar-3d.h, log-conform-viscoelastic.h, method, navier-stokes/centered.h, navier-stokes/conserving.h, tension.h, two-phaseve.h">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
@@ -464,20 +464,20 @@
 <span id="cb1-5"></span>
 <span id="cb1-6"><span class="pp">#define VANILLA </span><span class="dv">0</span><span class="pp"></span><span class="dv">36</span><span class="pp"></span></span>
 <span id="cb1-7"><span class="pp">#if VANILLA</span></span>
-<span id="cb1-8"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic.h"><span class="im">"../src-local/log-conform-viscoelastic.h"</span></a></span>
+<span id="cb1-8"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic.h.html" title="Link to local documentation for log-conform-viscoelastic.h"><span class="im">"log-conform-viscoelastic.h"</span></a></span>
 <span id="cb1-9"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-vanilla.dat&quot;</span><span class="pp"></span><span class="dv">39</span><span class="pp"></span></span>
 <span id="cb1-10"><span class="pp">#else</span></span>
 <span id="cb1-11"><span class="pp">#if AXI</span></span>
-<span id="cb1-12"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic-scalar-2D.h"><span class="im">"../src-local/log-conform-viscoelastic-scalar-2D.h"</span></a></span>
+<span id="cb1-12"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-2D.h"><span class="im">"log-conform-viscoelastic-scalar-2D.h"</span></a></span>
 <span id="cb1-13"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-scalar.dat&quot;</span><span class="pp"></span><span class="dv">43</span><span class="pp"></span></span>
 <span id="cb1-14"><span class="pp">#else</span></span>
-<span id="cb1-15"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-3D.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic-scalar-3D.h"><span class="im">"../src-local/log-conform-viscoelastic-scalar-3D.h"</span></a></span>
+<span id="cb1-15"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-3D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-3D.h"><span class="im">"log-conform-viscoelastic-scalar-3D.h"</span></a></span>
 <span id="cb1-16"><span class="pp">#define logFile </span><span class="st">&quot;log3D-scalar.dat&quot;</span><span class="pp"></span><span class="dv">46</span><span class="pp"></span></span>
 <span id="cb1-17"><span class="pp">#endif</span></span>
 <span id="cb1-18"><span class="pp">#endif</span></span>
 <span id="cb1-19"></span>
 <span id="cb1-20"><span class="pp">#define FILTERED </span><span class="co">// Smear density and viscosity jumps</span></span>
-<span id="cb1-21"><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for ../src-local/two-phaseVE.h"><span class="im">"../src-local/two-phaseVE.h"</span></a></span>
+<span id="cb1-21"><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for two-phaseVE.h"><span class="im">"two-phaseVE.h"</span></a></span>
 <span id="cb1-22"></span>
 <span id="cb1-23"><span class="pp">#include </span><a href="http://basilisk.fr/src/navier-stokes/conserving.h" title="Link to Basilisk source for navier-stokes/conserving.h"><span class="im">"navier-stokes/conserving.h"</span></a></span>
 <span id="cb1-24"><span class="pp">#include </span><a href="http://basilisk.fr/src/tension.h" title="Link to Basilisk source for tension.h"><span class="im">"tension.h"</span></a><span class="pp"></span></span></code></pre></div></div>

@@ -1,21 +1,21 @@
 /**
- # Viscoelastic Liquid Jet Pinch-Off Simulation
+# Viscoelastic Liquid Jet Pinch-Off Simulation
  
- This file implements an axisymmetric simulation of the pinch-off dynamics
- of a viscoelastic liquid jet. The simulation uses a two-phase approach with
- log-conformation formulation for the viscoelastic stress tensor. 
+This file implements an axisymmetric simulation of the pinch-off dynamics
+of a viscoelastic liquid jet. The simulation uses a two-phase approach with
+log-conformation formulation for the viscoelastic stress tensor. 
  
- The model incorporates:
- - Axisymmetric Navier-Stokes equations
- - Log-conformation viscoelastic constitutive model
- - Two-phase interface with surface tension
- - Adaptive mesh refinement based on interface curvature and velocity gradients
+The model incorporates:
+- Axisymmetric Navier-Stokes equations
+- Log-conformation viscoelastic constitutive model
+- Two-phase interface with surface tension
+- Adaptive mesh refinement based on interface curvature and velocity gradients
  
- ## File Information
- - File: pinchOff.c
- - Version: 0.2
- - Author: Vatsal Sanjay
- - Date: Oct 18, 2024
+## File Information
+- File: pinchOff.c
+- Version: 0.2
+- Author: Vatsal Sanjay
+- Date: Oct 18, 2024
 */
 
 #include "axi.h"

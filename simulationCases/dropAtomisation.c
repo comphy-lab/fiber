@@ -12,10 +12,11 @@ The physics model incorporates:
 - Optional viscoelastic behavior (controlled by Deborah and Elasto-capillary numbers)
 - Adaptive mesh refinement to efficiently resolve interfaces and high gradient regions
 
-@file dropAtomisation.c
-@author Ayush Dixit & Vatsal Sanjay
-@version 5.0
-@date Oct 20, 2024
+## File information
+- File: dropAtomisation.c
+- Author: Ayush Dixit & Vatsal Sanjay
+- Version: 5.0
+- Date: Oct 20, 2024
 */
 
 // #include "axi.h"
@@ -34,21 +35,21 @@ are available depending on simulation dimensionality:
 */
 #define VANILLA 0  // vanilla cannot do 3D
 #if VANILLA
-#include "../src-local/log-conform-viscoelastic.h"
+#include "log-conform-viscoelastic.h"
 #define logFile "logAxi-vanilla.dat"
 #else
 #if AXI
-#include "../src-local/log-conform-viscoelastic-scalar-2D.h"
+#include "log-conform-viscoelastic-scalar-2D.h"
 #define logFile "logAxi-scalar.dat"
 #else
-#include "../src-local/log-conform-viscoelastic-scalar-3D.h"
+#include "log-conform-viscoelastic-scalar-3D.h"
 #define logFile "log3D-scalar.dat"
 #endif
 #endif
 
 #define FILTERED  // Smear density and viscosity jumps
 
-#include "../src-local/two-phaseVE.h"
+#include "two-phaseVE.h"
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"

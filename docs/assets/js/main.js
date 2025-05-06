@@ -19,10 +19,14 @@
     
     // No need for a resize event handler as the CSS will handle everything
 
-    // Load about content when page loads
-    window.addEventListener('load', loadAboutContent);
-    // Load news content when page loads
-    window.addEventListener('load', loadNewsContent);
+    // Load about content when page loads - only if function exists
+    if (typeof loadAboutContent === 'function') {
+        window.addEventListener('load', loadAboutContent);
+    }
+    // Load news content when page loads - only if function exists
+    if (typeof loadNewsContent === 'function') {
+        window.addEventListener('load', loadNewsContent);
+    }
 
     /* Load Featured Papers - Only on main page
     * -------------------------------------------------- */
