@@ -1,7 +1,7 @@
 # ElastoFlow: 2D/3D Viscoelastic Fluid Simulation Framework
 
 [![DOI](https://zenodo.org/badge/874384071.svg)](https://doi.org/10.5281/zenodo.14011692)
-
+[![Website Status](https://img.shields.io/website?url=https%3A%2F%2Fcomphy-lab.github.io%2FViscoelastic3D%2F&style=flat-square&logo=github&label=Website)](https://comphy-lab.github.io/Viscoelastic3D/)
 ---
 
 🚀 **ElastoFlow** is a state-of-the-art, open-source framework for simulating viscoelastic fluid flows in 2D and 3D, built as an extension to the [Basilisk C](http://basilisk.fr/) CFD library. It implements the log-conformation method for robust, high-Weissenberg number simulations, with a focus on clarity, extensibility, and scientific rigor.
