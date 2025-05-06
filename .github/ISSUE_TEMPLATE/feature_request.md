@@ -2,8 +2,9 @@
 name: Feature/Topic Request
 about: Suggest topics, examples, or features for the Basilisk course
 title: "[FEATURE] "
-labels: enhancement
-assignees: ''
+labels:
+  - enhancement
+assignees: []
 ---
 
 ## Type of Request
