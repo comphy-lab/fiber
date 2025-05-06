@@ -167,7 +167,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>Viscoelastic3D | Viscoelastic3D</title>
+  <title>ElastoFlow: 2D/3D Viscoelastic Fluid Simulation Framework | ElastoFlow: 2D/3D Viscoelastic Fluid Simulation Framework</title>
   
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -411,29 +411,218 @@
                                 
                                 
                 
-                <h1 id="viscoelastic3d">Viscoelastic3D</h1>
+                <h1
+                id="elastoflow-2d3d-viscoelastic-fluid-simulation-framework">ElastoFlow:
+                2D/3D Viscoelastic Fluid Simulation Framework</h1>
                 <p><a
                 href="https://doi.org/10.5281/zenodo.14011692"><img
                 src="https://zenodo.org/badge/874384071.svg"
                 alt="DOI" /></a></p>
-                <p>This is the 3D extension of Basilisk C viscoelastic
-                solver</p>
-                <h2 id="running-the-codes">running the codes</h2>
-                <p>There are two ways to run the codes:</p>
-                <ol type="1">
-                <li>Using the vanilla basilisk method:</li>
-                </ol>
-                <div class="code-block-container"><pre class="shell"><code>qcc -O2 -Wall -disable-dimensions {NameOfFile}.c -o {NameOfFile} -lm 
-./{NameOfFile}</code></pre></div>
-                <ol start="2" type="1">
-                <li>Using the makefile (can be interactively run using
-                bview browser):</li>
-                </ol>
-                <div class="code-block-container"><pre class="shell"><code>CFLAGS=-DDISPLAY=-1 make {NameOfFile}.tst</code></pre></div>
-                <p>Check the localhost on {NameOfFile}/display.html.
-                something like: <a
-                href="http://basilisk.fr/three.js/editor/index.html?ws://localhost:7100">http://basilisk.fr/three.js/editor/index.html?ws://localhost:7100</a>
-                and run interactively.</p>
+                <hr />
+                <p>🚀 <strong>ElastoFlow</strong> is a state-of-the-art,
+                open-source framework for simulating viscoelastic fluid
+                flows in 2D and 3D, built as an extension to the <a
+                href="http://basilisk.fr/">Basilisk C</a> CFD library.
+                It implements the log-conformation method for robust,
+                high-Weissenberg number simulations, with a focus on
+                clarity, extensibility, and scientific rigor.</p>
+                <h2 id="key-features">✨ Key Features</h2>
+                <ul>
+                <li><strong>Full 3D Log-Conformation Method</strong>:
+                Complete scalar implementation for 3D viscoelastic
+                fluids (<a
+                href="src-local/log-conform-viscoelastic-scalar-3D.h.html">log-conform-viscoelastic-scalar-3D.h</a>)</li>
+                <li><strong>Robust 2D/Axi Support</strong>: Scalar and
+                tensor-based log-conformation for 2D and axisymmetric
+                cases (<a
+                href="src-local/log-conform-viscoelastic-scalar-2D.h.html">log-conform-viscoelastic-scalar-2D.h</a>,
+                <a
+                href="src-local/log-conform-viscoelastic.h.html">log-conform-viscoelastic.h</a>)</li>
+                <li><strong>Optimized Matrix Algebra</strong>:
+                Efficient, stable eigenvalue and tensor operations (<a
+                href="src-local/eigen_decomposition.h.html">eigen_decomposition.h</a>)</li>
+                <li><strong>Advanced Initialization</strong>: Functions
+                for pseudo vectors/tensors in 2D/3D</li>
+                <li><strong>Error Handling</strong>: Negative eigenvalue
+                checks, eigenvalue clamping, and detailed
+                diagnostics</li>
+                <li><strong>Performance</strong>: Simplified
+                acceleration term calculations and optimized tensor
+                operations</li>
+                <li><strong>Documentation</strong>: Extensive inline
+                documentation, mathematical background, and verification
+                notes</li>
+                <li><strong>Compatibility</strong>: GPLv3 license, fully
+                compatible with Basilisk and previous ElastoFlow
+                versions</li>
+                </ul>
+                <h2 id="bug-fixes-v2.5v2.6">🐛 Bug Fixes
+                (v2.5/v2.6)</h2>
+                <ul>
+                <li>Corrected matrix algebra in 3D</li>
+                <li>Fixed rotation tensor and eigenvalue edge cases</li>
+                <li>Improved error reporting and diagnostics</li>
+                <li>Enhanced axisymmetric and 2D/3D compatibility</li>
+                </ul>
+                <h2 id="repository-structure">🗂️ Repository
+                Structure</h2>
+                <div class="repository-structure">
+                <ul>
+                <li><strong>basilisk/src/</strong> - # Core Basilisk CFD
+                library (reference only, do not modify)</li>
+                <li><strong><a href="src-local">src-local/</a></strong>
+                - # Custom viscoelastic solvers and tensor utilities
+                <ul>
+                <li><strong><a
+                href="src-local/log-conform-viscoelastic-scalar-3D.h.html">log-conform-viscoelastic-scalar-3D.h</a></strong>
+                - # 3D log-conformation (scalar)</li>
+                <li><strong><a
+                href="src-local/log-conform-viscoelastic-scalar-2D.h.html">log-conform-viscoelastic-scalar-2D.h</a></strong>
+                - # 2D/axi log-conformation (scalar)</li>
+                <li><strong><a
+                href="src-local/log-conform-viscoelastic.h.html">log-conform-viscoelastic.h</a></strong>
+                - # 2D/axi log-conformation (tensor)</li>
+                <li><strong><a
+                href="src-local/two-phaseVE.h.html">two-phaseVE.h</a></strong>
+                - # Two-phase viscoelastic extension</li>
+                <li><strong><a
+                href="src-local/eigen_decomposition.h.html">eigen_decomposition.h</a></strong>
+                - # 3x3 symmetric eigenvalue solver</li>
+                </ul></li>
+                <li><strong><a
+                href="simulationCases">simulationCases/</a></strong> - #
+                Example/test cases and post-processing scripts
+                <ul>
+                <li><strong><a
+                href="simulationCases/dropAtomisation.c.html">dropAtomisation.c</a></strong>
+                - # 3D drop atomisation simulation</li>
+                <li><strong><a
+                href="simulationCases/pinchOff.c.html">pinchOff.c</a></strong>
+                - # Pinch-off of viscoelastic jet (2D/axi)</li>
+                <li><strong><a
+                href="simulationCases/testEigenDecomposition.c.html">testEigenDecomposition.c</a></strong>
+                - # Eigenvalue solver test/verification</li>
+                <li><strong><a
+                href="simulationCases/getData-elastic-scalar2D.c.html">getData-elastic-scalar2D.c</a></strong>
+                - # Data extraction utility</li>
+                <li><strong><a
+                href="simulationCases/getFacet2D.c.html">getFacet2D.c</a></strong>
+                - # Facet extraction utility</li>
+                <li><strong><a
+                href="simulationCases/VideoAxi.py.html">VideoAxi.py</a></strong>
+                - # Python visualization script</li>
+                <li><strong><a
+                href="simulationCases/verifyWtihPlots.ipynb.html">verifyWtihPlots.ipynb</a></strong>
+                - # Jupyter notebook for verification/plots</li>
+                </ul></li>
+                </ul>
+                </div>
+                <h2 id="documentation">📚 Documentation</h2>
+                <ul>
+                <li><a href="docs/">docs/</a> — Full HTML documentation,
+                mathematical background, and API</li>
+                <li>Inline documentation in all major headers (see
+                <code>src-local/</code>)</li>
+                <li>Example simulation and post-processing scripts in
+                <code>simulationCases/</code></li>
+                </ul>
+                <h2 id="quick-start">🚀 Quick Start</h2>
+                <h3 id="prerequisites">1. Prerequisites</h3>
+                <ul>
+                <li><a href="http://basilisk.fr/">Basilisk C</a>
+                (included as submodule in <code>basilisk/</code>)</li>
+                <li>C compiler (e.g., gcc)</li>
+                <li>Python 3 (for post-processing)</li>
+                <li>Optional: Jupyter for notebooks</li>
+                </ul>
+                <h3 id="compiling-running-simulations">2. Compiling
+                &amp; Running Simulations</h3>
+                <p><strong>A. Vanilla Basilisk method:</strong></p>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/{CaseName}.c <span class="at">-o</span> {CaseName} <span class="at">-lm</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./{CaseName}</span></span></code></pre></div></div>
+                <p><strong>B. Using the Makefile (with bview
+                browser):</strong></p>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">CFLAGS</span><span class="op">=</span>-DDISPLAY=-1 <span class="fu">make</span> simulationCases/{CaseName}.tst</span></code></pre></div></div>
+                <ul>
+                <li>For interactive visualization, open the generated
+                <code>display.html</code> in your browser (see <a
+                href="http://basilisk.fr/three.js/editor/index.html?ws://localhost:7100">Basilisk
+                bview</a>).</li>
+                </ul>
+                <h3 id="post-processing-analysis">3. Post-Processing
+                &amp; Analysis</h3>
+                <ul>
+                <li>Python scripts and Jupyter notebooks for data
+                extraction and visualization are in
+                <code>simulationCases/</code> (e.g.,
+                <code>VideoAxi.py</code>,
+                <code>verifyWtihPlots.ipynb</code>).</li>
+                <li>Example utilities:
+                <code>getData-elastic-scalar2D.c</code>,
+                <code>getFacet2D.c</code>.</li>
+                </ul>
+                <h2
+                id="example-running-a-3d-drop-atomisation-simulation">📝
+                Example: Running a 3D Drop Atomisation Simulation</h2>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/dropAtomisation.c <span class="at">-o</span> dropAtomisation <span class="at">-lm</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./dropAtomisation</span></span></code></pre></div></div>
+                <h2 id="technical-details">🔍 Technical Details</h2>
+                <ul>
+                <li><strong>Log-Conformation Method</strong>: See <a
+                href="src-local/log-conform-viscoelastic-scalar-3D.h.html">src-local/log-conform-viscoelastic-scalar-3D.h</a>
+                and <a
+                href="src-local/log-conform-viscoelastic-scalar-2D.h.html">src-local/log-conform-viscoelastic-scalar-2D.h</a>
+                for mathematical background and implementation
+                notes.</li>
+                <li><strong>Eigenvalue Solver</strong>: <a
+                href="src-local/eigen_decomposition.h.html">src-local/eigen_decomposition.h</a>
+                provides robust 3x3 symmetric eigensystem routines.</li>
+                <li><strong>Two-Phase Flows</strong>: <a
+                href="src-local/two-phaseVE.h.html">src-local/two-phaseVE.h</a>
+                extends Basilisk’s two-phase solver for
+                viscoelasticity.</li>
+                <li><strong>Axisymmetric/2D/3D</strong>: Use the
+                appropriate header for your geometry (see comments in
+                each header for guidance).</li>
+                </ul>
+                <h2 id="contributing">🧑‍💻 Contributing</h2>
+                <ul>
+                <li>See <a href="CLAUDE.md.html">CLAUDE.md</a> for code style
+                and development guidelines.</li>
+                <li>Issue templates and feature requests: <a
+                href=".github/ISSUE_TEMPLATE/">GitHub Issue
+                Templates</a></li>
+                <li>Pull requests are welcome! Please document your
+                changes and update relevant tests/examples.</li>
+                </ul>
+                <h2 id="license">📋 License</h2>
+                <p>This project is licensed under the <a
+                href="LICENSE">GNU GPLv3</a>, in line with the Basilisk
+                codebase.</p>
+                <h2 id="acknowledgments">🙏 Acknowledgments</h2>
+                <ul>
+                <li>Developed by Vatsal Sanjay (Physics of Fluids,
+                University of Twente)</li>
+                <li>Thanks to all contributors and the Basilisk
+                community</li>
+                </ul>
+                <h2 id="references">🔗 References</h2>
+                <ul>
+                <li>Fattal &amp; Kupferman (2004, 2005):
+                Log-conformation method</li>
+                <li>Comminal et al. (2015): Constitutive model
+                functions</li>
+                <li>Hao &amp; Pan (2007): Split scheme
+                implementation</li>
+                <li><a href="http://basilisk.fr/">Basilisk C</a></li>
+                </ul>
+                <hr />
+                <p>For detailed documentation, see the <a
+                href="docs/">docs/</a> folder or open
+                <code>docs/index.html</code> in your browser.</p>
                 <h2 id="generated-documentation">Generated
                 Documentation</h2>
                 <h3 id="root-directory">Root Directory</h3>
