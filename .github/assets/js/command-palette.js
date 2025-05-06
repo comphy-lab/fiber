@@ -157,29 +157,19 @@ function initCommandPalette() {
   // Ensure search database is preloaded for command palette search functionality
   // Try to prefetch the search database if it exists
   
-  // Derive the base path for relative URL resolution
-  let basePath = '';
-  
-  // Method 1: Use window.location.pathname to get the current path
-  if (window.location.pathname) {
-    // Get the directory part of the pathname
-    const pathParts = window.location.pathname.split('/');
-    pathParts.pop(); // Remove the last part (the page name or empty string)
-    basePath = pathParts.join('/');
+  // 1. Prefer an explicit <meta name="base-url"> if present
+  let basePath =
+    document.querySelector('meta[name="base-url"]')?.content ?? '';
+
+  // 2. Fallback: infer from location like before
+  if (!basePath) {
+    const parts = window.location.pathname.split('/');
+    parts.pop();
+    basePath = parts.join('/');
   }
-  
-  // Method 2: Try to use document.baseURI as a fallback
-  if (!basePath && document.baseURI) {
-    const baseUri = new URL(document.baseURI);
-    basePath = baseUri.pathname;
-    if (basePath.endsWith('/')) {
-      basePath = basePath.slice(0, -1); // Remove trailing slash
-    }
-  }
-  
+
   // Build the proper URL to the search database
   const searchDbUrl = `${basePath}/assets/js/search_db.json`;
-  
   console.log('Attempting to load search database from:', searchDbUrl);
   
   fetch(searchDbUrl).then(response => {
