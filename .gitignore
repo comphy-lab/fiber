@@ -6,7 +6,6 @@ testCases/dropAtomisation
 **/*.s
 **/*.tests 
 **/*.deps
-**/*.html
 **/*.tst
 
 CMakeLists.txt.user
