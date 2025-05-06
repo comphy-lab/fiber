@@ -34,13 +34,14 @@
 │   ├── two-phaseVE.h                          # Two-phase viscoelastic extension
 │   └── eigen_decomposition.h                  # 3x3 symmetric eigenvalue solver
 ├── simulationCases/            # Example/test cases and post-processing scripts
-    ├── dropAtomisation.c                     # 3D drop atomisation simulation
-    ├── pinchOff.c                            # Pinch-off of viscoelastic jet (2D/axi)
-    ├── testEigenDecomposition.c              # Eigenvalue solver test/verification
+│   ├── dropAtomisation.c                     # 3D drop atomisation simulation
+│   ├── pinchOff.c                            # Pinch-off of viscoelastic jet (2D/axi)
+│   ├── testEigenDecomposition.c              # Eigenvalue solver test/verification
+│   └── verifyWtihPlots.ipynb                 # Jupyter notebook for verification/plots
+├── postProcess/                # Project-specific post-processing tools and utilities
     ├── getData-elastic-scalar2D.c            # Data extraction utility
     ├── getFacet2D.c                          # Facet extraction utility
     ├── VideoAxi.py                           # Python visualization script
-    └── verifyWtihPlots.ipynb                 # Jupyter notebook for verification/plots
 ```
 
 ## 📚 Documentation
