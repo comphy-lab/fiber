@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Fluid Dynamics Simulation Visualization Tool
+Viscoelastic Visualization Tool
 ===========================================
 
 This script processes and visualizes fluid dynamics simulation data, particularly focused on 
