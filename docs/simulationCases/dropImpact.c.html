@@ -201,7 +201,7 @@
   <meta name="description" content="This file contains the simulation code for drop impact on a solid surface using a Volume of Fluid (VOF) method with viscoelastic fluid modeling capabilities....">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
-  <meta name="keywords" content="../src-local/log-conform-viscoelastic-scalar-2d.h, ../src-local/log-conform-viscoelastic-scalar-3d.h, ../src-local/log-conform-viscoelastic.h, ../src-local/two-phaseve.h, dropimpact, grid/octree.h, grid/quadtree.h, method, navier-stokes/centered.h, navier-stokes/conserving.h">
+  <meta name="keywords" content="../src-local/log-conform-viscoelastic-scalar-2d.h, ../src-local/log-conform-viscoelastic.h, ../src-local/two-phaseve.h, dropimpact, grid/octree.h, grid/quadtree.h, method, navier-stokes/centered.h, navier-stokes/conserving.h, tension.h">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
@@ -452,17 +452,17 @@
 <span id="cb1-3"><span class="co">// #include &quot;grid/quadtree.h&quot;</span></span>
 <span id="cb1-4"><span class="pp">#include </span><a href="http://basilisk.fr/src/navier-stokes/centered.h" title="Link to Basilisk source for navier-stokes/centered.h"><span class="im">"navier-stokes/centered.h"</span></a></span>
 <span id="cb1-5"></span>
-<span id="cb1-6"><span class="pp">#define VANILLA </span><span class="dv">0</span><span class="pp"></span><span class="dv">33</span><span class="pp"></span></span>
+<span id="cb1-6"><span class="pp">#define VANILLA </span><span class="dv">0</span><span class="pp"></span><span class="dv">35</span><span class="pp"></span></span>
 <span id="cb1-7"><span class="pp">#if VANILLA</span></span>
 <span id="cb1-8"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic.h"><span class="im">"../src-local/log-conform-viscoelastic.h"</span></a></span>
-<span id="cb1-9"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-vanilla.dat&quot;</span><span class="pp"></span><span class="dv">36</span><span class="pp"></span></span>
+<span id="cb1-9"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-vanilla.dat&quot;</span><span class="pp"></span><span class="dv">38</span><span class="pp"></span></span>
 <span id="cb1-10"><span class="pp">#else</span></span>
 <span id="cb1-11"><span class="pp">#if AXI</span></span>
 <span id="cb1-12"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic-scalar-2D.h"><span class="im">"../src-local/log-conform-viscoelastic-scalar-2D.h"</span></a></span>
-<span id="cb1-13"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-scalar.dat&quot;</span><span class="pp"></span><span class="dv">40</span><span class="pp"></span></span>
+<span id="cb1-13"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-scalar.dat&quot;</span><span class="pp"></span><span class="dv">42</span><span class="pp"></span></span>
 <span id="cb1-14"><span class="pp">#else</span></span>
 <span id="cb1-15"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-3D.h.html" title="Link to local documentation for ../src-local/log-conform-viscoelastic-scalar-3D.h"><span class="im">"../src-local/log-conform-viscoelastic-scalar-3D.h"</span></a></span>
-<span id="cb1-16"><span class="pp">#define logFile </span><span class="st">&quot;log3D-scalar.dat&quot;</span><span class="pp"></span><span class="dv">43</span><span class="pp"></span></span>
+<span id="cb1-16"><span class="pp">#define logFile </span><span class="st">&quot;log3D-scalar.dat&quot;</span><span class="pp"></span><span class="dv">45</span><span class="pp"></span></span>
 <span id="cb1-17"><span class="pp">#endif</span></span>
 <span id="cb1-18"><span class="pp">#endif</span></span>
 <span id="cb1-19"></span>
@@ -478,7 +478,7 @@
                 <li>tsnap: Time interval between snapshots (1e-2)</li>
                 </ul>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><span class="pp">#define tsnap </span><span class="op">(</span><span class="fl">1e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">59</span><span class="pp"></span><span class="dv">60</span><span class="pp"></span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><span class="pp">#define tsnap </span><span class="op">(</span><span class="fl">1e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">61</span><span class="pp"></span><span class="dv">62</span><span class="pp"></span></span></code></pre></div></div>
                 <h3 id="numerical-error-tolerances">Numerical Error
                 Tolerances</h3>
                 <ul>
@@ -492,9 +492,9 @@
                 </ul></li>
                 </ul>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><span class="pp">#define fErr </span><span class="op">(</span><span class="fl">1e-3</span><span class="op">)</span><span class="pp"></span><span class="dv">68</span><span class="pp"></span></span>
-<span id="cb3-2"><span class="pp">#define KErr </span><span class="op">(</span><span class="fl">1e-6</span><span class="op">)</span><span class="pp"></span><span class="dv">69</span><span class="pp"></span></span>
-<span id="cb3-3"><span class="pp">#define VelErr </span><span class="op">(</span><span class="fl">1e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">70</span><span class="pp"></span><span class="dv">71</span><span class="pp"></span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><span class="pp">#define fErr </span><span class="op">(</span><span class="fl">1e-3</span><span class="op">)</span><span class="pp"></span><span class="dv">70</span><span class="pp"></span></span>
+<span id="cb3-2"><span class="pp">#define KErr </span><span class="op">(</span><span class="fl">1e-6</span><span class="op">)</span><span class="pp"></span><span class="dv">71</span><span class="pp"></span></span>
+<span id="cb3-3"><span class="pp">#define VelErr </span><span class="op">(</span><span class="fl">1e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">72</span><span class="pp"></span><span class="dv">73</span><span class="pp"></span></span></code></pre></div></div>
                 <h3 id="domain-configuration">Domain Configuration</h3>
                 <ul>
                 <li>xDist: Initial horizontal displacement of droplet
@@ -503,8 +503,8 @@
                 droplet center</li>
                 </ul>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><span class="pp">#define xDist </span><span class="op">(</span><span class="fl">5e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">77</span><span class="pp"></span></span>
-<span id="cb4-2"><span class="pp">#define R2</span><span class="op">(</span><span class="pp">x</span><span class="op">,</span><span class="pp"> y</span><span class="op">,</span><span class="pp"> z</span><span class="op">)</span><span class="pp">  </span><span class="op">(</span><span class="pp">sq</span><span class="op">(</span><span class="pp">x </span><span class="op">-</span><span class="pp"> </span><span class="fl">1.</span><span class="pp"> </span><span class="op">-</span><span class="pp"> xDist</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">y</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">z</span><span class="op">))</span><span class="pp"></span><span class="dv">78</span><span class="pp"></span><span class="dv">79</span><span class="pp"></span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><span class="pp">#define xDist </span><span class="op">(</span><span class="fl">5e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">79</span><span class="pp"></span></span>
+<span id="cb4-2"><span class="pp">#define R2</span><span class="op">(</span><span class="pp">x</span><span class="op">,</span><span class="pp"> y</span><span class="op">,</span><span class="pp"> z</span><span class="op">)</span><span class="pp">  </span><span class="op">(</span><span class="pp">sq</span><span class="op">(</span><span class="pp">x </span><span class="op">-</span><span class="pp"> </span><span class="fl">1.</span><span class="pp"> </span><span class="op">-</span><span class="pp"> xDist</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">y</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">z</span><span class="op">))</span><span class="pp"></span><span class="dv">80</span><span class="pp"></span><span class="dv">81</span><span class="pp"></span></span></code></pre></div></div>
                 <h2 id="boundary-conditions">Boundary Conditions</h2>
                 <p>Dirichlet boundary condition for volume fraction at
                 left boundary. Note: No-slip boundary conditions are
