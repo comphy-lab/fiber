@@ -167,7 +167,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>postProcess/getData-elastic-scalar2D.c | ElastoFlow: 2D/3D Viscoelastic Fluid Simulation Framework</title>
+  <title>src-local/two-phaseVE.h | ElastoFlow: 2D/3D Viscoelastic Fluid Simulation Framework</title>
 <a id="" href="#"></a>
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -198,10 +198,10 @@
   </style>
 <a id="" href="#"></a>
   <!-- Critical Meta Tags -->
-  <meta name="description" content="This program extracts and processes data from fluid dynamics simulation snapshots, specifically designed for viscoelastic fluid simulations with conformation...">
+  <meta name="description" content="This is a modified version of [two-phase.h](http://basilisk.fr/src/two-phase.h). It contains the implementation of Viscoplastic Fluid (Bingham Fluid). T...">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
-  <meta name="keywords" content="elastic, getdata, output.h, scalar2d, utils.h">
+  <meta name="keywords" content="filtered, phaseve, vof.h">
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-title" content="CoMPhy Lab">
@@ -408,184 +408,158 @@
 <a id="" href="#"></a>
             <div class="page-content">
 <a id="" href="#"></a>
-                                <h1 class="page-title">postProcess/getData-elastic-scalar2D.c</h1>
+                                <h1 class="page-title">src-local/two-phaseVE.h</h1>
 <a id="" href="#"></a>
 <a id="" href="#"></a>
                                 <div class="raw-file-button-container">
-                    <a href="https://github.com/comphy-lab/Viscoelastic3D/raw/main/postProcess/getData-elastic-scalar2D.c" class="raw-file-button" target="_blank">
+                    <a href="https://github.com/comphy-lab/Viscoelastic3D/raw/main/src-local/two-phaseVE.h" class="raw-file-button" target="_blank">
                         <i class="fa-brands fa-github"></i> See raw file
                     </a>
                 </div>
 <a id="" href="#"></a>
-                <h1
-                id="simulation-data-extraction-and-processing">Simulation
-                Data Extraction and Processing</h1>
-                <p>This program extracts and processes data from fluid
-                dynamics simulation snapshots, specifically designed for
-                viscoelastic fluid simulations with conformation tensor
-                analysis. It computes important derived quantities
-                including deformation rate tensor components, velocity
-                magnitude, and conformation tensor trace.</p>
-                <p>The program interpolates these quantities onto a
-                regular grid and outputs the results for further
-                analysis or visualization.</p>
-                <h2 id="physics-background">Physics Background</h2>
-                <p>This code handles viscoelastic fluid simulation data
-                where the fluid stress tensor includes both a viscous
-                component (proportional to the deformation rate) and an
-                elastic component (represented by the conformation
-                tensor). The trace of the conformation tensor provides a
-                measure of polymer stretching in the fluid.</p>
-                <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><span class="pp">#include </span><a href="http://basilisk.fr/src/utils.h" title="Link to Basilisk source for utils.h"><span class="im">"utils.h"</span></a></span>
-<span id="cb1-2"><span class="pp">#include </span><a href="http://basilisk.fr/src/output.h" title="Link to Basilisk source for output.h"><span class="im">"output.h"</span></a></span>
-<span id="cb1-3"></span>
-<span id="cb1-4">scalar f<span class="op">[];</span>            <span class="co">// Volume fraction field</span></span>
-<span id="cb1-5">vector u<span class="op">[];</span>            <span class="co">// Velocity field</span></span>
-<span id="cb1-6">scalar A11<span class="op">[],</span> A12<span class="op">[],</span> A22<span class="op">[];</span> <span class="co">// Conformation tensor components</span></span>
-<span id="cb1-7">scalar conform_qq<span class="op">[];</span>   <span class="co">// Additional conformation tensor component</span></span>
-<span id="cb1-8"></span>
-<span id="cb1-9"><span class="dt">char</span> filename<span class="op">[</span><span class="dv">80</span><span class="op">];</span>     <span class="co">// Input file name</span></span>
-<span id="cb1-10"><span class="dt">int</span> nx<span class="op">,</span> ny<span class="op">,</span> len<span class="op">;</span>       <span class="co">// Grid dimensions and field count</span></span>
-<span id="cb1-11"><span class="dt">double</span> xmin<span class="op">,</span> ymin<span class="op">,</span> xmax<span class="op">,</span> ymax<span class="op">,</span> Deltax<span class="op">,</span> Deltay<span class="op">;</span> <span class="co">// Domain boundaries and grid spacing</span></span></code></pre></div></div>
-                <h3 id="derived-fields">Derived Fields</h3>
                 <ul>
-                <li>D2c: Log10 of squared deformation rate tensor
-                weighted by volume fraction</li>
-                <li>vel: Magnitude of velocity</li>
-                <li>trA: Log10 of excess trace of conformation
-                tensor</li>
+                <li>Modification by Vatsal Sanjay</li>
+                <li>Version 2.0, Oct 17, 2024</li>
                 </ul>
-                <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb2-1">scalar D2c<span class="op">[],</span> vel<span class="op">[],</span> trA<span class="op">[];</span></span>
-<span id="cb2-2">scalar <span class="op">*</span> list <span class="op">=</span> NULL<span class="op">;</span>  <span class="co">// List to store output fields</span></span></code></pre></div></div>
-                <h3 id="main-function">Main Function</h3>
-                <p>Processes simulation data and computes derived
-                quantities</p>
+                <h1 id="changelog">Changelog</h1>
                 <ul>
-                <li>Arguments:
-                <ul>
-                <li>arguments[1]: Input filename</li>
-                <li>arguments[2-5]: Domain boundaries (xmin, ymin, xmax,
-                ymax)</li>
-                <li>arguments[6]: Number of grid points in y-direction
-                (ny)</li>
-                </ul></li>
-                <li>Returns:
-                <ul>
-                <li>0 on successful execution</li>
-                </ul></li>
+                <li>Oct 17, 2024: added support for VE simulations.</li>
                 </ul>
+                <h1 id="brief-history">Brief history</h1>
+                <ul>
+                <li>v1.0 is the vanilla Basilisk code for two-phase
+                flows: http://basilisk.fr/src/two-phase.h +
+                http://basilisk.fr/src/two-phase-generic.h</li>
+                <li>v2.0 is the modification for viscoelastic fluids
+                using the log-conformation method.</li>
+                </ul>
+                <h1 id="two-phase-interfacial-flows">Two-phase
+                interfacial flows</h1>
+                <p>This is a modified version of <a
+                href="http://basilisk.fr/src/two-phase.h">two-phase.h</a>.
+                It contains the implementation of Viscoplastic Fluid
+                (Bingham Fluid).<br/> This file helps setup simulations
+                for flows of two fluids separated by an interface
+                (i.e. immiscible fluids). It is typically used in
+                combination with a <a
+                href="navier-stokes/centered.h">Navier–Stokes
+                solver</a>.</p>
+                <p>The interface between the fluids is tracked with a
+                Volume-Of-Fluid method. The volume fraction in fluid 1
+                is <span class="math inline">\(f=1\)</span> and <span
+                class="math inline">\(f=0\)</span> in fluid 2. The
+                densities and dynamic viscosities for fluid 1 and 2 are
+                <em>rho1</em>, <em>mu1</em>, <em>rho2</em>,
+                <em>mu2</em>, respectively.</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">char</span> <span class="dt">const</span> <span class="op">*</span>arguments<span class="op">[])</span></span>
-<span id="cb3-2"><span class="op">{</span></span>
-<span id="cb3-3">  sprintf<span class="op">(</span>filename<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">&quot;</span><span class="op">,</span> arguments<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
-<span id="cb3-4">  xmin <span class="op">=</span> atof<span class="op">(</span>arguments<span class="op">[</span><span class="dv">2</span><span class="op">]);</span> ymin <span class="op">=</span> atof<span class="op">(</span>arguments<span class="op">[</span><span class="dv">3</span><span class="op">]);</span></span>
-<span id="cb3-5">  xmax <span class="op">=</span> atof<span class="op">(</span>arguments<span class="op">[</span><span class="dv">4</span><span class="op">]);</span> ymax <span class="op">=</span> atof<span class="op">(</span>arguments<span class="op">[</span><span class="dv">5</span><span class="op">]);</span></span>
-<span id="cb3-6">  ny <span class="op">=</span> atoi<span class="op">(</span>arguments<span class="op">[</span><span class="dv">6</span><span class="op">]);</span></span>
-<span id="cb3-7"></span>
-<span id="cb3-8">  <span class="co">// Initialize list of fields to output</span></span>
-<span id="cb3-9">  list <span class="op">=</span> list_add<span class="op">(</span>list<span class="op">,</span> D2c<span class="op">);</span></span>
-<span id="cb3-10">  list <span class="op">=</span> list_add<span class="op">(</span>list<span class="op">,</span> vel<span class="op">);</span></span>
-<span id="cb3-11">  list <span class="op">=</span> list_add<span class="op">(</span>list<span class="op">,</span> trA<span class="op">);</span></span></code></pre></div></div>
-                <h2 id="data-processing-workflow">Data Processing
-                Workflow</h2>
-                <ol type="1">
-                <li>Restore simulation state from snapshot file</li>
-                <li>Compute derived quantities at each grid point</li>
-                <li>Interpolate fields onto regular grid</li>
-                <li>Output data to file</li>
-                </ol>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><span class="pp">#include </span><a href="http://basilisk.fr/src/vof.h" title="Link to Basilisk source for vof.h"><span class="im">"vof.h"</span></a></span>
+<span id="cb1-2"></span>
+<span id="cb1-3">scalar f<span class="op">[],</span> <span class="op">*</span> interfaces <span class="op">=</span> <span class="op">{</span>f<span class="op">};</span></span>
+<span id="cb1-4"></span>
+<span id="cb1-5"><span class="dt">double</span> rho1 <span class="op">=</span> <span class="fl">1.</span><span class="op">,</span> mu1 <span class="op">=</span> <span class="fl">0.</span><span class="op">,</span> rho2 <span class="op">=</span> <span class="fl">1.</span><span class="op">,</span> mu2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb1-6"><span class="dt">double</span> G1 <span class="op">=</span> <span class="fl">0.</span><span class="op">,</span> G2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span> <span class="co">// elastic moduli</span></span>
+<span id="cb1-7"><span class="dt">double</span> lambda1 <span class="op">=</span> <span class="fl">0.</span><span class="op">,</span> lambda2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span> <span class="co">// relaxation times</span></span>
+<span id="cb1-8"><span class="dt">double</span> TOLelastic <span class="op">=</span> <span class="fl">1e-2</span><span class="op">;</span> <span class="co">// tolerance for elastic modulus #TOFIX: this must always be a very small number.</span></span></code></pre></div></div>
+                <p>Auxilliary fields are necessary to define the
+                (variable) specific volume <span
+                class="math inline">\(\alpha=1/\rho\)</span> as well as
+                the cell-centered density.</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb4-1">  restore<span class="op">(</span>file <span class="op">=</span> filename<span class="op">);</span></span></code></pre></div></div>
-                <h3 id="field-computation">Field Computation</h3>
-                <p>For each cell, compute: - Components of the
-                deformation rate tensor D - Squared magnitude of D
-                weighted by volume fraction - Velocity magnitude -
-                Excess trace of the conformation tensor</p>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb2-1">face vector alphav<span class="op">[];</span></span>
+<span id="cb2-2">scalar rhov<span class="op">[];</span></span>
+<span id="cb2-3">scalar Gpd<span class="op">[];</span></span>
+<span id="cb2-4">scalar lambdapd<span class="op">[];</span></span>
+<span id="cb2-5"></span>
+<span id="cb2-6">event defaults <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-7">  alpha <span class="op">=</span> alphav<span class="op">;</span></span>
+<span id="cb2-8">  rho <span class="op">=</span> rhov<span class="op">;</span></span>
+<span id="cb2-9">  Gp <span class="op">=</span> Gpd<span class="op">;</span></span>
+<span id="cb2-10">  lambda <span class="op">=</span> lambdapd<span class="op">;</span></span></code></pre></div></div>
+                <p>If the viscosity is non-zero, we need to allocate the
+                face-centered viscosity field.</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb5-1">  foreach<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb5-2">    <span class="co">// Compute deformation rate tensor components</span></span>
-<span id="cb5-3">    <span class="dt">double</span> D11 <span class="op">=</span> <span class="op">(</span>u<span class="op">.</span>y<span class="op">[</span><span class="dv">0</span><span class="op">,</span> <span class="dv">1</span><span class="op">]</span> <span class="op">-</span> u<span class="op">.</span>y<span class="op">[</span><span class="dv">0</span><span class="op">,</span> <span class="op">-</span><span class="dv">1</span><span class="op">])</span> <span class="op">/</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> Delta<span class="op">);</span></span>
-<span id="cb5-4">    <span class="dt">double</span> D22 <span class="op">=</span> <span class="op">(</span>u<span class="op">.</span>y<span class="op">[]</span> <span class="op">/</span> y<span class="op">);</span></span>
-<span id="cb5-5">    <span class="dt">double</span> D33 <span class="op">=</span> <span class="op">(</span>u<span class="op">.</span>x<span class="op">[</span><span class="dv">1</span><span class="op">,</span> <span class="dv">0</span><span class="op">]</span> <span class="op">-</span> u<span class="op">.</span>x<span class="op">[-</span><span class="dv">1</span><span class="op">,</span> <span class="dv">0</span><span class="op">])</span> <span class="op">/</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> Delta<span class="op">);</span></span>
-<span id="cb5-6">    <span class="dt">double</span> D13 <span class="op">=</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="op">((</span>u<span class="op">.</span>y<span class="op">[</span><span class="dv">1</span><span class="op">,</span> <span class="dv">0</span><span class="op">]</span> <span class="op">-</span> u<span class="op">.</span>y<span class="op">[-</span><span class="dv">1</span><span class="op">,</span> <span class="dv">0</span><span class="op">]</span> <span class="op">+</span> u<span class="op">.</span>x<span class="op">[</span><span class="dv">0</span><span class="op">,</span> <span class="dv">1</span><span class="op">]</span> <span class="op">-</span> u<span class="op">.</span>x<span class="op">[</span><span class="dv">0</span><span class="op">,</span> <span class="op">-</span><span class="dv">1</span><span class="op">])</span> <span class="op">/</span></span>
-<span id="cb5-7">                        <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> Delta<span class="op">));</span></span>
-<span id="cb5-8">    <span class="dt">double</span> D2 <span class="op">=</span> <span class="op">(</span>sq<span class="op">(</span>D11<span class="op">)</span> <span class="op">+</span> sq<span class="op">(</span>D22<span class="op">)</span> <span class="op">+</span> sq<span class="op">(</span>D33<span class="op">)</span> <span class="op">+</span> <span class="fl">2.0</span> <span class="op">*</span> sq<span class="op">(</span>D13<span class="op">));</span></span>
-<span id="cb5-9">    D2c<span class="op">[]</span> <span class="op">=</span> f<span class="op">[]</span> <span class="op">*</span> D2<span class="op">;</span></span>
-<span id="cb5-10"></span>
-<span id="cb5-11">    <span class="co">// Take log10 of D2c for better visualization</span></span>
-<span id="cb5-12">    <span class="cf">if</span> <span class="op">(</span>D2c<span class="op">[]</span> <span class="op">&gt;</span> <span class="fl">0.</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-13">      D2c<span class="op">[]</span> <span class="op">=</span> log<span class="op">(</span>D2c<span class="op">[])</span> <span class="op">/</span> log<span class="op">(</span><span class="dv">10</span><span class="op">);</span></span>
-<span id="cb5-14">    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb5-15">      D2c<span class="op">[]</span> <span class="op">=</span> <span class="op">-</span><span class="dv">10</span><span class="op">;</span></span>
-<span id="cb5-16">    <span class="op">}</span></span>
-<span id="cb5-17"></span>
-<span id="cb5-18">    <span class="co">// Compute velocity magnitude</span></span>
-<span id="cb5-19">    vel<span class="op">[]</span> <span class="op">=</span> sqrt<span class="op">(</span>sq<span class="op">(</span>u<span class="op">.</span>x<span class="op">[])</span> <span class="op">+</span> sq<span class="op">(</span>u<span class="op">.</span>y<span class="op">[]));</span></span>
-<span id="cb5-20"></span>
-<span id="cb5-21">    <span class="co">// Compute excess trace of conformation tensor</span></span>
-<span id="cb5-22">    trA<span class="op">[]</span> <span class="op">=</span> <span class="op">(</span>A11<span class="op">[]</span> <span class="op">+</span> A22<span class="op">[]</span> <span class="op">+</span> conform_qq<span class="op">[])</span> <span class="op">/</span> <span class="fl">3.0</span> <span class="op">-</span> <span class="fl">1.0</span><span class="op">;</span></span>
-<span id="cb5-23"></span>
-<span id="cb5-24">    <span class="co">// Take log10 of trA for better visualization</span></span>
-<span id="cb5-25">    <span class="cf">if</span> <span class="op">(</span>trA<span class="op">[]</span> <span class="op">&gt;</span> <span class="fl">0.</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-26">      trA<span class="op">[]</span> <span class="op">=</span> log<span class="op">(</span>trA<span class="op">[])</span> <span class="op">/</span> log<span class="op">(</span><span class="dv">10</span><span class="op">);</span></span>
-<span id="cb5-27">    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb5-28">      trA<span class="op">[]</span> <span class="op">=</span> <span class="op">-</span><span class="dv">10</span><span class="op">;</span></span>
-<span id="cb5-29">    <span class="op">}</span></span>
-<span id="cb5-30">  <span class="op">}</span></span></code></pre></div></div>
-                <h3 id="grid-interpolation-and-output">Grid
-                Interpolation and Output</h3>
-                <ol type="1">
-                <li>Calculate grid spacing based on domain size and
-                ny</li>
-                <li>Allocate memory for interpolated field values</li>
-                <li>Interpolate field values onto regular grid</li>
-                <li>Output grid coordinates and field values</li>
-                </ol>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb3-1">  mu <span class="op">=</span> new face vector<span class="op">;</span></span>
+<span id="cb3-2"><span class="op">}</span></span></code></pre></div></div>
+                <p>The density and viscosity are defined using
+                arithmetic averages by default. The user can overload
+                these definitions to use other types of averages
+                (i.e. harmonic).</p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb6-1">  <span class="dt">FILE</span> <span class="op">*</span> fp <span class="op">=</span> ferr<span class="op">;</span></span>
-<span id="cb6-2">  Deltay <span class="op">=</span> <span class="op">(</span><span class="dt">double</span><span class="op">)((</span>ymax <span class="op">-</span> ymin<span class="op">)</span> <span class="op">/</span> <span class="op">(</span>ny<span class="op">));</span></span>
-<span id="cb6-3">  nx <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">)((</span>xmax <span class="op">-</span> xmin<span class="op">)</span> <span class="op">/</span> Deltay<span class="op">);</span></span>
-<span id="cb6-4">  Deltax <span class="op">=</span> <span class="op">(</span><span class="dt">double</span><span class="op">)((</span>xmax <span class="op">-</span> xmin<span class="op">)</span> <span class="op">/</span> <span class="op">(</span>nx<span class="op">));</span></span>
-<span id="cb6-5">  len <span class="op">=</span> list_len<span class="op">(</span>list<span class="op">);</span></span>
-<span id="cb6-6"></span>
-<span id="cb6-7">  <span class="co">// Allocate memory for field values</span></span>
-<span id="cb6-8">  <span class="dt">double</span> <span class="op">**</span> field <span class="op">=</span> <span class="op">(</span><span class="dt">double</span> <span class="op">**)</span> matrix_new<span class="op">(</span>nx<span class="op">,</span> ny <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> len <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">double</span><span class="op">));</span></span>
-<span id="cb6-9"></span>
-<span id="cb6-10">  <span class="co">// Interpolate field values onto regular grid</span></span>
-<span id="cb6-11">  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> nx<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb6-12">    <span class="dt">double</span> x <span class="op">=</span> Deltax <span class="op">*</span> <span class="op">(</span>i <span class="op">+</span> <span class="fl">1.</span><span class="op">/</span><span class="dv">2</span><span class="op">)</span> <span class="op">+</span> xmin<span class="op">;</span></span>
-<span id="cb6-13">    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> ny<span class="op">;</span> j<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb6-14">      <span class="dt">double</span> y <span class="op">=</span> Deltay <span class="op">*</span> <span class="op">(</span>j <span class="op">+</span> <span class="fl">1.</span><span class="op">/</span><span class="dv">2</span><span class="op">)</span> <span class="op">+</span> ymin<span class="op">;</span></span>
-<span id="cb6-15">      <span class="dt">int</span> k <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb6-16">      <span class="cf">for</span> <span class="op">(</span>scalar s in list<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-17">        field<span class="op">[</span>i<span class="op">][</span>len <span class="op">*</span> j <span class="op">+</span> k<span class="op">++]</span> <span class="op">=</span> interpolate<span class="op">(</span>s<span class="op">,</span> x<span class="op">,</span> y<span class="op">);</span></span>
-<span id="cb6-18">      <span class="op">}</span></span>
-<span id="cb6-19">    <span class="op">}</span></span>
-<span id="cb6-20">  <span class="op">}</span></span>
-<span id="cb6-21"></span>
-<span id="cb6-22">  <span class="co">// Output grid coordinates and field values</span></span>
-<span id="cb6-23">  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> nx<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb6-24">    <span class="dt">double</span> x <span class="op">=</span> Deltax <span class="op">*</span> <span class="op">(</span>i <span class="op">+</span> <span class="fl">1.</span><span class="op">/</span><span class="dv">2</span><span class="op">)</span> <span class="op">+</span> xmin<span class="op">;</span></span>
-<span id="cb6-25">    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> ny<span class="op">;</span> j<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb6-26">      <span class="dt">double</span> y <span class="op">=</span> Deltay <span class="op">*</span> <span class="op">(</span>j <span class="op">+</span> <span class="fl">1.</span><span class="op">/</span><span class="dv">2</span><span class="op">)</span> <span class="op">+</span> ymin<span class="op">;</span></span>
-<span id="cb6-27">      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g</span><span class="st">&quot;</span><span class="op">,</span> x<span class="op">,</span> y<span class="op">);</span></span>
-<span id="cb6-28">      <span class="dt">int</span> k <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb6-29">      <span class="cf">for</span> <span class="op">(</span>scalar s in list<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-30">        fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot; </span><span class="sc">%g</span><span class="st">&quot;</span><span class="op">,</span> field<span class="op">[</span>i<span class="op">][</span>len <span class="op">*</span> j <span class="op">+</span> k<span class="op">++]);</span></span>
-<span id="cb6-31">      <span class="op">}</span></span>
-<span id="cb6-32">      fputc<span class="op">(</span><span class="ch">&#39;</span><span class="sc">\n</span><span class="ch">&#39;</span><span class="op">,</span> fp<span class="op">);</span></span>
-<span id="cb6-33">    <span class="op">}</span></span>
-<span id="cb6-34">  <span class="op">}</span></span>
-<span id="cb6-35"></span>
-<span id="cb6-36">  <span class="co">// Clean up</span></span>
-<span id="cb6-37">  fflush<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb6-38">  fclose<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb6-39">  matrix_free<span class="op">(</span>field<span class="op">);</span></span>
-<span id="cb6-40"></span>
-<span id="cb6-41">  <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb6-42"><span class="op">}</span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb4-1"><span class="pp">#ifndef rho</span></span>
+<span id="cb4-2"><span class="pp"># define rho</span><span class="op">(</span><span class="pp">f</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">clamp</span><span class="op">(</span><span class="pp">f</span><span class="op">,</span><span class="fl">0.</span><span class="op">,</span><span class="fl">1.</span><span class="op">)*(</span><span class="pp">rho1 </span><span class="op">-</span><span class="pp"> rho2</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> rho2</span><span class="op">)</span><span class="pp"></span><span class="dv">62</span><span class="pp"></span></span>
+<span id="cb4-3"><span class="pp">#endif</span></span>
+<span id="cb4-4"><span class="pp">#ifndef mu</span></span>
+<span id="cb4-5"><span class="co">// for Arithmetic mean, use this</span></span>
+<span id="cb4-6"><span class="pp"># define mu</span><span class="op">(</span><span class="pp">f</span><span class="op">)</span><span class="pp">  </span><span class="op">(</span><span class="pp">clamp</span><span class="op">(</span><span class="pp">f</span><span class="op">,</span><span class="fl">0.</span><span class="op">,</span><span class="fl">1.</span><span class="op">)*(</span><span class="pp">mu1 </span><span class="op">-</span><span class="pp"> mu2</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> mu2</span><span class="op">)</span><span class="pp"></span><span class="dv">66</span><span class="pp"></span></span>
+<span id="cb4-7"><span class="pp">#endif</span></span></code></pre></div></div>
+                <p>We have the option of using some “smearing” of the
+                density/viscosity jump.</p>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><span class="pp">#ifdef FILTERED</span></span>
+<span id="cb5-2">scalar sf<span class="op">[];</span></span>
+<span id="cb5-3"><span class="pp">#else</span></span>
+<span id="cb5-4"><span class="pp"># define sf f</span><span class="dv">76</span><span class="pp"></span></span>
+<span id="cb5-5"><span class="pp">#endif</span></span>
+<span id="cb5-6"></span>
+<span id="cb5-7">event tracer_advection <span class="op">(</span>i<span class="op">++)</span> <span class="op">{</span></span></code></pre></div></div>
+                <p>When using smearing of the density jump, we
+                initialise <em>sf</em> with the vertex-average of
+                <em>f</em>.</p>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode c"><code class="sourceCode c"><span id="cb6-1"><span class="pp">#ifndef sf</span></span>
+<span id="cb6-2"><span class="pp">#if dimension &lt;=</span></span>
+<span id="cb6-3">  foreach<span class="op">()</span></span>
+<span id="cb6-4">    sf<span class="op">[]</span> <span class="op">=</span> <span class="op">(</span><span class="fl">4.</span><span class="op">*</span>f<span class="op">[]</span> <span class="op">+</span></span>
+<span id="cb6-5">        <span class="fl">2.</span><span class="op">*(</span>f<span class="op">[</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">])</span> <span class="op">+</span></span>
+<span id="cb6-6">        f<span class="op">[-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">])/</span><span class="fl">16.</span><span class="op">;</span></span>
+<span id="cb6-7"><span class="pp">#else </span><span class="co">// dimension ==</span></span>
+<span id="cb6-8">  foreach<span class="op">()</span></span>
+<span id="cb6-9">    sf<span class="op">[]</span> <span class="op">=</span> <span class="op">(</span><span class="fl">8.</span><span class="op">*</span>f<span class="op">[]</span> <span class="op">+</span></span>
+<span id="cb6-10">        <span class="fl">4.</span><span class="op">*(</span>f<span class="op">[-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">])</span> <span class="op">+</span></span>
+<span id="cb6-11">        <span class="fl">2.</span><span class="op">*(</span>f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span></span>
+<span id="cb6-12">        f<span class="op">[</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span></span>
+<span id="cb6-13">        f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">,-</span><span class="dv">1</span><span class="op">])</span> <span class="op">+</span></span>
+<span id="cb6-14">        f<span class="op">[</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span></span>
+<span id="cb6-15">        f<span class="op">[</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">]</span> <span class="op">+</span> f<span class="op">[-</span><span class="dv">1</span><span class="op">,-</span><span class="dv">1</span><span class="op">,</span><span class="dv">1</span><span class="op">])/</span><span class="fl">64.</span><span class="op">;</span></span>
+<span id="cb6-16"><span class="pp">#endif</span></span>
+<span id="cb6-17"><span class="pp">#endif</span></span>
+<span id="cb6-18"></span>
+<span id="cb6-19"><span class="pp">#if TREE</span></span>
+<span id="cb6-20">  sf<span class="op">.</span>prolongation <span class="op">=</span> refine_bilinear<span class="op">;</span></span>
+<span id="cb6-21">  sf<span class="op">.</span>dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span> <span class="co">// boundary conditions need to be updated</span></span>
+<span id="cb6-22"><span class="pp">#endif</span></span>
+<span id="cb6-23"><span class="op">}</span></span>
+<span id="cb6-24"></span>
+<span id="cb6-25">event properties <span class="op">(</span>i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb6-26"></span>
+<span id="cb6-27">  foreach_face<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-28">    <span class="dt">double</span> ff <span class="op">=</span> <span class="op">(</span>sf<span class="op">[]</span> <span class="op">+</span> sf<span class="op">[-</span><span class="dv">1</span><span class="op">])/</span><span class="fl">2.</span><span class="op">;</span></span>
+<span id="cb6-29">    alphav<span class="op">.</span>x<span class="op">[]</span> <span class="op">=</span> fm<span class="op">.</span>x<span class="op">[]/</span>rho<span class="op">(</span>ff<span class="op">);</span></span>
+<span id="cb6-30">    face vector muv <span class="op">=</span> mu<span class="op">;</span></span>
+<span id="cb6-31">    muv<span class="op">.</span>x<span class="op">[]</span> <span class="op">=</span> fm<span class="op">.</span>x<span class="op">[]*</span>mu<span class="op">(</span>ff<span class="op">);</span></span>
+<span id="cb6-32">  <span class="op">}</span></span>
+<span id="cb6-33"></span>
+<span id="cb6-34">  foreach<span class="op">(){</span></span>
+<span id="cb6-35">    rhov<span class="op">[]</span> <span class="op">=</span> cm<span class="op">[]*</span>rho<span class="op">(</span>sf<span class="op">[]);</span></span>
+<span id="cb6-36"></span>
+<span id="cb6-37">    Gpd<span class="op">[]</span> <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb6-38">    lambdapd<span class="op">[]</span> <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb6-39"></span>
+<span id="cb6-40">    <span class="cf">if</span> <span class="op">(</span>clamp<span class="op">(</span>sf<span class="op">[],</span> <span class="fl">0.</span><span class="op">,</span> <span class="fl">1.</span><span class="op">)</span> <span class="op">&gt;</span> TOLelastic<span class="op">){</span></span>
+<span id="cb6-41">      Gpd<span class="op">[]</span> <span class="op">+=</span> G1<span class="op">*</span>clamp<span class="op">(</span>sf<span class="op">[],</span> <span class="fl">0.</span><span class="op">,</span> <span class="fl">1.</span><span class="op">);</span></span>
+<span id="cb6-42">      lambdapd<span class="op">[]</span> <span class="op">+=</span> lambda1<span class="op">*</span>clamp<span class="op">(</span>sf<span class="op">[],</span> <span class="fl">0.</span><span class="op">,</span> <span class="fl">1.</span><span class="op">);</span></span>
+<span id="cb6-43">    <span class="op">}</span></span>
+<span id="cb6-44">    <span class="cf">if</span> <span class="op">(</span>clamp<span class="op">((</span><span class="dv">1</span><span class="op">-</span>sf<span class="op">[]),</span> <span class="fl">0.</span><span class="op">,</span> <span class="fl">1.</span><span class="op">)</span> <span class="op">&gt;</span> TOLelastic<span class="op">){</span></span>
+<span id="cb6-45">      Gpd<span class="op">[]</span> <span class="op">+=</span> G2<span class="op">*</span>clamp<span class="op">((</span><span class="dv">1</span><span class="op">-</span>sf<span class="op">[]),</span> <span class="fl">0.</span><span class="op">,</span> <span class="fl">1.</span><span class="op">);</span></span>
+<span id="cb6-46">      lambdapd<span class="op">[]</span> <span class="op">+=</span> lambda2<span class="op">*</span>clamp<span class="op">((</span><span class="dv">1</span><span class="op">-</span>sf<span class="op">[]),</span> <span class="fl">0.</span><span class="op">,</span> <span class="fl">1.</span><span class="op">);</span></span>
+<span id="cb6-47">    <span class="op">}</span></span>
+<span id="cb6-48">  <span class="op">}</span></span>
+<span id="cb6-49"></span>
+<span id="cb6-50"><span class="pp">#if TREE</span></span>
+<span id="cb6-51">  sf<span class="op">.</span>prolongation <span class="op">=</span> fraction_refine<span class="op">;</span></span>
+<span id="cb6-52">  sf<span class="op">.</span>dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span> <span class="co">// boundary conditions need to be updated</span></span>
+<span id="cb6-53"><span class="pp">#endif</span></span>
+<span id="cb6-54"><span class="op">}</span></span></code></pre></div></div>
             </div>
         </main>
 <a id="" href="#"></a>
