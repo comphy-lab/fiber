@@ -15,11 +15,12 @@ The simulation solves the Navier-Stokes equations for incompressible flow
 coupled with a viscoelastic constitutive equation. The interface between
 the two fluids is tracked using a VOF method with surface tension.
 
-Key dimensionless parameters:
-- Weber number (We): Ratio of inertia to surface tension
-- Ohnesorge number (Oh): Ratio of viscous to inertial and surface tension forces
-- Deborah number (De): Ratio of relaxation time to characteristic flow time
-- Elasto-capillary number (Ec): Ratio of elastic to capillary forces
+### Key dimensionless parameters:
+
+- **Weber number** ($We$): Ratio of inertia to surface tension
+- **Ohnesorge number** ($Oh$): Ratio of viscous to inertial and surface tension forces
+- **Deborah number** ($De$): Ratio of relaxation time to characteristic flow time
+- **Elastocapillary number** ($Ec$): Ratio of elastic to capillary forces
 
 @file dropImpact.c
 @author Vatsal Sanjay
