@@ -98,7 +98,6 @@ qcc -O2 -Wall -I./src-local -disable-dimensions simulationCases/dropAtomisation.
 This project is licensed under the [GNU GPLv3](LICENSE), in line with the Basilisk codebase.
 
 ## 🙏 Acknowledgments
-- Developed by Vatsal Sanjay (Physics of Fluids, University of Twente)
 - Thanks to all contributors and the Basilisk community
 
 ## 🔗 References
