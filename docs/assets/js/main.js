@@ -27,10 +27,12 @@
     /* Load Featured Papers - Only on main page
     * -------------------------------------------------- */
     const loadFeaturedPapers = async () => {
-        // Only load featured papers if we're on the main page
-        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        // Only load featured papers if we're on the main page (accounting for sub-paths in GitHub Pages)
+        if (window.location.pathname.endsWith('/') || window.location.pathname.endsWith('/index.html')) {
             try {
-                const response = await fetch('/research/');
+                // Use relative path to work with GitHub Pages sub-paths
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                const response = await fetch(basePath + 'research/');
                 if (!response.ok) {
                     throw new Error(`Failed to fetch research content: ${response.status} ${response.statusText}`);
                 }
