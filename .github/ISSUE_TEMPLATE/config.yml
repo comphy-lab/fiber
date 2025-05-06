@@ -1,4 +1,8 @@
 blank_issues_enabled: true
+issue_templates:
+  - name: "Feature/Topic Request"
+    description: "Suggest topics, examples, or features for the Basilisk course"
+    file: feature_request.md
 contact_links:
   - name: Basilisk Official Documentation
     url: http://basilisk.fr/
