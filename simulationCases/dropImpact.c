@@ -1,5 +1,6 @@
 /**
 # Drop Impact Simulation
+
 This file contains the simulation code for drop impact on a solid surface using 
 a Volume of Fluid (VOF) method with viscoelastic fluid modeling capabilities.
 
@@ -9,6 +10,7 @@ viscoelastic fluids through a log-conformation formulation for the polymeric
 stress tensor.
 
 ## Physical Model
+
 The simulation solves the Navier-Stokes equations for incompressible flow
 coupled with a viscoelastic constitutive equation. The interface between
 the two fluids is tracked using a VOF method with surface tension.
