@@ -1,37 +1,37 @@
 /**
- # Matrix Eigenvalue Solver
- 
- This module provides algorithms for computing eigenvalues and eigenvectors of 
- 3x3 symmetric matrices, which are commonly encountered in computational fluid 
- dynamics, solid mechanics, and other physics-based simulations.
- 
- ## Mathematical Background
- 
- The implementation uses the Householder transformation to reduce a symmetric
- matrix to tridiagonal form, followed by the QL algorithm with implicit shifts
- to compute the eigenvalues and eigenvectors.
- 
- For a 3x3 symmetric matrix, these methods are particularly efficient and
- numerically stable, providing accurate results even for matrices with closely
- spaced eigenvalues.
+# Matrix Eigenvalue Solver
 
- ### Tridiagonalize a 3x3 Symmetric Matrix
- 
- Reduces a 3x3 symmetric matrix to tridiagonal form using the Householder method,
- which applies a series of orthogonal transformations to eliminate elements
- below the subdiagonal.
- 
- - Parameters:
-   - matrix[in]: Input 3x3 symmetric matrix to be tridiagonalized
-   - eigenvectors[out]: Orthogonal matrix of Householder vectors
-   - diagonal[out]: Diagonal elements of the resulting tridiagonal matrix
-   - subdiagonal[out]: Subdiagonal elements of the tridiagonal matrix
- 
- - Implementation Notes:
-   - The original matrix is preserved
-   - The eigenvectors matrix is initialized to identity and then transformed
-   - The algorithm exploits the symmetry of the input matrix
- */
+This module provides algorithms for computing eigenvalues and eigenvectors of 
+3x3 symmetric matrices, which are commonly encountered in computational fluid 
+dynamics, solid mechanics, and other physics-based simulations.
+
+## Mathematical Background
+
+The implementation uses the Householder transformation to reduce a symmetric
+matrix to tridiagonal form, followed by the QL algorithm with implicit shifts
+to compute the eigenvalues and eigenvectors.
+
+For a 3x3 symmetric matrix, these methods are particularly efficient and
+numerically stable, providing accurate results even for matrices with closely
+spaced eigenvalues.
+
+### Tridiagonalize a 3x3 Symmetric Matrix
+
+Reduces a 3x3 symmetric matrix to tridiagonal form using the Householder method,
+which applies a series of orthogonal transformations to eliminate elements
+below the subdiagonal.
+
+- Parameters:
+  - matrix[in]: Input 3x3 symmetric matrix to be tridiagonalized
+  - eigenvectors[out]: Orthogonal matrix of Householder vectors
+  - diagonal[out]: Diagonal elements of the resulting tridiagonal matrix
+  - subdiagonal[out]: Subdiagonal elements of the tridiagonal matrix
+
+- Implementation Notes:
+  - The original matrix is preserved
+  - The eigenvectors matrix is initialized to identity and then transformed
+  - The algorithm exploits the symmetry of the input matrix
+*/
 
 #define SQUARE(x) ((x)*(x))
 
