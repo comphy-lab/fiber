@@ -123,9 +123,11 @@
                             const paperNumber = originalTitle.match(/^\[(\d+)\]/)?.[1];
                             if (paperNumber) {
                                 // Navigate to research page with the paper ID
-                                window.location.href = `/research/#${paperNumber}`;
+                                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                                window.location.href = `${basePath}research/#${paperNumber}`;
                             } else {
-                                window.location.href = '/research/';
+                                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                                window.location.href = `${basePath}research/`;
                             }
                         });
                         
