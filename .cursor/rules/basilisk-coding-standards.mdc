@@ -39,13 +39,13 @@ This document outlines the coding standards, project structure, and best practic
 **Standard Compilation**:
 
 ```bash
-qcc -autolink file.c -o executable -lm
+qcc -disable-dimensions file.c -o executable -lm
 ```
 
 ## Compilation with Custom Headers:
 
 ```bash
-qcc -I$PWD/src-local -autolink file.c -o executable -lm
+qcc -I$PWD/src-local -disable-dimensions file.c -o executable -lm
 ```
 
 
