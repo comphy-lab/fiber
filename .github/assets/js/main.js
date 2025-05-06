@@ -96,7 +96,8 @@
                                     span.style.cursor = 'pointer';
                                     span.addEventListener('click', (e) => {
                                         e.stopPropagation(); // Prevent container click
-                                        window.location.href = `/research/?tag=${span.textContent.trim()}`;
+                                        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                                        window.location.href = `${basePath}research/?tag=${span.textContent.trim()}`;
                                     });
                                 });
                             }
