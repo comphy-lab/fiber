@@ -2,6 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/874384071.svg)](https://doi.org/10.5281/zenodo.14011692)
 [![Website Status](https://img.shields.io/website?url=https%3A%2F%2Fcomphy-lab.github.io%2FViscoelastic3D%2F&style=flat-square&logo=github&label=Website)](https://comphy-lab.github.io/Viscoelastic3D/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/comphy-lab/Viscoelastic3D)
 
 ---
 
