@@ -240,6 +240,9 @@
   <script src="./assets/js/jquery-ui.packed.js"></script>
   <script src="./assets/js/plots.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+  <!-- Config script must load before other scripts -->
+  <script src="./assets/js/config.js"></script>
+  <script defer src="./assets/js/search-helper.js"></script>
   <script defer src="./assets/js/command-palette.js"></script>
   <script defer src="./assets/js/command-data.js"></script>
   <script defer src="./assets/js/main.js"></script>
@@ -550,12 +553,12 @@
                 &amp; Running Simulations</h3>
                 <p><strong>A. Vanilla Basilisk method:</strong></p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/{CaseName}.c <span class="at">-o</span> {CaseName} <span class="at">-lm</span> </span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./{CaseName}</span></span></code></pre></div></div>
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/{CaseName}.c <span class="at">-o</span> {CaseName} <span class="at">-lm</span> </span>
+<span id="cb1-2"><span class="ex">./{CaseName}</span></span></code></pre></div></div>
                 <p><strong>B. Using the Makefile (with bview
                 browser):</strong></p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">CFLAGS</span><span class="op">=</span>-DDISPLAY=-1 <span class="fu">make</span> simulationCases/{CaseName}.tst</span></code></pre></div></div>
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><span class="va">CFLAGS</span><span class="op">=</span>-DDISPLAY=-1 <span class="fu">make</span> simulationCases/{CaseName}.tst</span></code></pre></div></div>
                 <ul>
                 <li>For interactive visualization, open the generated
                 <code>display.html</code> in your browser (see <a
@@ -578,8 +581,8 @@
                 id="example-running-a-3d-drop-atomisation-simulation">📝
                 Example: Running a 3D Drop Atomisation Simulation</h2>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/dropAtomisation.c <span class="at">-o</span> dropAtomisation <span class="at">-lm</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./dropAtomisation</span></span></code></pre></div></div>
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/dropAtomisation.c <span class="at">-o</span> dropAtomisation <span class="at">-lm</span></span>
+<span id="cb3-2"><span class="ex">./dropAtomisation</span></span></code></pre></div></div>
                 <h2 id="technical-details">🔍 Technical Details</h2>
                 <ul>
                 <li><strong>Log-Conformation Method</strong>: See <a
