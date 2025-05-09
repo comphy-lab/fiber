@@ -34,6 +34,9 @@
 // boundary conditions
 u.n[top] = neumann(0.0);
 p[top] = dirichlet(0.0);
+u.n[right] = neumann(0.0);
+p[right] = dirichlet(0.0);
+
 
 int MAXlevel;
 // Bond number -> dimensionless driving...
@@ -53,10 +56,10 @@ int main(int argc, char const *argv[]) {
   
   // Values taken from the terminal
   MAXlevel = 10;
-  tmax = 1.75;
-  Bo = 1e0;
-  Oh = 1e0;
-  Oha = 1e-2 * Oh;
+  tmax = 10.0;
+  Bo = 4e0;
+  Oh = 1e-1;
+  Oha = 1e-5;
   De = 1e30; // 1e-1;
   Ec = 0.0; // 1e-2;
 
