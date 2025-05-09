@@ -1,4 +1,4 @@
-# Viscoelastic3D Development Guidelines
+# FIBER Development Guidelines
 
 ## project structure 
 ├-- `basilisk/src/`: Core Basilisk CFD library (reference only, do not modify) <- This contains the codebase for Basilisk C--a wrapper around C to do computational fluid dynamics. 
