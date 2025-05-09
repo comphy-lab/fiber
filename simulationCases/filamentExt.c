@@ -114,61 +114,69 @@ event writingFiles (t = 0; t += tsnap; t <= tmax) {
 ## Ending Simulation
 */
 event end (t = end) {
-  if (pid() == 0)
+  if (pid() == 0) {
     fprintf(ferr, "Level %d, Oh %2.1e\n", MAXlevel, Oh);
+
+    // Close log file
+    if (logFp != NULL) {
+      fclose(logFp);
+      logFp = NULL;
+    }
+  }
+}
+
+/**
+## Log file initialization
+*/
+static FILE *logFp = NULL;
+
+event logInit (i = 0) {
+  if (pid() == 0) {
+    logFp = fopen(logFile, "w");
+    if (logFp == NULL) {
+      fprintf(ferr, "Error opening log file\n");
+      return 1;
+    }
+    fprintf(ferr, "Level %d, Bo %2.1e, Oh %2.1e, Oha %2.1e, De %2.1e, Ec %2.1e\n", MAXlevel, Bo, Oh, Oha, De, Ec);
+    fprintf(ferr, "i dt t ke\n");
+    fprintf(logFp, "Level %d, Bo %2.1e, Oh %2.1e, Oha %2.1e, De %2.1e, Ec %2.1e\n", MAXlevel, Bo, Oh, Oha, De, Ec);
+    fprintf(logFp, "i dt t ke\n");
+    fflush(logFp);
+  }
 }
 
 /**
 ## Log writing
 */
 event logWriting (i++) {
-
   double ke = 0.;
   foreach (reduction(+:ke)){
     ke += (2*pi*y)*(0.5*rho(f[])*(sq(u.x[]) + sq(u.y[])+ sq(u.z[])))*sq(Delta);
   }
 
-  static FILE * fp;
   if (pid() == 0) {
-    const char* mode = (i == 0) ? "w" : "a";
-    fp = fopen(logFile, mode);
-    if (fp == NULL) {
-      fprintf(ferr, "Error opening log file\n");
-      return 1;
-    }
-
-    if (i == 0) {
-      fprintf(ferr, "Level %d, Bo %2.1e, Oh %2.1e, Oha %2.1e, De %2.1e, Ec %2.1e\n", MAXlevel, Bo, Oh, Oha, De, Ec);
-      fprintf(ferr, "i dt t ke\n");
-      fprintf(fp, "Level %d, Bo %2.1e, Oh %2.1e, Oha %2.1e, De %2.1e, Ec %2.1e\n", MAXlevel, Bo, Oh, Oha, De, Ec);
-      fprintf(fp, "i dt t ke\n");
-    }
-
-    fprintf(fp, "%d %g %g %g\n", i, dt, t, ke);
+    fprintf(logFp, "%d %g %g %g\n", i, dt, t, ke);
     fprintf(ferr, "%d %g %g %g\n", i, dt, t, ke);
-
-    fflush(fp);
-    fclose(fp);
+    fflush(logFp);
   }
 
   assert(ke > -1e-10);
 
   if (i > 1e4 && pid() == 0) {
     if (ke > 1e2*sq(U0) || ke < 1e-8) {
-      const char* message = (ke > 1e2) ? 
-        "The kinetic energy blew up. Stopping simulation\n" : 
+      const char* message = (ke > 1e2) ?
+        "The kinetic energy blew up. Stopping simulation\n" :
         "kinetic energy too small now! Stopping!\n";
-      
+
       fprintf(ferr, "%s", message);
-      
-      fp = fopen("log", "a");
+
+      FILE *fp = fopen("log", "a");
       fprintf(fp, "%s", message);
       fflush(fp);
       fclose(fp);
-      
+
       dump(file=dumpFile);
       return 1;
     }
   }
-
 }
