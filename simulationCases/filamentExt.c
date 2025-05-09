@@ -54,8 +54,8 @@ int main(int argc, char const *argv[]) {
   // Values taken from the terminal
   MAXlevel = 10;
   tmax = 1.75;
-  Bo = 1e1;
-  Oh = 1.25e-2;
+  Bo = 1e0;
+  Oh = 1e0;
   Oha = 1e-2 * Oh;
   De = 1e30; // 1e-1;
   Ec = 0.0; // 1e-2;
