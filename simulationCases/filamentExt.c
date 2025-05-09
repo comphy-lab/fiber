@@ -163,7 +163,7 @@ event logWriting (i++) {
   assert(ke > -1e-10);
 
   if (i > 1e4 && pid() == 0) {
-    if (ke > 1e2*sq(U0) || ke < 1e-8) {
+    if (ke > 1e2 || ke < 1e-8) {
       const char* message = (ke > 1e2) ?
         "The kinetic energy blew up. Stopping simulation\n" :
         "kinetic energy too small now! Stopping!\n";
