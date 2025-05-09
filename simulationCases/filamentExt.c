@@ -50,7 +50,6 @@ static FILE *logFp = NULL;
 int main(int argc, char const *argv[]) {
 
   L0 = 16.;
-  X0 = -L0/2.;
   
   // Values taken from the terminal
   MAXlevel = 10;
