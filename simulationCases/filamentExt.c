@@ -9,11 +9,13 @@
 
 #include "axi.h"
 #include "navier-stokes/centered.h"
-#define FILTERED // Smear density and viscosity jumps
-#include "two-phaseVE.h"
+
 
 #include "log-conform-viscoelastic-scalar-2D.h"
-#define logFile "logAxi-VE.dat"
+#define logFile "logAxi-scalar.dat"
+
+#define FILTERED // Smear density and viscosity jumps
+#include "two-phaseVE.h"
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"
@@ -43,6 +45,7 @@ int MAXlevel;
 
 double Bo, Oh, Oha, De, Ec, tmax;
 char nameOut[80], dumpFile[80];
+static FILE *logFp = NULL;
 
 int main(int argc, char const *argv[]) {
 
@@ -128,8 +131,6 @@ event end (t = end) {
 /**
 ## Log file initialization
 */
-static FILE *logFp = NULL;
-
 event logInit (i = 0) {
   if (pid() == 0) {
     logFp = fopen(logFile, "w");
