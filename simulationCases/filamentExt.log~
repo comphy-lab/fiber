@@ -1,0 +1,31 @@
+/Users/vatsal/Library/CloudStorage/Dropbox/0-Projects/proof-of-concepts/project-fiber/fiber/basilisk/src/grid/cartesian-common.h:923:7: warning: variable 'len' set but not used [-Wunused-but-set-variable]
+  923 |   int len = 0;
+      |       ^
+/Users/vatsal/Library/CloudStorage/Dropbox/0-Projects/proof-of-concepts/project-fiber/fiber/simulationCases/../src-local/two-phaseVE.h:46:3: error: use of undeclared identifier 'Gp'
+   46 |   Gp = Gpd;
+      |   ^
+/Users/vatsal/Library/CloudStorage/Dropbox/0-Projects/proof-of-concepts/project-fiber/fiber/simulationCases/../src-local/two-phaseVE.h:47:3: error: use of undeclared identifier 'lambda'; did you mean 'lambdapd'?
+   47 |   lambda = lambdapd;
+      |   ^~~~~~
+      |   lambdapd
+/Users/vatsal/Library/CloudStorage/Dropbox/0-Projects/proof-of-concepts/project-fiber/fiber/simulationCases/../src-local/two-phaseVE.h:41:9: note: 'lambdapd' declared here
+   41 | scalar  lambdapd={13};
+      |         ^
+filamentExt.c:121:9: error: use of undeclared identifier 'logFp'; did you mean 'log1p'?
+  121 |     if (logFp != NULL) {
+      |         ^~~~~
+      |         log1p
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/math.h:391:15: note: 'log1p' declared here
+  391 | extern double log1p(double);
+      |               ^
+filamentExt.c:122:14: error: use of undeclared identifier 'logFp'; did you mean 'log1p'?
+  122 |       fclose(logFp);
+      |              ^~~~~
+      |              log1p
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/math.h:391:15: note: 'log1p' declared here
+  391 | extern double log1p(double);
+      |               ^
+filamentExt.c:123:7: error: use of undeclared identifier 'logFp'
+  123 |       logFp = NULL;
+      |       ^
+1 warning and 5 errors generated.

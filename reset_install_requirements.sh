@@ -15,7 +15,9 @@ else
     echo "Using Linux"
     ln -s config.gcc config
 fi
+make -k
 make
+
 
 echo "export BASILISK=$PWD" >> ../../.project_config
 echo "export PATH=\$PATH:\$BASILISK" >> ../../.project_config
