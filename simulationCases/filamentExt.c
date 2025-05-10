@@ -1,7 +1,7 @@
 /**
  @file filamentExt.c
  @brief This code will give an initial condition where the filament is stretched out, to be used for filament_retraction_VE.c
- The relaxation time is taken as infinity here to ensure that the polymers undergo affine deformation while stretching. 
+ The relaxation time is taken as infinity here to ensure that the polymers undergo affine deformation while stretching.
  @author Vatsal Sanjay
  @version 1.1
  @date 2025-05-09
@@ -9,11 +9,13 @@
 
 #include "axi.h"
 #include "navier-stokes/centered.h"
-#define FILTERED // Smear density and viscosity jumps
-#include "two-phaseVE.h"
+
 
 #include "log-conform-viscoelastic-scalar-2D.h"
-#define logFile "logAxi-VE.dat"
+#define logFile "logAxi-scalar.dat"
+
+#define FILTERED // Smear density and viscosity jumps
+#include "two-phaseVE.h"
 
 #include "navier-stokes/conserving.h"
 #include "tension.h"
@@ -32,6 +34,9 @@
 // boundary conditions
 u.n[top] = neumann(0.0);
 p[top] = dirichlet(0.0);
+u.n[right] = neumann(0.0);
+p[right] = dirichlet(0.0);
+
 
 int MAXlevel;
 // Bond number -> dimensionless driving...
@@ -43,20 +48,20 @@ int MAXlevel;
 
 double Bo, Oh, Oha, De, Ec, tmax;
 char nameOut[80], dumpFile[80];
+static FILE *logFp = NULL;
 
 int main(int argc, char const *argv[]) {
 
   L0 = 16.;
-  X0 = -L0/2.;
-  
+
   // Values taken from the terminal
   MAXlevel = 10;
-  tmax = 1.75;
-  Bo = 1e1;
-  Oh = 1.25e-2;
-  Oha = 1e-2 * Oh;
+  tmax = 10.0;
+  Bo = 4e0;
+  Oh = 1e-1;
+  Oha = 1e-5;
   De = 1e30; // 1e-1;
-  Ec = 0.0; // 1e-2;
+  Ec = 1.0; // 1e-2;
 
   init_grid (1 << 6);
 
@@ -128,8 +133,6 @@ event end (t = end) {
 /**
 ## Log file initialization
 */
-static FILE *logFp = NULL;
-
 event logInit (i = 0) {
   if (pid() == 0) {
     logFp = fopen(logFile, "w");

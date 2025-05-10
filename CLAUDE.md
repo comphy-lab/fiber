@@ -33,4 +33,35 @@
 
 ## Build & Test Commands
 - Compile: `qcc -autolink file.c -o executable -lm`
-- Compile with specific headers: `qcc -I$PWD/src-local -autolink file.c -o executable -lm`
+- Compile with specific headers: `qcc -I$PWD/src-local -O2 -Wall -disable-dimensions file.c -o executable -lm`
+
+
+## Best Practices
+- Keep simulations modular and reusable
+- Document physical assumptions and numerical methods
+- Perform mesh refinement studies to ensure solution convergence
+- Include visualization scripts in the postProcess directory
+
+
+## Documentation Generation
+
+- Read `.github/Website-generator-readme.md` for the website generation process.
+- Do not auto-deploy the website; generating HTML is permitted using `.github/scripts/build.sh`.
+- Avoid editing HTML files directly; they are generated using `.github/scripts/build.sh`, which utilizes `.github/scripts/generate_docs.py`.
+- The website is deployed at `https://comphy-lab.org/repositoryName`; refer to the `CNAME` file for configuration. Update if not done already. 
+
+## Purpose
+
+This rule provides guidance for maintaining and generating documentation for code repositories in the CoMPhy Lab, ensuring consistency and proper workflow for website generation.
+
+## Process Details
+
+The documentation generation process utilizes Python scripts to convert source code files into HTML documentation. The process handles C/C++, Python, Shell, and Markdown files, generating a complete documentation website with navigation, search functionality, and code highlighting.
+
+## Best Practices
+
+- Always use the build script for generating documentation rather than manually editing HTML files
+- Customize styling through CSS files in `.github/assets/css/`
+- Modify functionality through JavaScript files in `.github/assets/js/`
+- For template changes, edit `.github/assets/custom_template.html`
+- Troubleshoot generation failures by checking error messages and verifying paths and dependencies
