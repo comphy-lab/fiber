@@ -3,6 +3,14 @@ Checks minmod2() */
 
 #include "utils.h"
 
+/**
+ * @brief Tests the minmod2 function with unset double values and displays the results.
+ *
+ * Initializes three double variables with specific values, unsets them, and passes them to minmod2.
+ * The result is displayed using display_value. This process is repeated with a second set of values.
+ *
+ * @return int Exit status code.
+ */
 int main()
 {
   {

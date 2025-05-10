@@ -1,5 +1,10 @@
 /**
-Tests undefined conditions. */
+ * @brief Tests interpreter behavior with undefined and conditional expressions.
+ *
+ * Declares an uninitialized variable and evaluates it in conditional statements to observe how the interpreter handles undefined conditions and control flow.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {{ interpreter_verbosity (4);

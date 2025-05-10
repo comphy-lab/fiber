@@ -2,6 +2,12 @@
 double G0 = 9.81 [1,-2], H0 = 10. [1];
 double c = G*H0;
 
+/**
+ * @brief Initializes simulation parameters and starts the layered hydrodynamics run.
+ *
+ * Sets the simulation domain size and gravitational acceleration, then executes the main simulation loop.
+ * @return int Exit status code.
+ */
 int main()
 {
   L0 = 1. [1];

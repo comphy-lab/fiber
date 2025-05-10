@@ -1,5 +1,10 @@
 /**
-# Dimensions in constant expressions */
+ * @brief Demonstrates dimensioning of constant expressions and constants in C.
+ *
+ * Initializes variables using dimensioned constant expressions and constants, performs arithmetic operations, and displays results to illustrate the behavior of dimensioning in constant expressions.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

@@ -1,5 +1,12 @@
 /**
-Checks that dimensions of conditional expressions are properly set. */
+ * @brief Tests dimension propagation in conditional expressions within a computational grid.
+ *
+ * Initializes a grid and assigns values to a scalar field using both if-else and ternary conditional expressions, verifying that dimensions are handled consistently. Also checks that multiplicative conditional expressions with constants are treated as dimensionless and that conditional branches with dimensioned values enforce consistent dimensions.
+ *
+ * Outputs values for manual or automated verification of dimension correctness.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

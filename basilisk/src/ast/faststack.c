@@ -19,6 +19,14 @@ struct _Stack {
   khash_t(STR) * h;
 };
 
+/**
+ * @brief Creates and initializes a new stack for elements of a specified size.
+ *
+ * Allocates a new Stack structure, sets the element size, and initializes the internal hash map for name-to-index tracking.
+ *
+ * @param size Size in bytes of each element to be stored in the stack.
+ * @return Pointer to the newly created Stack, or NULL on allocation failure.
+ */
 Stack * stack_new (int size)
 {
   Stack * s = calloc (1, sizeof (Stack));
@@ -27,6 +35,17 @@ Stack * stack_new (int size)
   return s;
 }
 
+/**
+ * @brief Reallocates memory for an array in fixed-size blocks.
+ *
+ * If the pointer is NULL or the number of elements is a multiple of the block size, reallocates the memory buffer to accommodate one additional block. Otherwise, returns the original pointer unchanged.
+ *
+ * @param ptr Pointer to the current memory block.
+ * @param nmemb Current number of elements.
+ * @param size Size of each element in bytes.
+ * @param block Block size for allocation granularity.
+ * @return void* Pointer to the reallocated memory, or the original pointer if no reallocation was performed.
+ */
 static void * realloc_block (void * ptr, size_t nmemb, size_t size, int block)
 {
   if (!ptr || nmemb % block == 0)
@@ -34,6 +53,11 @@ static void * realloc_block (void * ptr, size_t nmemb, size_t size, int block)
   return ptr;
 }
 
+/**
+ * @brief Pushes an element onto the stack, tracking identifier or typedef names.
+ *
+ * If the element represents an AST node for an identifier or typedef name, extracts its name and updates the stack's internal hash map to track its position and linkage type. The element and its associated name pointer are stored together in the stack buffer. If a custom push function is set, it is invoked before processing.
+ */
 void stack_push (Stack * s, void * p)
 {
   if (s->push)
@@ -86,6 +110,13 @@ void stack_push (Stack * s, void * p)
   memcpy (dest + s->size, &name, sizeof (char *));
 }
 
+/**
+ * @brief Removes and returns the top element from the stack.
+ *
+ * If the popped element represents an identifier or typedef name, updates or removes its associated entry in the internal hash map and frees related memory as needed.
+ *
+ * @return Pointer to the popped element, or NULL if the stack is empty.
+ */
 void * stack_pop (Stack * s)
 {
   if (!s->n)
@@ -114,6 +145,15 @@ void * stack_pop (Stack * s)
   return p;
 }
 
+/**
+ * @brief Returns a pointer to the stack element at the given index from the top.
+ *
+ * Retrieves the element at position `i` counting from the top of the stack (0 is the topmost element).
+ * Returns NULL if the index is out of bounds.
+ *
+ * @param i Index from the top of the stack (0 = top element).
+ * @return Pointer to the element at the specified position, or NULL if out of bounds.
+ */
 void * stack_index (Stack * s, int i)
 {
   if (!s->n || i > s->n - 1 || i < 0)
@@ -121,6 +161,12 @@ void * stack_index (Stack * s, int i)
   return ((char *)s->p) + (s->n - i - 1)*(s->size + sizeof(char *));
 }
 
+/**
+ * @brief Returns a pointer to the element at the specified index from the bottom of the stack.
+ *
+ * @param i Zero-based index from the bottom (0 = bottom element).
+ * @return Pointer to the element at index i, or NULL if out of bounds.
+ */
 void * stack_indexi (Stack * s, int i)
 {
   if (!s->n || i > s->n - 1 || i < 0)
@@ -128,6 +174,14 @@ void * stack_indexi (Stack * s, int i)
   return ((char *)s->p) + i*(s->size + sizeof(char *));
 }
 
+/**
+ * @brief Finds the most relevant stack element associated with a given name.
+ *
+ * Looks up the stack element for the specified key using the internal hash map. If the latest entry is an extern declaration, searches backwards for a global declaration and returns that instead. Returns NULL if the key is not found.
+ *
+ * @param key The name to search for in the stack.
+ * @return Pointer to the stack element associated with the key, or NULL if not found.
+ */
 void * fast_stack_find (Stack * s, const char * key)
 {
   khiter_t k = kh_get (STR, s->h, key);
@@ -143,6 +197,11 @@ void * fast_stack_find (Stack * s, const char * key)
   return ((char *)s->p) + index[n - 1].n*(s->size + sizeof(char *));
 }
 
+/**
+ * @brief Frees all resources associated with the stack.
+ *
+ * Releases memory for all stored name strings, index arrays, the internal hash map, the stack buffer, and the stack structure itself.
+ */
 void stack_destroy (Stack * s)
 {
   const char * name;
@@ -154,6 +213,14 @@ void stack_destroy (Stack * s)
   free (s);
 }
 
+/**
+ * @brief Sets a custom push function for the stack.
+ *
+ * Replaces the current push function with the provided one and returns the previous push function pointer.
+ *
+ * @param push Pointer to the new push function to use for stack operations.
+ * @return Pointer to the previous push function.
+ */
 void * stack_set_push (Stack * s, void * push (Stack *, void *))
 {
   void * old = s->push;
@@ -161,6 +228,14 @@ void * stack_set_push (Stack * s, void * push (Stack *, void *))
   return old;
 }
 
+/**
+ * @brief Sets the auxiliary data pointer for the stack.
+ *
+ * Replaces the stack's current auxiliary data pointer with the provided value and returns the previous pointer.
+ *
+ * @param data The new auxiliary data pointer to associate with the stack.
+ * @return The previous auxiliary data pointer.
+ */
 void * stack_set_data (Stack * s, void * data)
 {
   void * old = s->data;
@@ -168,6 +243,11 @@ void * stack_set_data (Stack * s, void * data)
   return old;
 }
 
+/**
+ * @brief Retrieves the auxiliary data pointer associated with the stack.
+ *
+ * @return The opaque data pointer stored in the stack, or NULL if none is set.
+ */
 void * stack_get_data (const Stack * s)
 {
   return s->data;

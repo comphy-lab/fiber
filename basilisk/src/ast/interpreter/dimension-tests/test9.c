@@ -1,6 +1,11 @@
 /**
-Checks that the interpreter correctly converts doubles/floats to
-bool. */
+ * @brief Tests conversion of floating-point values to boolean in conditional statements.
+ *
+ * Verifies that nonzero double values are treated as true by the interpreter in `if` conditions,
+ * both for variables and direct floating-point literals.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

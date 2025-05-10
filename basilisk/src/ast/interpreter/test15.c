@@ -1,7 +1,13 @@
 /**
-Checks for undefined pointers.
-
-Should be run with valgrind */
+ * @brief Tests interpreter handling of undefined pointer usage and memory errors.
+ *
+ * This function allocates, frees, and conditionally accesses pointers to test detection of undefined pointer dereferencing, uninitialized memory, and use-after-free scenarios. Intended to be run with valgrind or similar tools to verify correct reporting of memory errors and undefined behavior.
+ *
+ * The test covers:
+ * - Accessing pointers that may be NULL or freed.
+ * - Conditional assignment and dereferencing of struct and array pointers.
+ * - Use of uninitialized variables to control allocation and access paths.
+ */
 
 int main()
 {

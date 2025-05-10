@@ -1,5 +1,11 @@
 /**
-Tests function declarations and pointers */
+ * @brief Computes a value based on the fields of a coord structure.
+ *
+ * Calculates two intermediate values using the `z` and `y` members of the input `coord`, then returns their sum.
+ *
+ * @param q The coord structure containing the input values.
+ * @return double The computed sum of the intermediate values.
+ */
 
 double func (coord q)
 {
@@ -11,6 +17,13 @@ double func (coord q)
 
 double func (coord p);
 
+/**
+ * @brief Executes tests involving function pointers, struct manipulation, and pointer arithmetic.
+ *
+ * Initializes and manipulates `coord` structures and doubles, demonstrates function pointer usage with structs, performs arithmetic operations, and exercises pointer arithmetic on arrays. Prints a computed value to standard output.
+ *
+ * @return int Exit status code.
+ */
 int main()
 {{ interpreter_verbosity (4);
     

@@ -1,6 +1,10 @@
 /**
-Checks that freed values modified by undefined conditionals are
-properly handled. This should be run with valgrind. */
+ * @brief Tests memory allocation and freeing under an undefined conditional.
+ *
+ * Declares an uninitialized variable and uses it as a condition to allocate and free memory, intended for use with Valgrind to detect issues related to undefined behavior and memory management.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

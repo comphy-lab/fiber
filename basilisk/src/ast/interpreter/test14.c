@@ -3,6 +3,13 @@ Checks Arrays. */
 
 typedef int Elem;
 
+/**
+ * @brief Tests dynamic array creation, element appending, and pointer-based iteration.
+ *
+ * Creates a dynamic array of integers, appends elements, and verifies access to the internal data buffer using pointer arithmetic and iteration.
+ *
+ * @return int Exit status code.
+ */
 int main()
 {
   {

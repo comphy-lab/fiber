@@ -1,5 +1,10 @@
 /**
-# Constants */
+ * @brief Demonstrates evaluation and display of various expressions and variables.
+ *
+ * Exercises arithmetic operations, type conversions, variable assignments, constant usage, and conditional logic by displaying the results of multiple expressions using the display_value function.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

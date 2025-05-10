@@ -6,6 +6,13 @@ struct Func {
   double b; // implicit (0)
 };
 
+/**
+ * @brief Tests implicit zero initialization of struct members.
+ *
+ * Sets interpreter verbosity, creates a Func struct with only the first member initialized, and displays both members to verify that the second is zero-initialized.
+ *
+ * @return int Exit status code.
+ */
 int main()
 {
   { interpreter_verbosity (2);
