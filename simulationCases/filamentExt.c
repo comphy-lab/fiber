@@ -10,7 +10,6 @@
 #include "axi.h"
 #include "navier-stokes/centered.h"
 
-
 #include "log-conform-viscoelastic-scalar-2D.h"
 #define logFile "logAxi-scalar.dat"
 
