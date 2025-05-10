@@ -14,6 +14,16 @@ typedef struct {
   int n, dimension;
 } Accelerator;
 
+/**
+ * @brief Determines if an AST node represents a local declaration within the current scope.
+ *
+ * Checks whether the given AST node `n` is declared locally in the provided stack of declarations up to the specified scope node. Returns true if `n` is a local declaration or matches the special identifier "point"; otherwise, returns false.
+ *
+ * @param n The AST node to check.
+ * @param stack The stack of declarations representing the current scope chain.
+ * @param scope The AST node marking the boundary of the current scope.
+ * @return true if `n` is a local declaration within the scope; false otherwise.
+ */
 static
 bool is_local_declaration (Ast * n, Stack * stack, Ast * scope)
 {
@@ -31,6 +41,13 @@ bool is_local_declaration (Ast * n, Stack * stack, Ast * scope)
 static
 void external_references (Ast * n, Stack * stack, Accelerator * a);
 
+/**
+ * @brief Adds an external reference to the accelerator if it is not local or internal.
+ *
+ * Searches for the declaration of the given identifier name in the current stack. If the identifier is not locally declared within the current scope and is not an internal variable or macro, adds it to the accelerator's nonlocal references. If the identifier corresponds to a function definition, recursively collects its external references as well.
+ *
+ * @param name The identifier name to check for external reference.
+ */
 static
 void add_external_reference (const char * name, Stack * stack, Accelerator * a)
 {
@@ -71,6 +88,15 @@ void add_external_reference (const char * name, Stack * stack, Accelerator * a)
   }
 }
 
+/**
+ * @brief Recursively collects external references and attribute accesses within an AST node.
+ *
+ * Traverses the given AST node and its children, identifying identifiers that are not locally declared and recording them as external references. Also detects attribute accesses and records them if not already tracked. Skips placeholder nodes and parameter initializers.
+ *
+ * @param n The AST node to process.
+ * @param stack The stack representing the current scope and declarations.
+ * @param a The Accelerator struct used to accumulate nonlocal references and attributes.
+ */
 static
 void external_references (Ast * n, Stack * stack, Accelerator * a)
 {
@@ -120,6 +146,18 @@ void external_references (Ast * n, Stack * stack, Accelerator * a)
   ast_pop_scope (stack, scope);
 }
 
+/**
+ * @brief Appends a formatted description of an external reference to the references string.
+ *
+ * Formats and adds metadata about the given AST reference, including its name, type (handling typedefs, function pointers, and enumeration constants), pointer depth, global status, attribute offsets, reduction operators, and array dimensions. Skips internal or ignored references such as "NULL" and "qassert". Handles special cases for double pointers and attributes, and tracks function definitions in the provided functions stack.
+ *
+ * @param ref The AST node representing the external reference.
+ * @param references The string buffer to which the formatted reference description is appended.
+ * @param scope The current AST scope for context.
+ * @param stack The stack of declarations for scope resolution.
+ * @param functions Stack used to track encountered function definitions.
+ * @return The updated references string with the new reference appended.
+ */
 static
 char * add_reference (Ast * ref, char * references, Ast * scope, Stack * stack, Stack * functions)
 {
@@ -308,6 +346,16 @@ char * add_reference (Ast * ref, char * references, Ast * scope, Stack * stack, 
   return references;
 }
 
+/**
+ * @brief Collects and formats external references used within an AST scope.
+ *
+ * Traverses the given AST scope to identify external variables, functions, and attributes referenced within it. Appends formatted descriptions of these references to the provided string buffer, including type, pointer, and dimension information. Also tracks encountered functions in the provided stack.
+ *
+ * @param scope The AST node representing the scope to analyze.
+ * @param references The string buffer to which formatted reference descriptions are appended.
+ * @param functions Stack to collect function references encountered during traversal.
+ * @return Updated string buffer containing formatted external reference information.
+ */
 char * ast_external_references (Ast * scope, char * references, Stack * functions)
 {
   AstRoot * root = ast_get_root (scope);

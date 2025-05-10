@@ -45,9 +45,10 @@ User initialisation happens here. */
 event init (i = 0);
 
 /**
-The timestep is set using the velocity field and the CFL
-criterion. The integration itself is performed in the events of
-[tracer.h](). */
+ * @brief Updates the simulation timestep based on the velocity field and CFL condition.
+ *
+ * Computes the next timestep using the current velocity field to satisfy the CFL criterion. The actual tracer advection integration is handled separately.
+ */
 
 event velocity (i++,last) {
   dt = dtnext (timestep (u, DT));

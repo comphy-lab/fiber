@@ -1,8 +1,20 @@
 /**
-# Loop tests for the interpreter */
+ * @brief Placeholder function accepting an integer argument.
+ *
+ * Intended for use in interpreter loop tests; performs no operations.
+ *
+ * @param i Integer value passed to the function.
+ */
 
 void func (int i) {}
 
+/**
+ * @brief Tests various loop constructs and structure usage for the interpreter.
+ *
+ * Executes while, do-while, and for loops, each calling a test function with loop variables. Also tests structure initialization and the sizeof operator by passing results to the test function. Intended as a functional test for interpreter loop and structure handling.
+ *
+ * @return int Exit status code.
+ */
 int main()
 {
 {

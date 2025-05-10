@@ -1,5 +1,12 @@
 /**
-# Pointer tests for the C interpreter */
+ * @brief Computes and prints intermediate values based on the fields of a coord structure.
+ *
+ * Multiplies the z field of the input coord by 5 to compute c, then multiplies c by the y field to compute d.
+ * Prints the values of c and d, and returns their sum.
+ *
+ * @param q Input coord structure whose fields are used in the computation.
+ * @return The sum of c and d, where c = q.z * 5 and d = c * q.y.
+ */
 
 double func (coord q)
 {
@@ -12,6 +19,13 @@ double func (coord q)
   return c - d;
 }
 
+/**
+ * @brief Executes a series of pointer, array, and structure manipulation tests.
+ *
+ * Demonstrates pointer arithmetic, function pointer usage, structure member access, and function calls with various argument types. Outputs intermediate results to verify correctness of operations. Intended as a test suite for C interpreter features related to pointers and structures.
+ *
+ * @return int Exit status code.
+ */
 int main()
 {
 { interpreter_verbosity (2);  

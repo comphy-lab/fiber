@@ -1,6 +1,10 @@
 /**
-Checks that values which go back to their original value after an
-undefined condition are not undefined. */
+ * @brief Tests variable definedness after modification under undefined conditions.
+ *
+ * Demonstrates that if a variable modified within a conditional branch depending on an uninitialized value is restored to its original state, its use is not undefined; but if the variable is modified in only one branch, subsequent use may be undefined.
+ *
+ * @return int Always returns 0.
+ */
   
 int main()
 {

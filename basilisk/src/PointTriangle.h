@@ -6,9 +6,19 @@
 #define vecdist2(a,b) (sq((a).x - (b).x) + sq((a).y - (b).y) + sq((a).z - (b).z))
 
 /**
- * Returns the squared distance between point P and triangle P0, P1,
- * P2. Squared distance is returned in d2.  s and t returns the
- * closest point in parametric form in terms of edges P0P1 and P0P2.
+ * @brief Computes the squared distance from a point to a triangle in 3D space.
+ *
+ * Calculates the squared Euclidean distance between point P and the triangle defined by vertices P0, P1, and P2. The function also returns the barycentric coordinates (s, t) of the closest point on the triangle relative to edges P0P1 and P0P2.
+ *
+ * If the triangle is degenerate (zero area), returns a large value (HUGE). The result is numerically clamped to zero if negative due to round-off.
+ *
+ * @param P Pointer to the point.
+ * @param P0 Pointer to the first triangle vertex.
+ * @param P1 Pointer to the second triangle vertex.
+ * @param P2 Pointer to the third triangle vertex.
+ * @param s Pointer to store the barycentric coordinate along edge P0P1.
+ * @param t Pointer to store the barycentric coordinate along edge P0P2.
+ * @return Squared distance from P to the triangle.
  */
 double PointTriangleDistance (const coord * P,
 			      const coord * P0,
@@ -243,6 +253,13 @@ double PointTriangleDistance (const coord * P,
   return d2;
 }
 
+/**
+ * @brief Determines the orientation of a point relative to a triangle in 3D space.
+ *
+ * Computes the sign of the dot product between the vector from the point to a triangle vertex and the triangle's normal vector, indicating on which side of the triangle's plane the point lies.
+ *
+ * @return Positive, negative, or zero value indicating the side of the triangle plane where the point is located.
+ */
 int PointTriangleOrientation (const coord * P,
 			      const coord * P0,
 			      const coord * P1,
@@ -256,8 +273,17 @@ int PointTriangleOrientation (const coord * P,
 }
 
 /**
-   Returns the squared distance between p and [p0:p1].
-*/
+ * @brief Computes the squared distance from a point to a line segment in 3D space.
+ *
+ * Determines the closest point on the segment defined by endpoints `p0` and `p1` to the point `p`, returning the squared distance between them. Outputs the closest point in `segmentClosest` and the segment parameter in `segmentParameter`, where 0 corresponds to `p0` and 1 to `p1`.
+ *
+ * @param p Pointer to the point.
+ * @param p0 Pointer to the first endpoint of the segment.
+ * @param p1 Pointer to the second endpoint of the segment.
+ * @param segmentClosest Pointer to store the closest point on the segment.
+ * @param segmentParameter Pointer to store the parameter along the segment [0, 1] of the closest point.
+ * @return Squared distance between `p` and the closest point on the segment.
+ */
 double PointSegmentDistance (const coord * p, const coord * p0, const coord * p1,
 			     coord * segmentClosest, double * segmentParameter)
 {
@@ -303,6 +329,14 @@ double PointSegmentDistance (const coord * p, const coord * p0, const coord * p1
   return vecdot(diff, diff);
 }
 
+/**
+ * @brief Determines the orientation of a point relative to a line segment in 3D space.
+ *
+ * Computes the sign of the z-component of the cross product between the vector from P to P0 and the segment vector P0P1.
+ * Returns a positive value if P lies to one side of the segment, negative if to the other, and zero if colinear in the XY plane.
+ *
+ * @return int Sign of the orientation: 1, -1, or 0.
+ */
 int PointSegmentOrientation (const coord * P,
 			     const coord * P0,
 			     const coord * P1)

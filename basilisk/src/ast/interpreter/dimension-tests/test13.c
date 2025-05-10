@@ -1,7 +1,10 @@
 /**
-Check that 'datasize' and other field properties are defined properly
-even when allocating temporary fields within undefined
-conditionals. */
+ * @brief Tests that field properties remain defined after conditional allocation of temporary fields.
+ *
+ * Initializes a computational grid and declares a scalar field. Conditionally allocates a temporary scalar field inside an uninitialized conditional block, then verifies that properties such as `datasize` and `_attribute[1].freed` are properly set and not left unset, regardless of the conditional allocation path.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

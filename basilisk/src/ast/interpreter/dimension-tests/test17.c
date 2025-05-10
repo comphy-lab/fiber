@@ -1,5 +1,10 @@
 /**
-# Dimensioned constant expressions */
+ * @brief Demonstrates arithmetic operations with dimensioned constant expressions.
+ *
+ * Initializes double precision variables and performs addition with a dimensioned constant to test handling of such expressions.
+ *
+ * @return int Always returns 0.
+ */
 
 int main()
 {

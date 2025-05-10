@@ -152,7 +152,15 @@ typedef struct {
 } Einstein_sumData;
 
 /**
-This function appends a block to an expression with a `+` sign separator. */
+ * @brief Appends an AST node to an additive expression list with a '+' separator.
+ *
+ * If the appended item is already an additive expression of the specified type, it is added directly; otherwise, it is wrapped before appending. Returns the new additive expression node.
+ *
+ * @param list The existing additive expression AST node.
+ * @param item_sym The symbol representing the additive expression type (e.g., addition).
+ * @param item The AST node to append.
+ * @return Ast* The updated additive expression AST node.
+ */
 
 Ast * ast_add_list_append (Ast * list, int item_sym, Ast * item)
 {
@@ -177,7 +185,14 @@ Ast * ast_add_list_append (Ast * list, int item_sym, Ast * item)
 }
 
 /**
-Read the input id list given to the macro. */
+ * @brief Collects single-character identifiers from the macro argument list.
+ *
+ * Traverses the AST node representing macro arguments, appending each single-character identifier to the provided buffer. Emits an error and exits if any identifier is longer than one character.
+ *
+ * @param n AST node representing a macro argument.
+ * @param stack Unused.
+ * @param data Pointer to a character buffer where collected identifiers are appended.
+ */
 
 static void einstein_sum_id_list (Ast * n, Stack * stack, void * data)
 {
@@ -194,6 +209,13 @@ static void einstein_sum_id_list (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Extracts the argument list (summation indices) from an `einstein_sum` macro invocation in the AST.
+ *
+ * Traverses the AST upwards from the given node to locate the enclosing `einstein_sum` macro statement, then collects its argument identifiers into a newly allocated string.
+ *
+ * @return Pointer to a heap-allocated string containing the concatenated summation indices. Caller is responsible for freeing the memory.
+ */
 static char * get_einstein_sum_args (Ast * n, Stack * stack)
 {
   // stop when the macro einstein sum is found
@@ -216,6 +238,16 @@ static char * get_einstein_sum_args (Ast * n, Stack * stack)
   return indices;
 }
 
+/**
+ * @brief Appends member identifier characters to a buffer if they match summation indices.
+ *
+ * Traverses an AST node representing a member identifier and, if the identifier's first character
+ * matches any of the summation indices specified in the macro arguments, appends it to the provided buffer.
+ *
+ * @param n AST node to examine.
+ * @param stack AST traversal stack (unused in this function).
+ * @param data Pointer to a character buffer where matching identifier characters are appended.
+ */
 static void einstein_sum_get_member_id (Ast * n, Stack * stack, void * data)
 {
   if (n->sym == sym_member_identifier) {
@@ -231,6 +263,14 @@ static void einstein_sum_get_member_id (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Finds the enclosing expression statement AST node for a given node.
+ *
+ * Traverses the AST upwards from the given node until it reaches a node representing an expression statement or until the traversal condition fails.
+ *
+ * @param n The starting AST node.
+ * @return Ast* Pointer to the enclosing expression statement node, or the last traversed node if not found.
+ */
 static Ast * get_expression_statement (Ast * n)
 {
   while (n->sym != sym_expression_statement && n->sym == sym_expression)
@@ -239,7 +279,12 @@ static Ast * get_expression_statement (Ast * n)
 }
 
 /**
-Get all the indicies present in the block (Ast * n). */
+ * @brief Returns a string containing all unique index identifiers found in the given AST subtree.
+ *
+ * Traverses the AST node `n` and collects single-character member identifiers (e.g., `.i`, `.j`) into a dynamically allocated string. The returned string contains the indices present in the expression, in the order they are encountered.
+ *
+ * @return Pointer to a newly allocated string of indices. Caller is responsible for freeing the memory.
+ */
 
 static char * get_expression_id (Ast * n, Stack * stack)
 {
@@ -253,7 +298,13 @@ static char * get_expression_id (Ast * n, Stack * stack)
 }
 
 /**
-Return the right-hand-side of an expression from a lower level block. */
+ * @brief Retrieves the right-hand side expression of the nearest enclosing assignment.
+ *
+ * Traverses the AST upwards from the given node to locate the closest assignment expression,
+ * then returns its right-hand side child node.
+ *
+ * @return Ast* The AST node representing the right-hand side of the assignment, or NULL if not found.
+ */
 
 static Ast * get_right_hand_side (Ast * n, Stack * stack)
 {
@@ -263,7 +314,10 @@ static Ast * get_right_hand_side (Ast * n, Stack * stack)
 }
 
 /**
-Permute the .i by .i_x. */
+ * @brief Appends the suffix "_x" to member identifiers matching summation indices.
+ *
+ * Traverses the AST node and, for each member identifier whose name matches a single-character summation index from the macro arguments, modifies the identifier by appending "_x". This marks the index for later permutation during Einstein summation expansion.
+ */
 
 static void einstein_sum_replace_id (Ast * n, Stack * stack, void * data)
 {
@@ -280,7 +334,14 @@ static void einstein_sum_replace_id (Ast * n, Stack * stack, void * data)
 }
 
 /**
-Increment the _x to _y or _z and so on. */
+ * @brief Updates the suffix of member identifiers to reflect the current permutation index.
+ *
+ * For member identifiers ending with a suffix such as `_x`, `_y`, or `_z`, replaces the suffix with the appropriate character (`x`, `y`, or `z`) based on the current permutation values in the provided Einstein_sumData. This is used to permute tensor component indices during Einstein summation expansion.
+ *
+ * @param n AST node representing a member identifier.
+ * @param stack Unused stack parameter.
+ * @param data Pointer to Einstein_sumData containing permutation state.
+ */
 
 static void einstein_sum_rotate (Ast * n, Stack * stack, void * data)
 {
@@ -300,8 +361,14 @@ static void einstein_sum_rotate (Ast * n, Stack * stack, void * data)
 }
 
 /**
-Generate the list of all possible permutations for the indices 
-with {0,1,2} corresponding to {x,y,z}. */
+ * @brief Generates all possible index permutations for tensor components.
+ *
+ * Fills the provided array with every combination of index values for the specified number of indices and dimension, where 0, 1, and 2 correspond to x, y, and z components.
+ *
+ * @param LOP Output array to store the permutations. Must have size at least pow(dim, num_of_index) * num_of_index.
+ * @param num_of_index Number of indices to permute.
+ * @param dim Dimension of the tensor space (e.g., 2 for x/y, 3 for x/y/z).
+ */
 
 static void generates_list_of_permutations(int * LOP,int num_of_index,int dim){
     int length = pow(dim,num_of_index);
@@ -317,7 +384,14 @@ static void generates_list_of_permutations(int * LOP,int num_of_index,int dim){
 }
 
 /**
-This function perform the summation step within an expression. */
+ * @brief Expands summation indices in an expression according to Einstein notation.
+ *
+ * Identifies indices in the expression that should be summed over, generates all possible permutations for these indices, and duplicates the expression for each permutation, appending the resulting terms as an additive sum. Updates the forbidden index list to prevent repeated summation over the same indices.
+ *
+ * @param n The AST node representing the expression to process.
+ * @param stack The AST traversal stack.
+ * @param data Pointer to an Einstein_sumData struct containing summation state.
+ */
 
 static void einstein_sum_sum (Ast * n, Stack * stack, void * data)
 {
@@ -401,6 +475,11 @@ static void einstein_sum_sum (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Restores original index names in member identifiers after permutation expansion.
+ *
+ * Reverts temporary suffixes (e.g., `_x`, `_y`, `_z`) on member identifiers back to their original single-character index names within the AST subtree rooted at `n`.
+ */
 static void einstein_sum_replace_id_back (Ast * n, Stack * stack, void * data)
 {
   if (n->sym == sym_member_identifier) {
@@ -417,6 +496,18 @@ static void einstein_sum_replace_id_back (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Expands an assignment expression within the Einstein summation macro into explicit summations and permutations.
+ *
+ * For each assignment expression inside the macro block, this function:
+ * - Marks tensor indices for permutation by appending suffixes (e.g., `.i` to `.i_x`).
+ * - Identifies summation indices (those appearing only on the right-hand side) and expands the expression into a sum over all possible values of these indices.
+ * - Removes duplicate indices from the left-hand side.
+ * - Generates all permutations of remaining free indices and duplicates the expression accordingly.
+ * - Restores original member names after expansion.
+ *
+ * The expanded expressions are inserted into the AST, replacing the original macro statement.
+ */
 static void einstein_sum_expression (Ast * n, Stack * stack, void * data)
 { 
   if (n->sym == sym_assignment_expression &&
@@ -503,6 +594,15 @@ static void einstein_sum_expression (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Expands the `einstein_sum` macro in the AST to explicit tensor summation and permutation expressions.
+ *
+ * Processes the `einstein_sum` macro invocation by extracting summation indices, ensuring the macro body is a compound statement, and traversing its AST to expand index notation into explicit component-wise summations and permutations according to the specified tensor dimension. The macro body is replaced with the expanded AST reflecting the full summation and permutation logic.
+ *
+ * @param n AST node representing the macro statement.
+ * @param stack Stack used for AST traversal and scope management.
+ * @param dimension Dimension of the tensor space (e.g., 2 for 2D, 3 for 3D).
+ */
 void einstein_sum_global (Ast * n, Stack * stack, int dimension)
 {
   Ast * item = ast_block_list_get_item (ast_ancestor (n, 2));

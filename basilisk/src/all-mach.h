@@ -135,10 +135,12 @@ This event can be overloaded to add acceleration terms. */
 event acceleration (i++, last);
 
 /**
-The equation for the pressure is a Poisson--Helmoltz problem which we
-will solve with the [multigrid solver](poisson.h). The statistics for
-the solver will be stored in *mgp* (resp. *mgu* for the viscosity
-solver). */
+ * @brief Advances the pressure and velocity fields by solving the pressure evolution equation using a projection method.
+ *
+ * This event performs the main pressure and velocity update step for each timestep. It optionally applies an implicit viscosity solve, computes a provisional face velocity, and formulates the pressure evolution as a Poisson–Helmholtz problem. The pressure equation is solved using a multigrid solver, and the resulting pressure gradient is used to correct the velocity and momentum fields to enforce incompressibility or compressibility effects, depending on the equation of state.
+ *
+ * The function updates the global pressure, velocity, and momentum fields, and stores solver statistics for both pressure and viscosity solves.
+ */
 
 event pressure (i++, last)
 {
@@ -265,6 +267,11 @@ event end_timestep (i++, last);
 After mesh adaptation fluid properties need to be updated. */
 
 #if TREE
+/**
+ * @brief Updates fluid properties after mesh adaptation.
+ *
+ * Calls the "properties" event to ensure fluid properties are consistent with the adapted mesh.
+ */
 event adapt (i++,last) {
   event ("properties");
 }

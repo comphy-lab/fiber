@@ -5,6 +5,13 @@ A complex function with undefined conditions and loops. */
 #define length 0.025
 int maxlevel = 10;
 
+/**
+ * @brief Initializes a 3D computational grid and iteratively refines cells based on geometric criteria.
+ *
+ * Sets up a grid with specified origin and size, then repeatedly applies boundary conditions and refines leaf cells whose coordinates and refinement level meet defined thresholds. The refinement process continues until no further cells qualify for refinement.
+ *
+ * @return int Returns 0 upon successful completion.
+ */
 int main()
 {
   init_grid (64);

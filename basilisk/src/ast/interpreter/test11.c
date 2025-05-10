@@ -1,5 +1,10 @@
 /**
-Checks "undefined" scalar reductions. */
+ * @brief Tests scalar reduction operations on potentially uninitialized values in a grid.
+ *
+ * Initializes a 1x1 computational grid and performs reduction operations (sum, sum of squares, min, max, and volume) over a scalar field that is not explicitly initialized. The function checks the behavior of these reductions when encountering potentially undefined values, particularly focusing on the handling of cell volumes and maximum values.
+ *
+ * @return int Always returns 0.
+ */
 
 int main()
 {

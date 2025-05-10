@@ -1,5 +1,8 @@
 /**
-# Careful with dimensions depending on undefined branches */
+ * @brief Demonstrates dimension inconsistency when variable assignment depends on an undefined conditional branch.
+ *
+ * This function shows that if a variable's dimension changes only within a conditional branch with an undefined condition, the resulting dimensions may be inconsistent across execution paths. The accompanying comment explains the issue and suggests assigning the variable in both branches to ensure dimension consistency.
+ */
 
 int main()
 {{ interpreter_verbosity (3);

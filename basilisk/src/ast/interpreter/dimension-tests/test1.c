@@ -1,5 +1,10 @@
 /**
-# "Undefined branched expressions" have the same dimensions */
+ * @brief Tests dimension consistency in branched expressions.
+ *
+ * Initializes a grid and evaluates conditional assignments to verify that both branches of a conditional expression have matching dimensions. Demonstrates valid and invalid cases, including an intentional dimension mismatch to trigger an error.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

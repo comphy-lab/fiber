@@ -1,6 +1,10 @@
 /**
-Checks that the dimension of "out of bounds" array elements is the
-same as that of initial elements. */
+ * @brief Tests that all elements of a dimensioned array, including those beyond the interpreter's default initialization range, have consistent dimension metadata.
+ *
+ * Initializes a double array of size 100 with a dimensioned value. Uses a conditional expression to compare the dimensions of the first and last elements, triggering an error if they differ. This verifies that uninitialized elements beyond the default iteration limit retain the same dimension as initialized ones.
+ *
+ * @return int Always returns 0.
+ */
 
 int main()
 {

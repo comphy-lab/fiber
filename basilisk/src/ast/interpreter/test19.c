@@ -1,5 +1,10 @@
-/** 
-Checks that external declarations are properly handled. */
+/**
+ * @brief Tests correct resolution of external variable declarations.
+ *
+ * Verifies that an external declaration within a nested block refers to the global variable rather than a local variable with the same name.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

@@ -1,5 +1,10 @@
 /**
-# Tests default field dimensions */
+ * @brief Tests that scalar, vector, and tensor fields have default dimension L0.
+ *
+ * Initializes a single-cell grid, declares scalar, vector, and tensor fields, resets them, and verifies that all components have the default dimension L0 using dimensional assertions.
+ *
+ * @return int Returns 0 on successful completion.
+ */
 
 int main()
 {

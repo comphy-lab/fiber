@@ -56,6 +56,14 @@ const
 char *    ast_crop_before (const char * s);
 double    ast_evaluate_constant_expression (const Ast * n);
 
+/**
+ * @brief Returns the last child node of the given AST node.
+ *
+ * If the node has no children or is NULL, returns NULL.
+ *
+ * @param n Pointer to the AST node.
+ * @return Pointer to the last child node, or NULL if none exists.
+ */
 static inline Ast * ast_last_child (const Ast * n)
 {
   if (!n)
@@ -69,6 +77,15 @@ static inline Ast * ast_last_child (const Ast * n)
 
 extern Ast * const ast_placeholder;
 
+/**
+ * @brief Returns the first child of an AST node with the specified symbol.
+ *
+ * Searches the children of the given AST node for the first child whose symbol matches the provided value, skipping placeholder nodes. Returns NULL if no such child exists or if the node has no children.
+ *
+ * @param n Pointer to the AST node to search.
+ * @param sym Symbol value to match among the children.
+ * @return Pointer to the matching child node, or NULL if not found.
+ */
 static inline Ast * ast_child (const Ast * n, int sym)
 {
   if (!n)
@@ -80,6 +97,15 @@ static inline Ast * ast_child (const Ast * n, int sym)
   return *c;
 }
 
+/**
+ * @brief Returns the nearest ancestor of an AST node with a specified symbol.
+ *
+ * Searches up the parent chain from the given node and returns the first ancestor whose symbol matches the specified value, or NULL if none is found.
+ *
+ * @param n The starting AST node.
+ * @param sym The symbol to match in ancestor nodes.
+ * @return Ast* The nearest ancestor node with the given symbol, or NULL if not found.
+ */
 static inline Ast * ast_parent (const Ast * n, int sym)
 {
   if (!n || n == ast_placeholder)
@@ -90,6 +116,14 @@ static inline Ast * ast_parent (const Ast * n, int sym)
   return parent;
 }
 
+/**
+ * @brief Returns the leftmost terminal node in the subtree rooted at the given AST node.
+ *
+ * Traverses the AST from the specified node, following the first non-placeholder child at each level, until a terminal node is reached. Returns NULL if only placeholders are encountered.
+ *
+ * @param n The root of the subtree to search.
+ * @return AstTerminal* Pointer to the leftmost terminal node, or NULL if none is found.
+ */
 static inline AstTerminal * ast_left_terminal (const Ast * n)
 {
   while (n && n != ast_placeholder && n->child) {
@@ -100,6 +134,14 @@ static inline AstTerminal * ast_left_terminal (const Ast * n)
   return (AstTerminal *) (n != ast_placeholder ? n : NULL);
 }
 
+/**
+ * @brief Returns the rightmost terminal node in the subtree rooted at the given AST node.
+ *
+ * Traverses the AST from the specified node to its deepest rightmost descendant, skipping placeholder nodes. Returns the corresponding terminal node, or NULL if the subtree consists only of a placeholder.
+ *
+ * @param n Root of the subtree to search.
+ * @return AstTerminal* The rightmost terminal node, or NULL if not found.
+ */
 static inline AstTerminal * ast_right_terminal (const Ast * n)
 {
   while (n && n != ast_placeholder && n->child)
@@ -132,6 +174,12 @@ Ast * ast_new_children_internal (Ast * parent, ...);
 void ast_set_child (Ast * parent, int index, Ast * child);
 void ast_replace_child (Ast * parent, int index, Ast * child);
 
+/**
+ * @brief Returns the index of a node among its parent's children.
+ *
+ * @param n The AST node whose index is to be determined. Must have a parent.
+ * @return int The zero-based index of the node within its parent's child array, or -1 if not found.
+ */
 static inline int ast_child_index (const Ast * n)
 {
   assert (n->parent);
@@ -141,6 +189,15 @@ static inline int ast_child_index (const Ast * n)
   return *c == n ? index : - 1;
 }
 
+/**
+ * @brief Returns the ancestor of an AST node at a specified level.
+ *
+ * Traverses up the parent chain of the given AST node and returns the ancestor at the i-th level above. If the root is reached before the specified level, returns NULL.
+ *
+ * @param n The starting AST node.
+ * @param i The number of levels to traverse up.
+ * @return Ast* The ancestor node at the specified level, or NULL if not found.
+ */
 static inline Ast * ast_ancestor (const Ast * n, int i)
 {
   while (n && i)
@@ -161,6 +218,13 @@ char * str_prepend_realloc (char * dst, ...);
 #define ast_root(n) ((n)->parent ? NULL : (AstRoot *)(n))
 char *  ast_str_append (const Ast * n, char * s);
 
+/**
+ * @brief Replaces the source text of a terminal AST node with spaces.
+ *
+ * Overwrites the characters in the terminal's source text with spaces, effectively hiding its content.
+ *
+ * @param n Terminal AST node whose source text will be hidden.
+ */
 static inline void ast_hide (AstTerminal * n)
 {
   for (char * s = n->start; *s != '\0'; s++)
@@ -177,6 +241,16 @@ AstTerminal * ast_replace (Ast * n, const char * terminal, Ast * with);
 
 #define NN(parent,sym,...) ast_new_children (ast_new (parent, sym), __VA_ARGS__)
 
+/**
+ * @brief Creates a new terminal AST node and transfers the 'before' source context from the leftmost terminal of the parent.
+ *
+ * The new terminal node is initialized with the given parent, symbol, and name. The 'before' field of the leftmost terminal under the parent is moved to the new node, and cleared from the original.
+ *
+ * @param parent The parent AST node.
+ * @param sym The symbol for the new terminal node.
+ * @param name The source start position or name for the terminal.
+ * @return AstTerminal* The newly created terminal AST node.
+ */
 static inline AstTerminal * NB (Ast * parent, int sym, const char * name)
 {
   AstTerminal * t = ast_terminal_new (parent, sym, name);
@@ -185,6 +259,14 @@ static inline AstTerminal * NB (Ast * parent, int sym, const char * name)
   return t;
 }
 
+/**
+ * @brief Creates a new terminal AST node with the same line number as the rightmost terminal of the parent.
+ *
+ * @param parent The parent AST node.
+ * @param sym The symbol for the new terminal node.
+ * @param name The source start position or name for the terminal.
+ * @return AstTerminal* The newly created terminal AST node.
+ */
 static inline AstTerminal * NA (Ast * parent, int sym, const char * name)
 {
   AstTerminal * t = ast_terminal_new (parent, sym, name);

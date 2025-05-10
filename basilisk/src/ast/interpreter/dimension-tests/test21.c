@@ -1,5 +1,10 @@
 /**
-# Dimensions of array elements are identical */
+ * @brief Tests that array elements of different floating-point types behave identically in arithmetic operations.
+ *
+ * Initializes a grid, declares double and float arrays, and performs arithmetic with their elements to verify consistent handling of array element dimensions.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

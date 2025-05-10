@@ -1,5 +1,10 @@
 # 2 "ast/init_solver.h"
 
+/**
+ * @brief Initializes the solver and sets floating-point exception handling.
+ *
+ * Calls the solver initialization routine and configures floating-point exception handling. Contains placeholders for future event registrations and field allocations, which are currently empty.
+ */
 static void _init_solver (void)
 {
   void init_solver();

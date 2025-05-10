@@ -24,6 +24,14 @@ accesses). */
 # define CHECK(x) (x)
 #endif
 
+/**
+ * @brief Determines if a function AST node represents a stencil function.
+ *
+ * Checks whether the function's identifier starts with the "_stencil_" prefix.
+ *
+ * @param n The AST node representing a function.
+ * @return true if the function is a stencil function, false otherwise.
+ */
 bool ast_is_stencil_function (Ast * n)
 {
   Ast * identifier = ast_function_identifier (n);
@@ -33,6 +41,13 @@ bool ast_is_stencil_function (Ast * n)
   return len > 0 && !strncmp (ast_terminal (identifier)->start, "_stencil_", 9);
 }
 
+/**
+ * @brief Determines if an AST node represents a non-constant scalar or vertex scalar.
+ *
+ * Checks whether the given AST node has a type of "scalar" or "vertex scalar" and is not a constant postfix expression.
+ *
+ * @return true if the node is a non-constant scalar or vertex scalar; false otherwise.
+ */
 static bool is_scalar (Ast * n, Stack * stack)
 {
   const char * typename = ast_typedef_name (ast_expression_type (n, stack, true));  
@@ -41,6 +56,14 @@ static bool is_scalar (Ast * n, Stack * stack)
     !ast_constant_postfix_expression (n, stack);
 }
 
+/**
+ * @brief Checks if an AST node represents a point function call.
+ *
+ * Scans the argument list of a function call AST node and returns the argument node if it is an identifier named "point" or a function call to "neighborp". Returns NULL if no such argument is found.
+ *
+ * @param n The AST node to check.
+ * @return Ast* The argument node corresponding to a point function call, or NULL if not found.
+ */
 static Ast * is_point_function_call (Ast * n)
 {  
   Ast * arguments = ast_child (n, sym_argument_expression_list);
@@ -63,6 +86,15 @@ static Ast * is_point_function_call (Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Determines if an AST node represents a stencil field access.
+ *
+ * Returns true if the node is an array access of a scalar field, a function call to a recognized stencil-related function (such as "val", "neighbor", "_assign", etc.), or a point function call. Otherwise, returns false.
+ *
+ * @param n The AST node to check.
+ * @param stack The current symbol stack for type resolution.
+ * @return true if the node is a stencil field access; false otherwise.
+ */
 static bool is_field_access (Ast * n, Stack * stack)
 {  
   switch (n->sym) {
@@ -98,12 +130,31 @@ static bool is_field_access (Ast * n, Stack * stack)
   return false;
 }
 
+/**
+ * @brief Appends an AST item to a block list, creating a new list if necessary.
+ *
+ * If the list is empty, returns a new list containing the item. Otherwise, returns a new list with the item appended.
+ *
+ * @param list The AST block list to append to.
+ * @param item The AST node to append.
+ * @return Ast* The resulting AST block list with the item appended.
+ */
 static Ast * block_list_append (Ast * list, Ast * item)
 {
   return !list->child ? ast_new_children (list, item) :
     ast_new_children (ast_new (item, list->sym), list, item);
 }
 
+/**
+ * @brief Retrieves the local variable declaration for an identifier within a given scope.
+ *
+ * Searches for the declaration of the identifier referenced by the AST node `n` in the specified scope. Returns NULL if the identifier is part of a function call or cannot be resolved, or returns the node itself if the identifier is "point".
+ *
+ * @param n AST node containing the identifier reference.
+ * @param stack Stack used for symbol resolution.
+ * @param scope AST node representing the scope to search within.
+ * @return Ast* The AST node for the local variable declaration, the original node if the identifier is "point", or NULL if not found.
+ */
 static
 Ast * get_local_variable_reference (Ast * n, Stack * stack, Ast * scope)
 {
@@ -117,6 +168,11 @@ Ast * get_local_variable_reference (Ast * n, Stack * stack, Ast * scope)
   return ast_identifier_declaration_from_to (stack, ast_terminal (identifier)->start, NULL, scope);
 }
 
+/**
+ * @brief Cleans up jump statements and transforms certain postfix operations in the AST.
+ *
+ * Removes jump statements, converts postfix increment/decrement operations that do not reference local variables into assignment expressions, and erases assignment right-hand sides for non-local variable assignments.
+ */
 static
 void set_conditionals (Ast * n, Stack * stack, void * scope)
 {
@@ -151,6 +207,14 @@ void set_conditionals (Ast * n, Stack * stack, void * scope)
   }
 }
 
+/**
+ * @brief Wraps an AST node as a stencil access using the "o_stencil" identifier.
+ *
+ * Creates a unary expression node representing a stencil access and attaches it to the given AST node, marking it for stencil processing.
+ *
+ * @param n The AST node to be wrapped as a stencil access.
+ * @return Ast* The new AST node representing the stencil access.
+ */
 static inline Ast * o_stencil (Ast * n)
 {
   return ast_attach (ast_new_unary_expression (n),
@@ -160,7 +224,11 @@ static inline Ast * o_stencil (Ast * n)
 }
 
 /**
-Fix successive (symbolically) identical parent / child. */
+ * @brief Flattens nested AST nodes with identical symbols by shifting their children up.
+ *
+ * Recursively replaces a node's single child with its own children if the child has the same symbol,
+ * effectively collapsing chains of symbolically identical parent-child nodes into a single level.
+ */
 
 void ast_shift_children (Ast * n)
 {
@@ -173,6 +241,15 @@ void ast_shift_children (Ast * n)
   }
 }
 
+/**
+ * @brief Determines if an AST node represents a field type.
+ *
+ * Checks whether the given AST node corresponds to a field type such as scalar, vertex scalar, vector, face vector, tensor, or symmetric tensor. Returns the type AST node if it matches a field type, otherwise returns NULL.
+ *
+ * @param n The AST node to check.
+ * @param stack The stack used for type resolution.
+ * @return Ast* The type node if it is a recognized field type, or NULL otherwise.
+ */
 static Ast * is_field (Ast * n, Stack * stack)
 {
   Ast * type = ast_expression_type (n, stack, true);
@@ -186,6 +263,15 @@ static Ast * is_field (Ast * n, Stack * stack)
     type : NULL;
 }
 
+/**
+ * @brief Determines if a function call has field-type arguments or is a "neighborp" call.
+ *
+ * Checks whether any argument of the given function call is a field, or if the function being called is "neighborp".
+ *
+ * @param function_call The AST node representing the function call.
+ * @param stack The stack used for type/context resolution.
+ * @return true if the function call has at least one field argument or is "neighborp"; false otherwise.
+ */
 static
 bool has_field_arguments (Ast * function_call, Stack * stack)
 {
@@ -200,7 +286,15 @@ bool has_field_arguments (Ast * function_call, Stack * stack)
 }
 
 /**
-Clean up placeholders. */
+ * @brief Cleans up the AST by removing placeholders, invalid, or unreachable nodes.
+ *
+ * Traverses the AST node and its children, removing or transforming nodes that are placeholders, incomplete, or no longer valid after previous transformation passes. Handles special cases for statements, expressions, and declarations, ensuring the resulting AST is well-formed and contains only valid constructs. Also removes unreachable statements (such as returns inside foreach loops), empty statements, and nodes that do not reference fields or are otherwise unnecessary for stencil analysis.
+ *
+ * @param n The AST node to clean up.
+ * @param stack The traversal stack used for context.
+ * @param scope The current scope node.
+ * @param init_declarator Indicates whether to erase incomplete init declarators.
+ */
 
 void ast_cleanup (Ast * n, Stack * stack, Ast * scope, bool init_declarator)
 {
@@ -541,12 +635,16 @@ void ast_cleanup (Ast * n, Stack * stack, Ast * scope, bool init_declarator)
 }
 
 /**
-## First pass: move field accesses 
-
-This pass move all field accesses into their own expression
-statement. 
-
-It also records the type of access (assign or read). */
+ * @brief Moves a field access into its own expression statement and records access type.
+ *
+ * Isolates a field access AST node as a separate expression statement, wrapping it as an assignment, read, or overflow access as appropriate. The new statement is inserted before or after the parent statement based on the `after` flag.
+ *
+ * @param parent The parent AST node containing the field access.
+ * @param n The AST node representing the field access.
+ * @param after If true, inserts the new statement after the parent item; otherwise, inserts before.
+ * @param overflow If true, treats the access as an overflow operation.
+ * @return Ast* The newly created statement node, or NULL if the field access is already isolated.
+ */
 
 static
 Ast * move_field_access (Ast * parent, Ast * n, bool after, bool overflow)
@@ -596,8 +694,10 @@ typedef struct {
 } Undefined;
 
 /**
-Move field accesses into their own expression statement, before their
-parent statement or declaration. */
+ * @brief Moves field accesses into separate expression statements.
+ *
+ * Recursively traverses the AST and isolates each field access by moving it into its own expression statement, placed before its parent statement or declaration. This ensures that field reads and writes are explicitly separated for further stencil analysis and transformation.
+ */
 
 void move_field_accesses (Ast * n, Stack * stack, Undefined * u)
 {
@@ -660,23 +760,41 @@ void move_field_accesses (Ast * n, Stack * stack, Undefined * u)
 }
 
 /**
-## Second pass: propagate undefined values 
-
-After field accesses have been moved, undefined values are left
-behind. If these values are assigned to variables, the corresponding
-variables also need to be undefined, as well as any reference to these
-variables. */
+ * @brief Marks an AST node as undefined within a given scope.
+ *
+ * Sets the value of the terminal AST node to indicate it is undefined in the specified scope.
+ *
+ * @param n The AST node to mark as undefined.
+ * @param scope The scope in which the node is considered undefined.
+ */
 
 static inline void set_undefined (Ast * n, Ast * scope)
 {
   ast_terminal (n)->value = scope;
 }
 
+/**
+ * @brief Checks if an AST node is marked as undefined within a given scope.
+ *
+ * @param n The AST node to check.
+ * @param scope The scope used to identify undefined status.
+ * @return true if the node's value matches the scope, indicating it is undefined; false otherwise.
+ */
 static inline bool is_undefined (Ast * n, Ast * scope)
 {
   return ast_terminal (n)->value == scope;
 }
 
+/**
+ * @brief Retrieves the variable declaration AST node for an identifier within a given scope.
+ *
+ * Searches for the identifier referenced by the AST node, skipping placeholders, function calls, and the special "point" identifier. Returns the corresponding declaration node if found; otherwise, prints an error and exits.
+ *
+ * @param n AST node potentially referencing a variable.
+ * @param stack Stack used for symbol resolution.
+ * @param scope Scope in which to search for the variable declaration.
+ * @return Ast* Declaration node for the referenced variable, or NULL if not applicable.
+ */
 static Ast * get_variable_reference (Ast * n, Stack * stack, Ast * scope)
 {
   Ast * identifier = ast_find (n, sym_postfix_expression,
@@ -702,6 +820,15 @@ static Ast * get_variable_reference (Ast * n, Stack * stack, Ast * scope)
   return ref;
 }
 
+/**
+ * @brief Marks iterators as undefined if they are modified in unsupported ways.
+ *
+ * Traverses AST nodes representing postfix increment/decrement or assignment expressions and marks the corresponding iterator variable as undefined within the given scope if it is modified in a way that is not a simple assignment.
+ *
+ * @param n The AST node to analyze.
+ * @param stack The stack used for variable resolution.
+ * @param data Pointer to an Undefined structure containing the current scope.
+ */
 static
 void undefined_iterators (Ast * n, Stack * stack, void * data)
 {
@@ -732,6 +859,14 @@ void undefined_iterators (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Checks if a parameter is marked as undefined for stencil analysis.
+ *
+ * If the given AST node represents a parameter declaration with type `_stencil_undefined`, returns the corresponding type identifier node; otherwise, returns NULL.
+ *
+ * @param n AST node to check.
+ * @return Ast* The type identifier node if the parameter is undefined, or NULL.
+ */
 static Ast * is_undefined_parameter (const Ast * n)
 {
   if (n->sym == sym_IDENTIFIER) n = ast_parent (n, sym_parameter_declaration);
@@ -746,6 +881,16 @@ static Ast * is_undefined_parameter (const Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Determines if an AST node represents a local variable declaration within a given scope.
+ *
+ * Checks if the AST node corresponds to the special "point" identifier or is present in the stack before reaching the specified scope.
+ *
+ * @param n The AST node to check.
+ * @param stack The stack representing the current scope chain.
+ * @param scope The scope boundary for the search.
+ * @return true if the node is a local declaration within the scope, false otherwise.
+ */
 static
 bool is_local_declaration (Ast * n, Stack * stack, Ast * scope)
 {
@@ -760,6 +905,14 @@ bool is_local_declaration (Ast * n, Stack * stack, Ast * scope)
   return false;
 }
 
+/**
+ * @brief Finds the nearest enclosing foreach statement in the stack.
+ *
+ * Traverses the stack from top to bottom and returns the first AST node that represents a foreach statement.
+ *
+ * @return Ast* Pointer to the nearest foreach statement AST node.
+ * @note This function asserts if no foreach statement is found in the stack.
+ */
 static
 Ast * calling_foreach (Stack * stack)
 {
@@ -771,6 +924,15 @@ Ast * calling_foreach (Stack * stack)
   return NULL;
 }
 
+/**
+ * @brief Reports an error if a non-local variable modified in a foreach loop or point function is not listed as a reduction.
+ *
+ * Checks whether the given variable is included in the reduction list of the enclosing foreach loop or point function. If not, prints an error message and terminates the program.
+ *
+ * @param n AST node representing the variable being modified.
+ * @param stack Call stack for context.
+ * @param scope AST node representing the enclosing foreach loop or function definition.
+ */
 static
 void check_missing_reductions (Ast * n, Stack * stack, Ast * scope)
 {
@@ -811,6 +973,14 @@ void check_missing_reductions (Ast * n, Stack * stack, Ast * scope)
   exit (1);
 }
 
+/**
+ * @brief Determines if the given AST node refers to the POINT_VARIABLES identifier.
+ *
+ * Traverses the AST from the provided reference node to locate an identifier and checks if it matches "POINT_VARIABLES".
+ *
+ * @param ref The AST node reference to check.
+ * @return true if the node refers to POINT_VARIABLES, false otherwise.
+ */
 static
 bool is_point_variable (const Ast * ref)
 {
@@ -825,6 +995,14 @@ bool is_point_variable (const Ast * ref)
   return identifier && !strcmp (ast_terminal (identifier)->start, "POINT_VARIABLES");
 }
 
+/**
+ * @brief Determines if an AST node is an argument to a foreach statement.
+ *
+ * Traverses the AST upwards from the given node to check if it is part of the argument list of a foreach statement.
+ *
+ * @param n The AST node to check.
+ * @return true if the node is an argument to a foreach statement, false otherwise.
+ */
 bool ast_is_foreach_parameter (Ast * n)
 {
   n = ast_parent (n, sym_argument_expression_list);
@@ -833,6 +1011,11 @@ bool ast_is_foreach_parameter (Ast * n)
   return ast_is_foreach_statement (n);
 }
 
+/**
+ * @brief Propagates and removes undefined variable references in the AST.
+ *
+ * Traverses the AST to mark variables as undefined if they are assigned undefined values, are non-local and illegally modified in parallel contexts, or are referenced before declaration. Removes or erases AST nodes corresponding to undefined or illegal variable usages, including increment/decrement operations and assignments. Handles point function calls that may modify variables by address, and cleans up incomplete or invalid loop constructs. Ensures the AST does not contain references to undefined or illegal variables after transformation.
+ */
 static
 void undefined_variables (Ast * n, Stack * stack, void * data)
 {
@@ -1023,13 +1206,13 @@ void undefined_variables (Ast * n, Stack * stack, void * data)
 }
 
 /**
-## Third pass: point function calls
-
-Point functions calls need to be replaced by their `ast_stencil()`
-transform.
-
-Return a previously defined stencil function matching
-*function_definition* or NULL if none can be found. */
+ * @brief Finds a stencil function corresponding to a given function definition.
+ *
+ * Searches for a previously defined stencil function whose name matches the given function definition, using the "_stencil_" prefix. Returns the matching stencil function AST node if found, or NULL otherwise.
+ *
+ * @param function_definition The AST node representing the original function definition.
+ * @return Ast* The AST node of the matching stencil function, or NULL if not found.
+ */
 
 static Ast * get_stencil_function (Ast * function_definition)
 {
@@ -1058,8 +1241,13 @@ static Ast * get_stencil_function (Ast * function_definition)
 }
 
 /**
-Returns a function declaration or NULL, taking into account potential
-x,y,z name rotations. */
+ * @brief Finds a function declaration by name, considering possible _x, _y, or _z suffix rotations.
+ *
+ * Searches for a function declaration matching the given name within the specified AST range. If not found and the name ends with an underscore followed by 'x', 'y', or 'z', attempts to find a declaration by rotating the suffix among 'x', 'y', and 'z'.
+ *
+ * @param name The function name, which may be modified temporarily during the search.
+ * @return Ast* The matching function declaration, or NULL if none is found.
+ */
 
 static
 Ast * identifier_function_declaration (Stack * stack, char * name,
@@ -1079,6 +1267,15 @@ Ast * identifier_function_declaration (Stack * stack, char * name,
   return n;
 }
 
+/**
+ * @brief Retrieves the function definition AST node for a given identifier.
+ *
+ * Searches for the function definition corresponding to the provided identifier, starting from the given declaration and traversing parent nodes as needed. Returns NULL if no matching function definition is found.
+ *
+ * @param identifier The AST node representing the function identifier.
+ * @param declaration The starting declaration node for the search.
+ * @return Ast* The AST node for the function definition, or NULL if not found.
+ */
 Ast * ast_get_function_definition (Stack * stack, Ast * identifier, Ast * declaration)
 {
   if (!identifier)
@@ -1108,6 +1305,11 @@ Ast * ast_get_function_definition (Stack * stack, Ast * identifier, Ast * declar
   return ast_get_function_definition (stack, identifier, declaration1);
 }
 
+/**
+ * @brief Appends a function declaration to the appropriate location in the AST.
+ *
+ * Depending on the parent node's type, inserts the function declaration either directly into the external declarations block or wraps it within a foreach dimension node before appending. Asserts if the parent context is invalid.
+ */
 static void append_function_declaration (Ast * parent, Ast * declaration)
 {
   if (parent->parent->sym == sym_external_declaration)
@@ -1127,6 +1329,11 @@ static void append_function_declaration (Ast * parent, Ast * declaration)
     assert (false);
 }
 
+/**
+ * @brief Replaces a function call AST node with a default stencil call.
+ *
+ * Transforms the given AST node into a call to the "default_stencil" function, constructing its arguments and initializer list from the original node. If no field arguments are present, the node is destroyed.
+ */
 static void default_stencil (Ast * n, Stack * stack, void * scope)
 {
   Ast * initializer = NN (n, sym_postfix_initializer,
@@ -1161,6 +1368,13 @@ static void default_stencil (Ast * n, Stack * stack, void * scope)
   }
 }
 
+/**
+ * @brief Creates an AST node representing a NULL expression.
+ *
+ * Constructs a unary expression AST node with the identifier "NULL" as its operand.
+ *
+ * @return Ast* The newly created NULL expression AST node.
+ */
 static
 Ast * null_expression (Ast * n)
 {		     
@@ -1170,6 +1384,11 @@ Ast * null_expression (Ast * n)
 			     NA (n, sym_IDENTIFIER, "NULL"))));
 }
 
+/**
+ * @brief Marks a function parameter as undefined by setting its type to `_stencil_undefined`.
+ *
+ * Replaces the parameter's type with `_stencil_undefined` and updates its declarator accordingly.
+ */
 static
 void set_undefined_parameter (Ast * parameter)
 {
@@ -1196,8 +1415,10 @@ void set_undefined_parameter (Ast * parameter)
 }
 
 /**
-This function sets undefined point function parameters based on undefined
-function call arguments. */
+ * @brief Marks point function parameters as undefined if corresponding call arguments are undefined.
+ *
+ * For each argument in a function call, sets the corresponding parameter in the point function as undefined if the argument is a placeholder. Exits with an error if there are more arguments than parameters.
+ */
 
 static
 void set_undefined_parameters (Ast * point_function, const Ast * function_call)
@@ -1225,6 +1446,11 @@ void set_undefined_parameters (Ast * point_function, const Ast * function_call)
   }
 }
 
+/**
+ * @brief Replaces point function calls in the AST with corresponding stencil function calls.
+ *
+ * For each point function call found in the AST node, this function locates or generates the corresponding stencil function (prefixed with "_stencil_"), ensuring that undefined arguments and parameters are handled consistently. If the stencil function does not exist, it is created by transforming a copy of the original function. The function also replaces undefined arguments with NULL expressions and issues warnings or errors for unresolved or mismatched cases.
+ */
 static void point_function_calls (Ast * n, Stack * stack, void * data)
 {
   Undefined * undef = data;
@@ -1390,9 +1616,15 @@ static void point_function_calls (Ast * n, Stack * stack, void * data)
 }
 
 /**
-## Fourth pass: cleanup of unused and undefined variables
-
-Mostly to avoid compiler warnings. */
+ * @brief Finds the nearest ancestor node with a specific symbol within a given scope.
+ *
+ * Traverses the parent chain of the AST node `n` to locate the closest ancestor whose symbol matches `sym`, stopping if a node with symbol `scope` is encountered.
+ *
+ * @param n The starting AST node.
+ * @param sym The symbol to search for among ancestor nodes.
+ * @param scope The symbol indicating the scope boundary for the search.
+ * @return Ast* Pointer to the ancestor node with symbol `sym`, or NULL if not found before reaching the scope boundary.
+ */
 
 Ast * ast_scope_parent (Ast * n, int sym, int scope)
 {
@@ -1405,6 +1637,12 @@ Ast * ast_scope_parent (Ast * n, int sym, int scope)
   return NULL;
 }
 
+/**
+ * @brief Marks an AST node as initialized by setting its terminal value to itself.
+ *
+ * This function is used to indicate that the given AST node has been initialized,
+ * typically during AST analysis or transformation passes.
+ */
 static inline void initialize (Ast * n)
 {
 #if 0 
@@ -1416,11 +1654,22 @@ static inline void initialize (Ast * n)
   ast_terminal (n)->value = n;
 }
 
+/**
+ * @brief Checks if an AST node is marked as initialized.
+ *
+ * @param n The AST node to check.
+ * @return true if the node is initialized; false otherwise.
+ */
 static inline bool is_initialized (Ast * n)
 {
   return ast_terminal (n)->value == n;
 }
   
+/**
+ * @brief Marks an AST node as declared within a given scope.
+ *
+ * Associates the provided scope with the AST node to indicate its declaration context.
+ */
 static inline void declare (Ast * n, Ast * scope)
 {
 #if 0 
@@ -1432,16 +1681,33 @@ static inline void declare (Ast * n, Ast * scope)
   ast_terminal (n)->value = scope;
 }
 
+/**
+ * @brief Checks if an AST node is declared within a given scope.
+ *
+ * @param n The AST node to check.
+ * @param scope The scope to compare against.
+ * @return true if the node's value matches the scope, false otherwise.
+ */
 static inline bool is_declared (Ast * n, Ast * scope)
 {
   return ast_terminal (n)->value == scope;
 }
 
+/**
+ * @brief Marks an AST node as used by clearing its value.
+ *
+ * Sets the value of the terminal AST node to NULL to indicate usage.
+ */
 static inline void use (Ast * n)
 {
   ast_terminal (n)->value = NULL;
 }
 
+/**
+ * @brief Marks variables in the AST as used, declared, or initialized, and removes unused identifiers.
+ *
+ * Traverses the AST node to update the usage state of variables based on their context. Identifiers are marked as declared or initialized depending on their position in declarations or assignments. Unused identifiers that are declared but not initialized are removed from the AST.
+ */
 static
 void mark_unused (Ast * n, Stack * stack, void * scope)
 {
@@ -1502,6 +1768,11 @@ void mark_unused (Ast * n, Stack * stack, void * scope)
   }
 }
 
+/**
+ * @brief Removes references to undefined identifiers from the AST.
+ *
+ * Recursively traverses the AST node and erases identifier nodes that are not declared or initialized in the current scope, except in certain contexts such as function calls, declarations, or foreach arguments. Cleans up remaining nodes as needed.
+ */
 static
 void remove_undefined (Ast * n, Stack * stack, void * scope)
 {
@@ -1527,6 +1798,11 @@ void remove_undefined (Ast * n, Stack * stack, void * scope)
     ast_cleanup (n, stack, scope, true);
 }
 
+/**
+ * @brief Removes unused or undefined identifiers and marks unused parameters as undefined.
+ *
+ * Traverses the AST to erase identifiers that are declared or initialized but unused within the given scope, and replaces unused function parameters with an undefined type. Also recursively cleans up other nodes as needed.
+ */
 static
 void remove_unused (Ast * n, Stack * stack, void * data)
 {
@@ -1580,13 +1856,16 @@ void remove_unused (Ast * n, Stack * stack, void * data)
 }
 
 /**
-## The `ast_stencil()` function
-
-The parameters are the input foreach loop or point function and the
-tuning options. 
-
-The function may return a NULL pointer, for example when the loop body
-does not contain any field access. */
+ * @brief Transforms a foreach loop or point function AST into a stencil AST for boundary condition handling.
+ *
+ * Recursively analyzes and rewrites the given AST node to isolate stencil field accesses, propagate undefined values, replace point function calls with stencil equivalents, and remove unused or undefined variables. Returns a simplified AST that records stencil read/write accesses, or NULL if no stencil accesses remain.
+ *
+ * @param n The AST node representing a foreach loop or point function.
+ * @param parallel Indicates if the transformation should consider parallel execution.
+ * @param overflow Enables overflow handling for stencil accesses.
+ * @param nowarning Suppresses warnings during transformation.
+ * @return Ast* The transformed stencil AST, or NULL if no stencil accesses are found.
+ */
 
 Ast * ast_stencil (Ast * n, bool parallel, bool overflow, bool nowarning)
 {

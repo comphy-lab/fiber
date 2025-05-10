@@ -1,5 +1,10 @@
 /**
-Checks that indiviual structure members are properly initialized. */
+ * @brief Tests initialization and accessibility of structure members.
+ *
+ * Verifies that structure members are properly initialized to zero and remain accessible, even when conditional assignments are involved.
+ *
+ * @return int Always returns 0.
+ */
 
 int main()
 {

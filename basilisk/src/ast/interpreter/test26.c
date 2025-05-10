@@ -1,7 +1,10 @@
 /**
-# Test writing to arrays with an "unset" index 
-
-This does not work yet. See the UNSET_ARRAY flag in [interpreter.c](). */
+ * @brief Tests array write and access behavior with an unset index.
+ *
+ * This function exercises various read and write operations on arrays of primitive and struct types using an uninitialized index variable. It documents, via comments, the expected "unset" status for each operation, serving as a scaffold for future implementation of unset index handling in the interpreter.
+ *
+ * @return int Always returns 0.
+ */
 
 int main()
 {

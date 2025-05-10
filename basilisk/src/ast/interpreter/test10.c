@@ -1,5 +1,8 @@
 /**
-More tests of undefined conditions and evaluations of branches. */
+ * @brief Tests interpreter handling of undefined conditions and branch evaluations in a grid loop.
+ *
+ * Initializes a scalar grid and iterates over its cells, evaluating conditional branches and variable assignments to verify correct interpreter behavior with potentially undefined values and conditions.
+ */
 
 int main()
 {

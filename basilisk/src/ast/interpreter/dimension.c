@@ -200,6 +200,16 @@ struct _Key {
   List * dimensions;
 };
 
+/**
+ * @brief Adds a dimension reference to a key and increments its reference count.
+ *
+ * Associates the given dimension with the key by appending it to the key's dimension list.
+ * Increments the key's reference counter to track usage.
+ *
+ * @param k The key to which the dimension is added.
+ * @param d The dimension to associate with the key.
+ * @param stack Memory stack used for allocation.
+ */
 static
 void key_add_dimension (Key * k, Dimension * d, Stack * stack)
 {
@@ -215,6 +225,15 @@ void key_add_dimension (Key * k, Dimension * d, Stack * stack)
   l->next->d = d;
 }
 
+/**
+ * @brief Removes a specific dimension reference from a key.
+ *
+ * Decrements the reference count and removes the given dimension from the key's list of associated dimensions if present.
+ *
+ * @param k The key from which to remove the dimension.
+ * @param d The dimension to remove.
+ * @return true if the dimension was found and removed; false otherwise.
+ */
 static
 bool key_remove_dimension (Key * k, const Dimension * d)
 {
@@ -266,7 +285,13 @@ static
 Dimension * const dimension_any = (Dimension *) 128;
 
 /**
-# Outputs */
+ * @brief Returns a file path with the BASILISK prefix cropped for display.
+ *
+ * If the input file path starts with the BASILISK directory prefix, returns a pointer to the path with the prefix removed (offset by 4 characters). Otherwise, returns the original file path.
+ *
+ * @param file The file path to crop.
+ * @return Pointer to the cropped file path string.
+ */
 
 const char * ast_file_crop (const char * file)
 {
@@ -276,6 +301,14 @@ const char * ast_file_crop (const char * file)
   return file;
 }
 
+/**
+ * @brief Checks if a character is a valid C identifier letter.
+ *
+ * Returns true if the character is an underscore or an uppercase or lowercase letter.
+ *
+ * @param c Character to check.
+ * @return true if c is a valid identifier letter, false otherwise.
+ */
 static inline
 bool is_identifier (char c)
 {
@@ -283,8 +316,14 @@ bool is_identifier (char c)
 }
 
 /**
-The function below just replaces 'val(s,0,1,0)' with 's[0,1]' and
-'_attribute[s.i].' with 's.'. */
+ * @brief Simplifies an AST expression string for display by replacing verbose patterns with concise forms.
+ *
+ * Replaces occurrences of 'val(s,0,1,0)' with 's[0,1]' and '_attribute[s.i].' with 's.' in the input string,
+ * producing a more readable version for error messages or diagnostics.
+ *
+ * @param string The original expression string to simplify.
+ * @return char* Newly allocated string containing the simplified expression. Caller is responsible for freeing the result.
+ */
 
 static
 char * simplified_expression (const char * string)
@@ -323,6 +362,14 @@ char * simplified_expression (const char * string)
   return smp;
 }
 
+/**
+ * @brief Prints a simplified version of an expression string to a file.
+ *
+ * Converts the given expression string to a simplified form and writes it to the specified file stream.
+ *
+ * @param string The expression string to simplify and print.
+ * @param fp The file stream to write the simplified expression to.
+ */
 static
 void print_simplified_expression (const char * string, FILE * fp)
 {
@@ -341,6 +388,16 @@ enum {
   REFS     = 1 << 4
 };
 
+/**
+ * @brief Retrieves the explicit dimension annotation for an AST node if present.
+ *
+ * Searches for an explicit dimension annotation associated with the given AST node,
+ * typically in the context of an array access with a dimension annotation. Returns
+ * the relevant AST node if such an annotation exists, or NULL otherwise.
+ *
+ * @param n The AST node to check for an explicit dimension annotation.
+ * @return Ast* The AST node representing the explicit dimension annotation, or NULL if not found.
+ */
 static
 Ast * get_explicit_dimension (const Ast * n)
 {
@@ -353,6 +410,14 @@ Ast * get_explicit_dimension (const Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Returns the relevant parent AST expression for a given dimension key.
+ *
+ * Determines the parent expression node associated with a dimension key, accounting for assignment expressions and explicit dimension annotations. If the expression is part of an initializer or assignment, it returns the appropriate ancestor or parent node; otherwise, it returns the original parent or the node with an explicit dimension annotation if present.
+ *
+ * @param c The dimension key whose parent expression is sought.
+ * @return Ast* The AST node representing the relevant parent expression.
+ */
 static
 Ast * parent_expression (const Key * c)
 {
@@ -373,6 +438,16 @@ Ast * parent_expression (const Key * c)
   return n;
 }
 
+/**
+ * @brief Generates a human-readable label for a dimension key, including file, line, field, and expression.
+ *
+ * Constructs a descriptive string for a dimension key, incorporating the source file, optional line number, field name, and a simplified representation of the associated AST expression. Used for diagnostics and reporting in dimensional analysis.
+ *
+ * @param c The dimension key to label.
+ * @param sep Separator character between file/line and the expression.
+ * @param flags Bitmask controlling label details (e.g., whether to include line number).
+ * @return Newly allocated string containing the label. Caller is responsible for freeing it.
+ */
 static
 char * key_label (const Key * c, char sep, int flags)
 {
@@ -398,6 +473,16 @@ char * key_label (const Key * c, char sep, int flags)
   return label;
 }
 
+/**
+ * @brief Prints the label of a dimension key to a file, with optional metadata.
+ *
+ * Outputs the key's label to the specified file stream, followed by its index and reference count if requested by flags.
+ *
+ * @param c The dimension key to print.
+ * @param sep Separator character for label formatting.
+ * @param fp Output file stream.
+ * @param flags Bitmask controlling additional output (e.g., index, reference count).
+ */
 static
 void print_key_label (const Key * c, char sep, FILE * fp, int flags)
 {
@@ -420,6 +505,16 @@ void print_key_label (const Key * c, char sep, FILE * fp, int flags)
 
 #define END 1e10
 
+/**
+ * @brief Prints a human-readable representation of a dimension to a file.
+ *
+ * Outputs the dimension as a combination of known base dimensions and unknowns, using the specified coefficient and formatting flags. Special cases for unknown or dimensionless values are handled with symbolic output.
+ *
+ * @param d Pointer to the Dimension to print.
+ * @param fp Output file stream.
+ * @param coef Coefficient to scale the dimension components.
+ * @param flags Formatting flags for label printing.
+ */
 static
 void dimension_print (const Dimension * d, FILE * fp, double coef, int flags)
 {
@@ -460,7 +555,13 @@ void dimension_print (const Dimension * d, FILE * fp, double coef, int flags)
 }
 
 /**
-# Various utility functions */
+ * @brief Determines if a value can be associated with a physical dimension.
+ *
+ * Returns true if the value is non-null, not a pointer, and of type long, double, or float.
+ *
+ * @param v The value to check.
+ * @return true if the value can have a dimension; false otherwise.
+ */
 
 static inline
 bool can_have_dimension (const Value * v) {
@@ -469,12 +570,29 @@ bool can_have_dimension (const Value * v) {
 			      v->type->sym == sym_FLOAT);
 }
 
+/**
+ * @brief Determines if a value can be assigned a physical dimension.
+ *
+ * Returns true if the value is non-null, not a pointer, and of type float or double.
+ *
+ * @param v The value to check.
+ * @return true if the value can have a dimension assigned; false otherwise.
+ */
 static inline
 bool can_assign_dimension (const Value * v) {
   return v && !v->pointer && (v->type->sym == sym_DOUBLE ||
 			      v->type->sym == sym_FLOAT);
 }
 
+/**
+ * @brief Returns the size of a type including space for dimension metadata.
+ *
+ * For types that can carry dimension information (long, float, double), adds
+ * the size needed to store a pointer to dimension data.
+ *
+ * @param type AST node representing the type.
+ * @return int Total size in bytes for the type with dimension metadata.
+ */
 static
 int dimension_type_size (const Ast * type)
 {
@@ -488,6 +606,12 @@ int dimension_type_size (const Ast * type)
   return size;
 }
 
+/**
+ * @brief Counts the number of unknown dimension variables in a dimension.
+ *
+ * @param d Pointer to the Dimension to inspect.
+ * @return int Number of unknowns present in the dimension.
+ */
 static inline
 int unknowns (const Dimension * d)
 {
@@ -498,6 +622,14 @@ int unknowns (const Dimension * d)
   return n;
 }
 
+/**
+ * @brief Finds the nearest binary expression ancestor of an AST node.
+ *
+ * Traverses the AST upwards from the given node to locate the closest parent node representing a binary operation (such as addition, multiplication, shift, relational, equality, or assignment expressions). Returns the corresponding AST node if found, or NULL if no such ancestor exists.
+ *
+ * @param n The starting AST node.
+ * @return Ast* The nearest binary expression ancestor node, or NULL if none is found.
+ */
 static
 Ast * binary_expression_parent (Ast * n)
 {
@@ -525,6 +657,15 @@ Ast * binary_expression_parent (Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Counts the number of unique unknown dimension variables present in either of two dimensions.
+ *
+ * Compares two Dimension objects and returns the total number of distinct unknowns (keys) that appear in at least one of them.
+ *
+ * @param a First dimension to compare.
+ * @param b Second dimension to compare.
+ * @return int Number of unique unknowns across both dimensions.
+ */
 static
 int unique_unknowns (const Dimension * a, const Dimension *b)
 {
@@ -545,6 +686,14 @@ int unique_unknowns (const Dimension * a, const Dimension *b)
   return nt;
 }
 
+/**
+ * @brief Returns the number of base dimensions present in a dimension.
+ *
+ * Counts the number of non-terminal entries in the base dimension array of the given Dimension.
+ *
+ * @param d Pointer to the Dimension to inspect.
+ * @return int Number of base dimensions, or 0 if none.
+ */
 static inline
 int dimensions (const Dimension * d)
 {
@@ -558,6 +707,15 @@ int dimensions (const Dimension * d)
 
 static void constraint_print (Dimension * d, FILE * fp, int flags);
 
+/**
+ * @brief Creates a new dimensionless (zero) Dimension object.
+ *
+ * Allocates and initializes a Dimension structure representing a dimensionless quantity, with all coefficients set to zero and no associated unknowns.
+ *
+ * @param alloc Allocator used for memory allocation.
+ * @param origin AST node associated with the origin of this dimension.
+ * @return Pointer to the newly created dimensionless Dimension.
+ */
 static
 Dimension * dimension_zero (Allocator * alloc, Ast * origin)
 {
@@ -572,6 +730,14 @@ Dimension * dimension_zero (Allocator * alloc, Ast * origin)
 
 #define ROUNDOFF 1e-12
 
+/**
+ * @brief Simplifies a dimension by removing negligible coefficients and unused unknowns.
+ *
+ * Sets coefficients in the known and unknown parts of the dimension to zero if they are below a numerical threshold, and removes corresponding entries. If all coefficients are removed, the respective arrays are set to NULL.
+ *
+ * @param d Pointer to the Dimension to simplify.
+ * @return Pointer to the simplified Dimension.
+ */
 static
 Dimension * dimension_simplify (Dimension * d)
 {
@@ -603,6 +769,15 @@ Dimension * dimension_simplify (Dimension * d)
 static
 void add_constraint (System * s, Dimension * constraint, Stack * stack);
 
+/**
+ * @brief Creates a new unknown dimension associated with an AST node.
+ *
+ * Allocates and initializes a Dimension object representing a new unknown dimension variable, linking it to the provided AST node. The dimension is set up as a single unknown with coefficient 1, and is allocated using the provided stack allocator.
+ *
+ * @param n AST node to associate with the new dimension.
+ * @param stack Stack allocator for memory management.
+ * @return Pointer to the newly created Dimension.
+ */
 static
 Dimension * new_dimension (Ast * n, Stack * stack)
 {
@@ -627,6 +802,14 @@ Dimension * new_dimension (Ast * n, Stack * stack)
   return dimension;
 }
 
+/**
+ * @brief Determines whether the given AST node originates from a C source file.
+ *
+ * Checks if the leftmost terminal of the AST node has a file name ending with ".c".
+ *
+ * @param n AST node to check.
+ * @return true if the node is from a C file, false otherwise.
+ */
 static
 bool in_c_file (const Ast * n)
 {
@@ -637,6 +820,15 @@ bool in_c_file (const Ast * n)
   return !strcmp (t->file + len - 2, ".c");
 }
 
+/**
+ * @brief Retrieves or infers the physical dimension associated with a value.
+ *
+ * Determines the dimension of a given value, handling constants, explicit dimension annotations, array accesses, and unset values. For constants, it infers or assigns a new unknown dimension, or returns dimensionless if appropriate. For array accesses, it propagates the dimension from the first array element. If the value is unset and not a long integer, a warning is attached. The result is cached in the value for future queries.
+ *
+ * @param v The value whose dimension is to be determined.
+ * @param stack The current interpreter stack, used for memory allocation and context.
+ * @return The inferred or assigned Dimension for the value, or NULL if the value cannot have a dimension.
+ */
 static
 Dimension * get_dimension (Value * v, Stack * stack)
 {
@@ -759,6 +951,17 @@ Dimension * get_dimension (Value * v, Stack * stack)
   return (value_dimension (v) = d);
 }
 
+/**
+ * @brief Prints the dimension of a value to a file stream.
+ *
+ * If the value has an associated dimension, prints it in human-readable form.
+ * If no dimension is present and `zero` is true, prints a dimensionless indicator.
+ *
+ * @param v The value whose dimension is to be printed.
+ * @param zero Whether to print a dimensionless indicator if no dimension is present.
+ * @param flags Flags controlling dimension formatting.
+ * @param fp Output file stream.
+ */
 static
 void value_print_dimension (const Value * v, bool zero, int flags, FILE * fp)
 {
@@ -773,12 +976,34 @@ void value_print_dimension (const Value * v, bool zero, int flags, FILE * fp)
   }
 }
 
+/**
+ * @brief Prints the dimension of a value to the specified file.
+ *
+ * Outputs the dimension associated with the given value to the provided file stream.
+ *
+ * @param v The value whose dimension is to be printed.
+ * @param fp The file stream to which the dimension will be written.
+ */
 static
 void value_print_dimension_hook (const Value * v, FILE * fp)
 {
   value_print_dimension (v, false, LINENO, fp);
 }
 
+/**
+ * @brief Computes the resulting dimension from multiplying or dividing two dimensions.
+ *
+ * Combines the known and unknown components of two dimensions, scaling the second by a factor `v`
+ * (typically 1 for multiplication or -1 for division). If either operand has an arbitrary dimension,
+ * the result is also arbitrary. The resulting dimension is simplified before being returned.
+ *
+ * @param origin AST node associated with the resulting dimension.
+ * @param alloc Allocator for memory management.
+ * @param da First operand dimension.
+ * @param db Second operand dimension.
+ * @param v Scaling factor for the second operand (1 for multiplication, -1 for division).
+ * @return Pointer to the resulting Dimension, or `dimension_any` if either operand is arbitrary.
+ */
 static
 Dimension * dimensions_multiply (const Ast * origin, Allocator * alloc,
 				 const Dimension * da, const Dimension * db,
@@ -838,6 +1063,11 @@ Dimension * dimensions_multiply (const Ast * origin, Allocator * alloc,
   return dimension_simplify (dimension);
 }
 
+/**
+ * @brief Reports a dimensional inconsistency error or warning for non-homogeneous expressions.
+ *
+ * Prints a detailed diagnostic message to stderr when two values involved in an expression have incompatible dimensions, including the source locations and the dimensions of each value. Returns NULL.
+ */
 static
 void * not_homogeneous (Ast * n, Value * va, Value * vb, Stack * stack)
 {
@@ -863,7 +1093,10 @@ void * not_homogeneous (Ast * n, Value * va, Value * vb, Stack * stack)
 }
 
 /**
-# System of dimensional constraints */
+ * @brief Creates and initializes a new system of dimensional constraints.
+ *
+ * @return Pointer to a newly allocated System structure with default settings.
+ */
 
 static
 System * system_new()
@@ -875,6 +1108,11 @@ System * system_new()
   return system;
 }
 
+/**
+ * @brief Frees all memory associated with a System of dimensional constraints.
+ *
+ * Releases the arrays of constraints and indices, then deallocates the System structure itself.
+ */
 static
 void system_destroy (System * system)
 {
@@ -883,6 +1121,15 @@ void system_destroy (System * system)
   free (system);
 }
 
+/**
+ * @brief Prints a human-readable representation of a dimensional constraint.
+ *
+ * Outputs the constraint associated with a given Dimension to the specified file stream, including origin information and a simplified expression if available. The output format adapts based on the number of unknowns in the constraint and the provided flags.
+ *
+ * @param d The dimension constraint to print.
+ * @param fp The file stream to write the output to.
+ * @param flags Flags controlling output details (e.g., whether to include origin information or carriage formatting).
+ */
 static void constraint_print (Dimension * d, FILE * fp, int flags)
 {
   if (d != dimension_any) {
@@ -916,12 +1163,29 @@ static void constraint_print (Dimension * d, FILE * fp, int flags)
 
 #define foreach_constraint(s, i) if (s->r) for (Dimension ** _p = s->r, * i = *_p; i; i = *++_p)
 
+/**
+ * @brief Prints all dimensional constraints in the system to the specified file.
+ *
+ * Each constraint is printed in a human-readable format, including line number, index, and reference count.
+ *
+ * @param s The system of dimensional constraints to print.
+ * @param fp The output file stream.
+ */
 void system_print (System * s, FILE * fp)
 {
   foreach_constraint (s, r)
     constraint_print (r, fp, LINENO | INDEX | REFS);
 }
 
+/**
+ * @brief Adds a new dimension constraint to the system if not already present.
+ *
+ * If the constraint is already in the system, does nothing and returns false. Otherwise, appends the constraint, updates its system pointer, and marks the system as non-dimensionless if the constraint has known base dimensions.
+ *
+ * @param s The system to which the constraint is added.
+ * @param constraint The dimension constraint to add.
+ * @return true if the constraint was added; false if it was already present.
+ */
 static
 bool system_append (System * s, Dimension * constraint)
 {
@@ -940,6 +1204,15 @@ bool system_append (System * s, Dimension * constraint)
   return true;
 }
 
+/**
+ * @brief Adds a dimensional constraint to the system and updates key references.
+ *
+ * If the constraint is nontrivial, appends it to the system and associates it with all involved keys, marking them as used.
+ *
+ * @param s The system of dimensional constraints.
+ * @param constraint The dimension constraint to add.
+ * @param stack The interpreter stack, used for verbosity and context.
+ */
 static
 void add_constraint (System * s, Dimension * constraint, Stack * stack)
 {
@@ -955,6 +1228,16 @@ void add_constraint (System * s, Dimension * constraint, Stack * stack)
   }
 }
 
+/**
+ * @brief Performs row replacement on a dimension using another dimension.
+ *
+ * Returns a new Dimension resulting from subtracting a multiple of `with` from `d` to eliminate the first unknown in `with` from `d`, as in Gaussian elimination. Returns NULL if the unknown is not present in `d`.
+ *
+ * @param d The target Dimension to be modified.
+ * @param with The Dimension whose first unknown is to be eliminated from `d`.
+ * @param alloc Allocator for memory management.
+ * @return Dimension* The resulting Dimension after row replacement, or NULL if elimination is not possible.
+ */
 static Dimension * row_replacement (Dimension * d, Dimension * with, Allocator * alloc)
 {
   if (!d->c)
@@ -969,6 +1252,13 @@ static Dimension * row_replacement (Dimension * d, Dimension * with, Allocator *
   return dimensions_multiply (d->origin, alloc, d, with, - j[0]/with->b[0]);
 }
 
+/**
+ * @brief Returns the coefficient of the specified unknown in a dimension.
+ *
+ * @param r Pointer to the Dimension structure.
+ * @param j Index of the unknown variable.
+ * @return The coefficient corresponding to the unknown with index j, or 0 if not present.
+ */
 static inline
 double column (const Dimension * r, int j)
 {
@@ -983,12 +1273,30 @@ double column (const Dimension * r, int j)
   return 0.;
 }
 
+/**
+ * @brief Returns the coefficient at row i and column j of the system's constraint matrix.
+ *
+ * @param s Pointer to the System containing the constraints.
+ * @param i Row index.
+ * @param j Column index.
+ * @return double The coefficient at the specified position in the matrix.
+ */
 static inline
 double matrix (const System * s, int i, int j)
 {
   return column (s->r[i], j);
 }
 
+/**
+ * @brief Comparator for sorting dimensions by number of unknowns.
+ *
+ * Compares two Dimension pointers, ordering them by the count of unknown variables they contain.
+ * If the counts are equal, uses pointer address as a tiebreaker for deterministic ordering.
+ *
+ * @param pa Pointer to the first Dimension pointer.
+ * @param pb Pointer to the second Dimension pointer.
+ * @return int Positive if `a` has more unknowns, negative if fewer, or based on address if equal.
+ */
 static
 int compare_unknowns (const void * pa, const void * pb)
 {
@@ -1001,6 +1309,11 @@ int compare_unknowns (const void * pa, const void * pb)
   return pa > pb ? 1 : -1;
 }
 
+/**
+ * @brief Indexes unknowns and constraints in the system and sorts constraints by complexity.
+ *
+ * Assigns row indices to constraints, resets and assigns indices to unknown keys, and sorts constraints by the number of unknowns to optimize pivoting during Gaussian elimination. Updates the system's counts of constraints and unknowns.
+ */
 static
 void system_index (System * s)
 {
@@ -1040,6 +1353,15 @@ void system_index (System * s)
 #if WRITE_GRAPH
 # include "graph.c"
 
+/**
+ * @brief Writes the system of dimensional constraints as a graph in DOT format.
+ *
+ * Generates a DOT-format graph representation of the given system and writes it to the specified file.
+ * The output can be visualized using graph visualization tools.
+ *
+ * @param s The system of dimensional constraints to represent.
+ * @param name The output file path for the DOT-format graph.
+ */
 void system_write_graph (System * s, const char * name)
 {
   FILE * fp = fopen (name, "w");
@@ -1058,6 +1380,14 @@ void system_write_graph (System * s, const char * name)
   */
 }
 
+/**
+ * @brief Writes the system of dimensional constraints to a file in matrix form.
+ *
+ * Each line in the output file represents a nonzero entry in the constraint matrix, including the key index, constraint index, coefficient value, and key label.
+ *
+ * @param s The system of dimensional constraints to write.
+ * @param name The name of the output file.
+ */
 void system_write_matrix (System * s, const char * name)
 {
   FILE * fp = fopen (name, "w");
@@ -1080,6 +1410,16 @@ void system_write_matrix (System * s, const char * name)
 }
 #endif
 
+/**
+ * @brief Recursively adds a dimension and its dependencies to a subsystem.
+ *
+ * If the given dimension is not already present in the subsystem, it is appended.
+ * The function then recursively adds all dimensions referenced by the unknowns in this dimension,
+ * ensuring that all related dimensions are included in the subsystem.
+ *
+ * @param j The dimension to add.
+ * @param sub The subsystem to which dimensions are added.
+ */
 static
 void set_system (Dimension * j, System * sub)
 {
@@ -1091,6 +1431,14 @@ void set_system (Dimension * j, System * sub)
   }
 }
 
+/**
+ * @brief Removes subsystems of constraints that are dimensionless from the given system.
+ *
+ * Identifies and eliminates groups of constraints within the system that are dimensionless, freeing their associated resources. Returns true if any such subsystems were found and removed.
+ *
+ * @param s The system of dimensional constraints to process.
+ * @return true if any dimensionless subsystems were removed; false otherwise.
+ */
 static
 bool remove_dimensionless_subsystems (System * s)
 {
@@ -1112,12 +1460,29 @@ bool remove_dimensionless_subsystems (System * s)
   return found;
 }
 
+/**
+ * @brief Assigns a dimension to a specific row in the system of constraints.
+ *
+ * Updates the system to associate the given dimension with the specified row index and sets the dimension's row field accordingly.
+ *
+ * @param row Index of the row in the system to assign the dimension.
+ * @param d Pointer to the dimension to assign.
+ */
 static inline
 void set_row (System * s, int row, Dimension * d)
 {
   s->r[row] = d; d->row = row;
 }
 
+/**
+ * @brief Performs Gaussian elimination on the system of dimensional constraints.
+ *
+ * Applies Gaussian elimination with pivoting to the system's matrix to solve for unknown dimensions, detect inconsistencies, and reduce the system to independent constraints. If incompatible constraints are found (i.e., a zero left-hand side with a nonzero right-hand side), the function reports an error or warning and returns false.
+ *
+ * @param s The system of dimensional constraints to be solved.
+ * @param stack Temporary stack used for managing dimension references during elimination.
+ * @return true if the system is consistent and elimination succeeds; false if an inconsistency is detected.
+ */
 static bool system_pivot (System * s, Stack * stack)
 {
   system_index (s);
@@ -1214,6 +1579,17 @@ static bool system_pivot (System * s, Stack * stack)
   return true;
 }
 
+/**
+ * @brief Returns an array of unconstrained dimension keys in the system.
+ *
+ * Scans the system of dimensional constraints and collects keys (unknowns)
+ * that appear in constraints with more than one unknown, indicating they are
+ * not uniquely determined by the system. The returned array is NULL-terminated
+ * and must be freed by the caller.
+ *
+ * @param s The system of dimensional constraints.
+ * @return Key** NULL-terminated array of unconstrained keys, or NULL if all unknowns are constrained.
+ */
 static
 Key ** system_unconstrained (const System * s)
 {
@@ -1238,6 +1614,15 @@ Key ** system_unconstrained (const System * s)
   return unconstrained;
 }
 
+/**
+ * @brief Solves the system of dimensional constraints using Gaussian elimination and backward substitution.
+ *
+ * Performs pivoting to reduce the system, applies backward substitution to simplify constraints, removes dimensionless subsystems, and updates indexing. Optionally outputs diagnostic information and summaries.
+ *
+ * @param s Pointer to the system of dimensional constraints.
+ * @param stack Interpreter stack used during pivoting.
+ * @return true if the system was successfully solved; false if pivoting failed (indicating inconsistent or unsolvable constraints).
+ */
 static bool system_solve (System * s, Stack * stack)
 {
 #if WRITE_GRAPH  
@@ -1293,7 +1678,14 @@ static bool system_solve (System * s, Stack * stack)
 }
 
 /**
-# Dimension hooks to the interpreter */
+ * @brief Intercepts AST node evaluation to assign or propagate dimensions during interpretation.
+ *
+ * Handles primary expressions by associating dimensions with constants and special identifiers, and ensures that all elements of float or double arrays initialized together share the same dimension. For other nodes, delegates to the standard interpreter.
+ *
+ * @param n AST node to evaluate.
+ * @param stack Interpreter stack.
+ * @return Value* Result of evaluating the node, with dimension information updated as needed.
+ */
 
 static
 Value * dimension_run (Ast * n, Stack * stack)
@@ -1393,6 +1785,13 @@ Value * dimension_run (Ast * n, Stack * stack)
   return NULL;
 }
 
+/**
+ * @brief Assigns the dimension of the source value to the destination value.
+ *
+ * If the source value does not have a defined dimension, assigns a dimensionless (zero) dimension to the destination.
+ *
+ * @return Pointer to the destination value with updated dimension.
+ */
 static
 Value * dimension_assign (Ast * n, Value * dst, Value * src, Stack * stack)
 {
@@ -1412,6 +1811,14 @@ Value * dimension_assign (Ast * n, Value * dst, Value * src, Stack * stack)
   return dst;
 }
 
+/**
+ * @brief Emits a warning message for a dimension assumed to be zero if applicable.
+ *
+ * If the given dimension has an associated warning message, writes it to the system's output file and clears the warning.
+ *
+ * @param d The dimension to check for a warning.
+ * @param stack The interpreter stack used to access the current system.
+ */
 static void warn_unset_zero (Dimension * d, Stack * stack)
 {
   if (d && d->warn) {
@@ -1422,6 +1829,17 @@ static void warn_unset_zero (Dimension * d, Stack * stack)
   }
 }
 
+/**
+ * @brief Ensures two values have compatible dimensions, adding constraints if necessary.
+ *
+ * Checks whether the dimensions of two values are identical when fully known, reporting an error if not. If either dimension is unknown, adds a constraint enforcing their compatibility. Returns the most appropriate dimension to represent the result, preferring non-constant or less-unknown dimensions, or a dimensionless value if neither is available.
+ *
+ * @param n AST node representing the operation context.
+ * @param va First value to compare.
+ * @param vb Second value to compare.
+ * @param stack Interpreter stack for memory allocation and context.
+ * @return Dimension* The compatible dimension if successful, or triggers an error if dimensions are incompatible.
+ */
 static
 Dimension * homogeneous_dimensions (Ast * n, Value * va, Value * vb, Stack * stack)
 {
@@ -1481,6 +1899,14 @@ Dimension * homogeneous_dimensions (Ast * n, Value * va, Value * vb, Stack * sta
   return d;
 }
 
+/**
+ * @brief Determines whether a value is a finite, non-trivial constant.
+ *
+ * Returns true if the value is not a constant expression, or if it is a constant with magnitude between 1e-30 and 1e30 (excluding the sentinel value 1234567890).
+ *
+ * @param v The value to check.
+ * @return true if the value is considered finite and non-trivial; false otherwise.
+ */
 static inline
 bool is_finite (const Value * v)
 {
@@ -1494,11 +1920,28 @@ bool is_finite (const Value * v)
   return false;
 }
 
+/**
+ * @brief Signals a dimension analysis error by terminating further interpretation.
+ *
+ * Sets the interpreter's maximum call count to -1 to halt execution after a dimensional inconsistency is detected.
+ */
 static void dimension_error (Stack * stack)
 {
   ((StackData *)stack_get_data (stack))->maxcalls = -1;
 }
 
+/**
+ * @brief Infers and assigns the resulting dimension for a binary arithmetic operation.
+ *
+ * Handles dimensional analysis for binary operations such as addition, subtraction, multiplication, and division. Ensures operands are dimensionally compatible, propagates or combines dimensions as appropriate, and reports errors for inconsistent operations.
+ *
+ * @param n AST node representing the binary operation.
+ * @param stack Interpreter stack for memory allocation and error context.
+ * @param a First operand value.
+ * @param b Second operand value.
+ * @param value Result value to assign the computed dimension.
+ * @return The result value with its dimension set or updated.
+ */
 static
 Value * dimension_binary_operation (Ast * n, Stack * stack, Value * a, Value * b, Value * value)
 {
@@ -1531,6 +1974,17 @@ Value * dimension_binary_operation (Ast * n, Stack * stack, Value * a, Value * b
   return value;
 }
 
+/**
+ * @brief Raises a dimension to a given power.
+ *
+ * Returns a new Dimension representing the original dimension raised to the exponent `e`. Both known base dimension exponents and unknown coefficients are multiplied by `e`. If the input dimension is arbitrary (`dimension_any`), it is returned unchanged.
+ *
+ * @param origin AST node associated with the resulting dimension.
+ * @param stack Memory stack for allocation.
+ * @param d Input dimension to be exponentiated.
+ * @param e Exponent to raise the dimension to.
+ * @return Dimension* New dimension representing d^e.
+ */
 static
 Dimension * dimension_pow (Ast * origin, Stack * stack, Dimension * d, double e)
 {
@@ -1562,6 +2016,15 @@ Dimension * dimension_pow (Ast * origin, Stack * stack, Dimension * d, double e)
   return r;
 }
 
+/**
+ * @brief Prints the dimensions of function call arguments with context.
+ *
+ * For each argument in the given function call, outputs its source location, a message, the argument's expression, and its associated dimension to stderr.
+ *
+ * @param call The AST node representing the function call.
+ * @param params Array of parameter values corresponding to the arguments.
+ * @param msg Contextual message to display with each argument.
+ */
 static
 void print_params (Ast * call, Value ** params, const char * msg)
 {
@@ -1576,6 +2039,18 @@ void print_params (Ast * call, Value ** params, const char * msg)
   }
 }
 
+/**
+ * @brief Infers and enforces dimension constraints for internal mathematical functions.
+ *
+ * Handles dimension inference and constraint enforcement for built-in functions such as `sqrt`, `atan2`, `pow`, `fabs`, and standard math functions (e.g., `exp`, `log`, `sin`). Ensures that arguments have appropriate dimensions, adds constraints to the system, and sets the result's dimension accordingly. Reports errors or warnings if dimension requirements are violated.
+ *
+ * @param call The AST node representing the function call.
+ * @param identifier The AST node identifying the function.
+ * @param params Array of argument values to the function.
+ * @param stack The interpreter stack.
+ * @param value The value object to assign the result's dimension.
+ * @return The value object with its dimension set or updated.
+ */
 static
 Value * dimension_internal_functions (Ast * call, Ast * identifier, Value ** params, Stack * stack, Value * value)
 {
@@ -1652,6 +2127,17 @@ Value * dimension_internal_functions (Ast * call, Ast * identifier, Value ** par
   return value;
 }
 
+/**
+ * @brief Selects the appropriate value based on dimension compatibility in conditional expressions.
+ *
+ * Chooses between two values for a conditional expression, ensuring their dimensions are compatible and preferring the value with fewer unknown dimension variables when possible.
+ *
+ * @param n The AST node representing the conditional expression.
+ * @param stack The current interpreter stack.
+ * @param a The first value to consider.
+ * @param b The second value to consider.
+ * @return Value* The selected value with the most suitable dimension.
+ */
 static
 Value * dimension_choose (Ast * n, Stack * stack, Value * a, Value * b)
 {
@@ -1666,6 +2152,14 @@ Value * dimension_choose (Ast * n, Stack * stack, Value * a, Value * b)
     unknowns (get_dimension (a, stack)) < unknowns (get_dimension (b, stack)) ? a : b;
 }
 
+/**
+ * @brief Determines if an AST node represents an internal expression.
+ *
+ * Checks whether the given AST node corresponds to an internal expression node by comparing its rightmost terminal's start string to a special marker.
+ *
+ * @param n The AST node to check.
+ * @return true if the node is an internal expression; false otherwise.
+ */
 static
 bool is_expression (Ast * n)
 {
@@ -1673,6 +2167,26 @@ bool is_expression (Ast * n)
   return (t->start && !strcmp (t->start, EXPR_MAGIC));
 }
 
+/**
+ * @brief Comparator for sorting Dimension pointers by relevance and origin.
+ *
+ * Sorts dimensions with a single unknown according to a series of heuristics:
+ * - Non-expression dimensions before expression-based ones.
+ * - Fewer nonzero base dimensions first.
+ * - Smaller sum of absolute dimension exponents first.
+ * - Fewer total dimension components first.
+ * - Smaller sum of dimension exponents first.
+ * - Dimensions originating from internal parser files before user files.
+ * - Deeper file paths before shallower ones.
+ * - Non-.c files before .c files.
+ * - Alphabetical order of file names.
+ * - Lower line numbers first.
+ * - Alphabetical order of dimension labels.
+ *
+ * @param pa Pointer to the first Dimension pointer.
+ * @param pb Pointer to the second Dimension pointer.
+ * @return int Negative if a < b, positive if a > b, zero if equal.
+ */
 static
 int compare_dimensions (const void * pa, const void * pb)
 {
@@ -1787,6 +2301,15 @@ int compare_dimensions (const void * pa, const void * pb)
   return strcmp (ac->label, bc->label);
 }
 
+/**
+ * @brief Determines if a key represents a finite, non-trivial constant value.
+ *
+ * Evaluates the constant expression associated with the key's AST parent and checks
+ * if its value is within a reasonable finite range and not equal to a sentinel value.
+ *
+ * @param c The key whose associated constant is to be evaluated.
+ * @return true if the constant is finite and not equal to the sentinel; false otherwise.
+ */
 static
 bool is_finite_constant (const Key * c)
 {
@@ -1794,6 +2317,11 @@ bool is_finite_constant (const Key * c)
   return val > 1e-30 && val < 1e30 && val != 1234567890;
 }
 
+/**
+ * @brief Finalizes dimensional analysis after interpretation and outputs results.
+ *
+ * Processes the collected system of dimensional constraints after partial interpretation, solves for dimension assignments, detects unconstrained constants, and outputs a summary of dimension information, unconstrained constants, and dimension assignments to the configured output stream. If the system is inconsistent or unsolvable, marks the analysis as failed.
+ */
 static
 void dimension_after_run (Ast * n, Stack * stack)
 {
@@ -1918,23 +2446,19 @@ void dimension_after_run (Ast * n, Stack * stack)
 }
 
 /**
-# Interface
-
-This function performs dimensional analysis and returns `true` if the
-code defined by `root` and `n` is dimensionally correct and `false`
-otherwise. The parameters are:
-
-* `verbosity` : verbosity level for the interpreter (1 to 4).
-* `maxcalls` : maximum number of calls or instructions interpreted.
-* `dimensions` : where to output a summary of the dimensions of constants.
-* `finite` : if `true` only "finite" constants (i.e. constants
-*            different from "zero" or "infinity") are displayed.
-* `redundant` : if `true` all constants are listed, even repeated ones.
-* `lineno` : if `true` a different output format is used.
-* `warn` : if `true` the code will only warn on dimensional errors.
-
-See also [interpreter.c]().
-*/
+ * @brief Performs dimensional analysis on an AST subtree and reports consistency.
+ *
+ * Runs a partial interpretation of the code defined by `root` and `n`, collecting and solving dimensional constraints to check for consistency among physical dimensions of constants and expressions. Outputs a summary of inferred dimensions and reports errors or warnings based on the provided options.
+ *
+ * @param verbosity Level of interpreter verbosity (1 to 4).
+ * @param maxcalls Maximum number of instructions to interpret before stopping.
+ * @param dimensions Output file for the summary of constant dimensions.
+ * @param finite If nonzero, only finite (nonzero, non-infinite) constants are displayed in the summary.
+ * @param redundant If nonzero, all constants are listed, including duplicates.
+ * @param lineno If nonzero, uses an alternate output format including line numbers.
+ * @param warn If nonzero, dimensional inconsistencies are reported as warnings instead of errors.
+ * @return true if the code is dimensionally consistent; false if inconsistencies are detected or the run is incomplete.
+ */
 
 bool ast_check_dimensions (AstRoot * root, Ast * n, int verbosity, int maxcalls,
 			   FILE * dimensions, int finite, int redundant, int lineno,
