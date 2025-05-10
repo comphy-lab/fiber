@@ -635,22 +635,15 @@ double embed_vorticity (Point point, vector u, coord p, coord n)
 #endif // dimension == 2
 
 /**
-## Flux through the embedded boundary
-
-This function computes the flux through the embedded boundary contained 
-within a cell
-$$
-\int_b \mu \nabla s\cdot\mathbf{n} db
-$$
-with $db$ the elementary boundary surface and $\mathbf{n}$ the embedded
-boundary (outward-pointing) normal.
-
-Boundary conditions for *s* are taken into account.
-
-The result is returned in *val*. 
-
-For degenerate cases, the value returned by the function must be
-multiplied by `s[]` and added to *val*. */
+ * @brief Computes the flux of a diffusive quantity through the embedded boundary within a cell.
+ *
+ * Calculates the flux $\int_b \mu \nabla s \cdot \mathbf{n} \, db$ across the embedded boundary fragment in a cell, where $\mu$ is a face-centered coefficient, $s$ is a scalar field, and $\mathbf{n}$ is the outward normal to the embedded boundary. The function accounts for Dirichlet and Neumann boundary conditions on $s$ and returns the flux in `*val`. For degenerate cases, the return value should be multiplied by `s[]` and added to `*val`.
+ *
+ * @param s Scalar field whose flux is computed.
+ * @param mu Face vector of coefficients (e.g., diffusivity or viscosity).
+ * @param val Pointer to store the computed flux through the embedded boundary.
+ * @return double Coefficient for degenerate cases; multiply by `s[]` and add to `*val`.
+ */
 
 double embed_flux (Point point, scalar s, face vector mu, double * val)
 {
@@ -705,11 +698,13 @@ double embed_flux (Point point, scalar s, face vector mu, double * val)
 }
 
 /**
-For ease of use, we replace the Neumann and Dirichlet functions with
-macros so that they can be used either for standard domain boundaries
-or for embedded boundaries. The distinction between the two cases is
-based on whether the `dirichlet` parameter is passed to the boundary
-function (using the `data` parameter). */
+ * @brief Applies a Dirichlet boundary condition for both standard and embedded boundaries.
+ *
+ * Returns the appropriate value for a Dirichlet boundary condition, automatically handling embedded boundaries if the `data` flag is provided. For embedded boundaries, sets the `data` flag and evaluates the expression at the embedded boundary barycenter; for standard boundaries, applies the standard Dirichlet extrapolation.
+ *
+ * @param expr The Dirichlet boundary value to enforce.
+ * @return The value to assign at the boundary.
+ */
 
 macro2
 double dirichlet (double expr, Point point = point,
@@ -719,6 +714,13 @@ double dirichlet (double expr, Point point = point,
     *((bool *)data) = true, expr : 2.*expr - s[];
 }
 
+/**
+ * @brief Applies a homogeneous Dirichlet boundary condition, supporting embedded boundaries.
+ *
+ * Returns zero and sets the embedded boundary flag if `data` is provided (embedded boundary case); otherwise, returns the negative of the cell-centered value for standard boundaries.
+ *
+ * @return double Value to enforce the homogeneous Dirichlet condition.
+ */
 macro2
 double dirichlet_homogeneous (double expr, Point point = point,
 			      scalar s = _s, bool * data = data)
@@ -726,6 +728,14 @@ double dirichlet_homogeneous (double expr, Point point = point,
   return data ? *((bool *)data) = true, 0 : - s[];
 }
 
+/**
+ * @brief Applies a Neumann boundary condition, supporting both embedded and standard boundaries.
+ *
+ * For embedded boundaries (when `data` is provided), shifts the evaluation point to the embedded boundary barycenter and returns the specified expression. For standard boundaries, returns the sum of the cell value and the product of the grid spacing and the expression.
+ *
+ * @param expr The value of the normal derivative to impose at the boundary.
+ * @return The value to assign at the boundary for the Neumann condition.
+ */
 macro2
 double neumann (double expr, Point point = point,
 		scalar s = _s, bool * data = data)
@@ -734,6 +744,17 @@ double neumann (double expr, Point point = point,
     *((bool *)data) = false, expr : Delta*expr + s[];
 }
 
+/**
+ * @brief Applies a homogeneous Neumann boundary condition, supporting embedded boundaries.
+ *
+ * Returns zero for embedded boundaries (setting the boundary flag to false), or the cell-centered value for standard boundaries.
+ *
+ * @param expr Unused expression parameter for compatibility.
+ * @param point Grid location (optional).
+ * @param s Scalar field at the boundary (optional).
+ * @param data Pointer to embedded boundary flag (optional).
+ * @return double Boundary value for the homogeneous Neumann condition.
+ */
 macro2
 double neumann_homogeneous (double expr, Point point = point,
 			    scalar s = _s, bool * data = data)

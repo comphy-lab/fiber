@@ -134,18 +134,19 @@ We start the harmonic analysis after a spinup time of eight days. */
 double tspinup = 8*day;
 
 /**
-## main() 
-
-The simulation can be run in serial/OpenMP or with MPI and with a
-multiple of 2^i+1^ processes. This can be done using the
-[Makefile](/Tutorial#using-makefiles) with e.g.:
-
-~~~bash
-CC='mpicc -D_MPI=8' make global-tides.tst
-~~~
-
-Command-line parameters can be passed to the code to change the
-spatial resolution and/or the timestep. */
+ * @brief Entry point for the global ocean tide simulation.
+ *
+ * Initializes the spherical grid, sets physical and numerical parameters, parses optional command-line arguments for resolution, timestep, and spinup duration, and launches the simulation. After completion, generates and processes output movies of the free-surface height and equilibrium tide.
+ *
+ * Command-line arguments:
+ *   - argv[1]: Number of longitude grid points (default: 1024)
+ *   - argv[2]: Timestep in seconds (default: 600)
+ *   - argv[3]: Spinup duration in seconds (optional)
+ *
+ * The simulation supports serial, OpenMP, and MPI execution.
+ *
+ * @return int Exit status code.
+ */
 
 int main (int argc, char * argv[])
 {
@@ -269,13 +270,10 @@ event init (i = 0)
 }
 
 /**
-## Astronomical forcing 
-
-The astronomical forcing is added as the acceleration
-$g\nabla\eta_\text{eq}/(1 - \beta_\text{SAL})$ where $\eta_\text{eq}$
-is the "equilibrium tide" i.e. the height the free-surface would have
-if the water surface equilibrated instantly with the astronomical
-variations of gravity. */
+ * @brief Applies astronomical tidal forcing as an acceleration to the ocean layers.
+ *
+ * Computes and adds the acceleration due to the gradient of the equilibrium tide, scaled by gravity and the Self-Attraction and Loading (SAL) correction, to each horizontal face and layer of the simulation grid.
+ */
 
 event acceleration (i++)
 {
@@ -318,7 +316,11 @@ We add a (small) Laplacian horizontal viscosity in each layer. It is
 not clear whether this is really necessary i.e. how sensitive the
 results are to this parameter. */
 
-double nu_H = 10; // m^2/s
+double nu_H = 10; /**
+ * @brief Applies horizontal Laplacian viscosity to velocity fields in each ocean layer.
+ *
+ * Adds a small horizontal viscosity term to the velocity components, smoothing velocity gradients and enhancing numerical stability. The viscosity is only applied if the horizontal viscosity coefficient (`nu_H`) is positive, and only in wet regions of each layer.
+ */
 
 event viscous_term (i++)
 {
@@ -347,9 +349,10 @@ event viscous_term (i++)
 }
 
 /**
-## Hourly outputs 
-
-We compute the kinetic energy in the top and bottom layer. */
+ * @brief Outputs hourly diagnostics of kinetic energy, volume, and solver statistics.
+ *
+ * Computes and prints the kinetic energy per unit volume in the top and bottom layers, standard deviations of free-surface height and velocity norm, solver iteration counts, and the rate of volume change for each layer. These diagnostics help monitor simulation stability, energy evolution, and mass conservation throughout the run.
+ */
 
 event outputs (t += hour)
 {

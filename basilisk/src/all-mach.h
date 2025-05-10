@@ -135,10 +135,10 @@ This event can be overloaded to add acceleration terms. */
 event acceleration (i++, last);
 
 /**
-The equation for the pressure is a Poisson--Helmoltz problem which we
-will solve with the [multigrid solver](poisson.h). The statistics for
-the solver will be stored in *mgp* (resp. *mgu* for the viscosity
-solver). */
+ * @brief Solves the pressure equation and updates velocity and momentum fields for the next timestep.
+ *
+ * This event implements the projection step for all Mach number flows, solving the Poisson–Helmholtz equation for pressure using a multigrid solver. It handles both incompressible and compressible regimes, applies implicit viscosity if present, and updates the face and cell-centered velocity and momentum fields accordingly. The pressure correction enforces the appropriate divergence constraint, and the combined pressure gradient and acceleration fields are computed for use in subsequent steps.
+ */
 
 event pressure (i++, last)
 {

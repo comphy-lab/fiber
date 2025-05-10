@@ -1,5 +1,10 @@
 /**
-Checks that dimensions of conditional expressions are properly set. */
+ * @brief Tests dimensional consistency of conditional expressions in scalar assignments and arithmetic operations.
+ *
+ * Initializes a computational grid and performs a series of assignments and operations involving conditional expressions, verifying that the resulting dimensions are consistent according to the rules of dimensional analysis. Demonstrates correct handling of dimensions in both simple and nested conditional expressions, including cases with dimensioned constants and variables.
+ *
+ * @return int Returns 0 on successful completion.
+ */
 
 int main()
 {

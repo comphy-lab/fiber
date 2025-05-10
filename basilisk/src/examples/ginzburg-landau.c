@@ -70,6 +70,11 @@ event init (i = 0) {
 /**
 ## Time integration */
 
+/**
+ * @brief Advances the real and imaginary fields by one time step using reaction-diffusion integration.
+ *
+ * Computes the squared magnitude of the complex field and updates the real and imaginary components using a diffusion solver with nonlinear reaction terms, ensuring numerical stability by capping the time step.
+ */
 event integration (i++) {
 
   /**

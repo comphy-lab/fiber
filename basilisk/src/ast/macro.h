@@ -207,6 +207,16 @@ typedef struct {
   int postmacros;
 } MacroReplacement;
 
+/**
+ * @brief Retrieves the AST node corresponding to a macro argument for a given parameter identifier.
+ *
+ * Searches the macro's parameter list for the specified identifier and returns the associated argument expression from the macro call. If the argument is missing, prints an error message and terminates the program.
+ *
+ * @param identifier The AST node representing the macro parameter identifier.
+ * @param stack The stack used during macro expansion.
+ * @param r The macro replacement context containing parameters and arguments.
+ * @return Ast* The AST node representing the argument expression for the given parameter.
+ */
 static Ast * argument_value (Ast * identifier, Stack * stack, const MacroReplacement * r)
 {
   Ast * decl = ast_identifier_declaration (r->sparameters, ast_terminal (identifier)->start);
@@ -238,6 +248,14 @@ static Ast * argument_value (Ast * identifier, Stack * stack, const MacroReplace
   return value;
 }
 
+/**
+ * @brief Removes leading whitespace from the 'before' field of an AST terminal node.
+ *
+ * If the 'before' string contains only spaces, tabs, or newlines, it is cleared; otherwise, it is left unchanged.
+ *
+ * @param n AST node whose leading whitespace may be removed.
+ * @return Ast* The same AST node, possibly with its leading whitespace cleared.
+ */
 static Ast * remove_leading_spaces (Ast * n)
 {
   AstTerminal * t = ast_left_terminal (n);
@@ -248,6 +266,11 @@ static Ast * remove_leading_spaces (Ast * n)
   return n;
 }
 
+/**
+ * @brief Replaces macro parameter identifiers in an AST node with their corresponding argument expressions.
+ *
+ * Traverses the AST node, substituting macro parameters with the actual arguments provided during macro invocation. Handles both expression and declarator contexts, including special identifiers like `S__FILE__` and `S_LINENO`, which are replaced with the macro call's file name and line number, respectively. Reports an error and exits if a macro argument used as a declarator is not a simple identifier.
+ */
 static void replace_arguments (Ast * n, Stack * stack, void * data)
 {
   const MacroReplacement * r = data;
@@ -331,6 +354,15 @@ static void replace_arguments (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Replaces the ellipsis macro operator `{...}` in a macro body with the actual statement from the macro invocation.
+ *
+ * Traverses the AST node and, if an ellipsis macro is found, substitutes it with the statement provided in the macro call.
+ *
+ * @param n The AST node to process.
+ * @param stack Unused parameter for traversal context.
+ * @param data Pointer to a MacroReplacement struct containing the statement to insert.
+ */
 static void replace_ellipsis (Ast * n, Stack * stack, void * data)
 {
   if (ast_schema (ast_child (n, sym_statement), sym_statement,
@@ -343,6 +375,14 @@ static void replace_ellipsis (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Determines if a function declaration is a macro definition.
+ *
+ * Checks whether the given AST node represents a macro by searching for the `MACRODEF` storage class specifier. If so, returns the identifier node of the macro; otherwise, returns NULL.
+ *
+ * @param function_declaration AST node representing a function declaration.
+ * @return Ast* The identifier node of the macro if it is a macro definition, or NULL if not.
+ */
 Ast * ast_is_macro_declaration (const Ast * function_declaration)
 {
   return ast_find (ast_schema (function_declaration, sym_function_declaration,
@@ -358,6 +398,15 @@ Ast * ast_is_macro_declaration (const Ast * function_declaration)
 		0, sym_IDENTIFIER) : NULL;
 }
 
+/**
+ * @brief Replaces `break` statements within a macro body with a user-defined break expression or reports an error if breaking is not allowed.
+ *
+ * Recursively traverses the AST node `n`, and for each `break` statement that would exit the macro's scope (as determined by `parent`), replaces it with the provided `breaking` expression if specified. If no replacement is provided and a `break` is encountered, prints an error message and terminates the program.
+ *
+ * @param n The AST node to process.
+ * @param breaking The AST node representing the replacement for `break` statements, or NULL to disallow breaking.
+ * @param parent The AST node representing the macro's scope boundary.
+ */
 static void replace_break (Ast * n, Ast * breaking, Ast * parent)
 {
   if (ast_schema (n, sym_statement,
@@ -402,6 +451,11 @@ static void replace_break (Ast * n, Ast * breaking, Ast * parent)
       replace_break (*c, breaking, parent);
 }
 
+/**
+ * @brief Replaces `return` statements in macro bodies with `goto` statements targeting a unique label.
+ *
+ * Converts `return` statements inside complex macros into `goto` statements that jump to a generated label. If the macro returns a value, assigns the return expression to a temporary variable before the jump. Errors if a void return is used in a macro expected to return a value.
+ */
 static void replace_return (Ast * n, Stack * stack, void * data)
 {
   if (n->sym == sym_RETURN) {
@@ -471,6 +525,15 @@ static void replace_return (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Retrieves the AST node for a macro definition corresponding to a given identifier.
+ *
+ * Searches for the macro definition associated with the specified identifier, handling macro overloading, the `auto` specifier, and recursive macro inheritance. Reports an error and exits if the macro is undefined or if an ancestor macro cannot be found for recursive definitions.
+ *
+ * @param identifier The AST node representing the macro identifier.
+ * @param scope The AST node representing the search scope, or NULL for global scope.
+ * @return Ast* The AST node of the macro definition.
+ */
 static
 Ast * get_macro_definition (Stack * stack, const Ast * identifier, Ast * scope)
 {
@@ -513,6 +576,15 @@ Ast * get_macro_definition (Stack * stack, const Ast * identifier, Ast * scope)
   return macro_definition;
 }
 
+/**
+ * @brief Recursively expands macros within AST statement and function call nodes.
+ *
+ * Traverses the AST and applies macro expansion to statement and function call nodes using the provided macro replacement context.
+ *
+ * @param n The AST node to process.
+ * @param stack The current stack of macro parameters.
+ * @param data Pointer to a MacroReplacement struct containing macro expansion context.
+ */
 static void replace_macros (Ast * n, Stack * stack, void * data)
 {
   if (n->sym == sym_statement || n->sym == sym_function_call) {
@@ -521,6 +593,20 @@ static void replace_macros (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Expands a macro call in the AST, replacing it with the corresponding macro body.
+ *
+ * This function identifies macro invocations within statements or function calls and replaces them with their expanded macro bodies, handling argument substitution, optional arguments, break and return statement transformation, and recursive macro expansion. It supports both simple inlined macros and complex macros that return values, managing temporary variables and labels as needed. Errors are reported for incorrect argument counts, misuse of return values, or missing return types in value-returning macros.
+ *
+ * @param statement The AST node representing the macro call to be expanded.
+ * @param initial The initial AST node context for expansion, or NULL.
+ * @param stack The stack used for AST traversal and scope management.
+ * @param nolineno If true, suppresses line number information in the expansion.
+ * @param postmacros Controls macro expansion priority; macros with higher priority are skipped.
+ * @param expand_definitions If false, skips expansion within macro definitions.
+ * @param return_macro_index Pointer to a counter for generating unique return labels.
+ * @param scope The current AST scope for macro lookup and expansion.
+ */
 void ast_macro_replacement (Ast * statement, Ast * initial, Stack * stack,
 			    bool nolineno, int postmacros, bool expand_definitions,
 			    int * return_macro_index, Ast * scope)

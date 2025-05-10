@@ -350,6 +350,11 @@ topography. Any part of the image for which *m[]* is negative
 (i.e. for which *etam[] < zb[]*) will be masked out. */
 
 #if !BENCHMARK
+/**
+ * @brief Generates and outputs animations of wave elevation, refinement level, and process ID during the simulation.
+ *
+ * Produces MP4 movies visualizing the free surface elevation over the entire domain and a zoomed region, using a masked field to highlight wet areas. If adaptive mesh refinement is enabled, also outputs an animation of the refinement level. For parallel runs, generates a process ID animation. These outputs facilitate visual analysis of tsunami propagation and mesh adaptation.
+ */
 event movies (t++) {
   scalar m[], etam[];
   foreach() {
@@ -438,40 +443,10 @@ Gauge gauges[] = {
 event gauges1 (i++) output_gauges (gauges, {eta});
 
 /**
-As before gnuplot processes these files to produce this image:
-
-~~~gnuplot Comparison between observed and simulated timeseries (hours) of wave elevations (metres) for a selection of tide gauges.
-reset
-set term svg enhanced size 625,800 font ",10"
-set multiplot layout 5,1 scale 1,1.1
-set xrange [3:8]
-set key bottom right
-set title 'Hanimaadhoo, Maldives'
-plot 'hani' u ($1/60.):2 w l t 'modelled', \
-     '../hanires.txt' u 1:($2/100.) w lp t 'observed'
-unset key
-set title 'Male, Maldives'
-plot 'male' u ($1/60.):2 w l t 'modelled', \
-     '../maleres.txt' u 1:($2/100.) w lp t 'observed'
-set title 'Gan, Maldives'
-plot 'gana' u ($1/60.):2 w l t 'modelled', \
-     '../ganares.txt' u 1:($2/100.) w lp t 'observed'
-set title 'Diego Garcia'
-plot 'dieg' u ($1/60.):2 w l t 'modelled', \
-     '../diegres.txt' u 1:($2/100.) w lp t 'observed'
-set title 'Columbo, Sri Lanka'
-set xrange [2.5:8]
-plot 'colo' u ($1/60.):2 w l t 'modelled', \
-     '../colores.txt' u 1:($2/100.) w lp t 'observed'
-unset multiplot
-~~~
-
-### Google Earth KML file
-
-We also generate images and a [Keyhole Markup Language]() file which
-can be imported into [Google Earth](https://www.google.com/earth/) to
-superpose the evolving wave height field on top of Google Earth
-data. */
+ * @brief Appends wave elevation overlays to a KML file for Google Earth visualization.
+ *
+ * Every 15 minutes of simulation time, generates a PNG image of the free surface elevation masked by wet cells, and updates a KML file with a GroundOverlay referencing the image. The overlays are georeferenced to the simulation domain and can be imported into Google Earth to visualize the evolving tsunami wave field. Closes the KML file after the final time step.
+ */
 
 event kml (t += 15)
 {

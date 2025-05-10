@@ -1,5 +1,10 @@
 /**
-# Do not report unset values unless they are used in constraints */
+ * @brief Tests reporting of unset variable usage in constraint expressions.
+ *
+ * Demonstrates that unset variables assigned but not used in constraints are not reported, while unset variables used in constraint expressions trigger a report. Also includes conditional assignments within a loop and checks constraint evaluation after assignments.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

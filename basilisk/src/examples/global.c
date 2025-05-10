@@ -64,26 +64,14 @@ double * hmax = (double [NL]){ HUGE, HUGE, HUGE, HUGE, HUGE, HUGE };
 double omr = 0.05e-2, Cm = 0.;
 
 /**
-## main() 
-
-The simulation can be run in OpenMP/serial/GPU or with MPI. With MPI
-the number of processes must be of the form 2^(i+1) i.e.: 8, 32, 128,
-512, 2048 etc. (see [Tips](/src/Tips#non-cubic-domains) for
-explanations). This can be done using the
-[Makefile](/Tutorial#using-makefiles) with:
-
-~~~bash
-CC='mpicc -D_MPI=8' CFLAGS=-disable-dimensions make global.tst
-~~~
-
-it can also be run on GPUs using e.g.
-
-~~~bash
-OMP_NUM_THREADS=8 CFLAGS=-DSHOW make global.gpu.tst
-~~~
-
-Command-line parameters can be passed to the code to change the
-spatial resolution and/or the timestep. */
+ * @brief Initializes and runs the global oceanic circulation simulation.
+ *
+ * Configures the simulation domain, physical constants, spatial resolution, timestep, spinup time, number of isopycnal layers, and solver parameters based on command-line arguments or defaults. Supports execution with OpenMP, serial, GPU, or MPI parallelization. Starts the simulation run after setup.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Exit status code.
+ */
 
 int main (int argc, char * argv[])
 {

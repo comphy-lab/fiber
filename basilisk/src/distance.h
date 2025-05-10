@@ -216,7 +216,15 @@ static coord face_normal (coord * q, int type)
     n.x *= nn;
   return n;
 }
-#endif // dimension == 3
+#endif /**
+ * @brief Computes and assigns the signed minimal distance from a grid point to the closest surface elements.
+ *
+ * For a given grid point, finds the closest oriented segment (2D) or triangle (3D) from a list of elements, determines the sign of the distance based on local geometry orientation, and stores both the signed distance and a list of nearby elements for further refinement. If no nearby elements are found, interpolates or assigns zero distance as appropriate.
+ *
+ * @param point The grid point at which to compute the distance.
+ * @param i Pointer to a list of surface elements (segments or triangles).
+ * @param d Scalar field to store the computed signed distance.
+ */
 
 static void update_distance (Point point, coord ** i, scalar d)
 {
@@ -453,6 +461,11 @@ static void delete_distance (scalar d) {
   delete ({surface});
 }
 
+/**
+ * @brief Initializes and computes the signed distance field from a set of segments or triangles.
+ *
+ * Constructs a signed minimal distance field in the scalar `d` from the geometric elements in `p`, supporting both 2D (segments) and 3D (triangles) cases. Handles degenerate elements, sets up dynamic memory management for associated surface data, and iteratively refines the distance field across all grid levels to ensure accuracy and consistency on adaptive meshes.
+ */
 trace
 void distance (scalar d, coord * p)
 {

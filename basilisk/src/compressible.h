@@ -52,11 +52,14 @@ vector * vectors = {w};
 double gammao = 1.4 ;
 
 /**
-The system is entirely defined by the `flux()` function called by the
-generic solver for conservation laws. The parameter passed to the
-function is the array `s` which contains the state variables for each
-conserved field, in the order of their definition above (i.e. scalars
-then vectors). */
+ * @brief Computes the fluxes and characteristic speeds for the 2D Euler equations of compressible gas dynamics.
+ *
+ * Given the state vector `s` (density, total energy, and momentum components), calculates the fluxes for each conserved variable and determines the minimum and maximum eigenvalues (wave speeds) for the system.
+ *
+ * @param s Input array containing state variables: density, total energy, and momentum components.
+ * @param f Output array to store the computed fluxes for each conserved variable.
+ * @param e Output array to store the minimum and maximum eigenvalues (characteristic speeds).
+ */
 
 void flux (const double * s, double * f, double * e)
 {

@@ -110,14 +110,10 @@ The default starting time for averaging (i.e. spinup time) is set to
 double tspinup = 5.*year;
 
 /**
-## Initial conditions 
-
-The function below applies some Laplacian smoothing to the real
-bathymetry, as done in [Hulburt & Hogan, 2000 &
-2008](#hurlburt2000). Note that the runs are robust even without this
-smoothing, which may or may not be necessary to obtain realistic
-results. We keep it for consistency with [Hulburt & Hogan,
-2000](#hurlburt2000). */
+ * @brief Applies two iterations of Laplacian smoothing to the bathymetry field.
+ *
+ * This function smooths the bathymetry (`zb`) by averaging each wet cell's value with its eight neighbors, storing the result in `zbs`. The process is repeated twice to reduce small-scale noise in the bathymetry, as commonly done in ocean modeling studies. Dry cells (non-ocean) are left unchanged.
+ */
 
 void laplacian_smoothing()
 {
@@ -229,8 +225,13 @@ Rosenstein climatology directly gives the wind stress.*/
 double Cw = 1.5e-3, rho_air = 1.2;
 
 /**
-This function loads the [Hellerman & Rosenstein, 1983](#hellerman1983)
-(default) or the COADS wind climatology. */
+ * @brief Loads monthly wind climatology data into the wind vector field.
+ *
+ * Depending on the configuration, loads either the Hellerman & Rosenstein (1983) or COADS wind climatology for the specified month index. The data is read from ASCII grid files and assigned to the zonal and meridional components of the wind vector field.
+ *
+ * @param wind Vector field to store the loaded wind data.
+ * @param index Zero-based month index (0 for January, 11 for December).
+ */
 
 void load_wind (vector wind, int index)
 {
@@ -306,6 +307,11 @@ time. */
 
 vector wind1[], wind2[];
 
+/**
+ * @brief Applies wind stress forcing as acceleration to the topmost ocean layer.
+ *
+ * Interpolates monthly wind stress climatology in time and applies the resulting wind stress as an acceleration to the topmost fluid layer at each grid face, provided the layer thickness exceeds 10 meters. The wind stress is sourced from either COADS or Hellerman & Rosenstein datasets, with appropriate unit conversion. Only the relevant faces receive the forcing, and the wind stress is linearly interpolated between two monthly datasets based on the current simulation time.
+ */
 event acceleration (i++)
 {
   int i = t/month;
@@ -355,7 +361,11 @@ viscosity for a resolution of 1024 x 512 (we haven't tested other
 resolutions) and the statistics (and dynamics) are undistinguishable
 from those with viscosity. */
 
-double nu_H = 10; // m^2/s
+double nu_H = 10; /**
+ * @brief Applies horizontal Laplacian viscosity to velocity fields in each isopycnal layer.
+ *
+ * Updates the velocity in each layer using an implicit scheme with a constant horizontal viscosity coefficient, smoothing velocity gradients while accounting for dry cells and masking.
+ */
 
 event viscous_term (i++)
 {
@@ -384,9 +394,10 @@ event viscous_term (i++)
 }
 
 /**
-## Daily outputs 
-
-We compute the kinetic energy in the top and bottom layer. */
+ * @brief Outputs daily diagnostics and visualizations of the ocean model state.
+ *
+ * Computes and prints kinetic energy in the top and bottom layers, volume-averaged thickness variations for each layer, and standard deviations of free-surface height and velocity norm. Generates animations of free-surface height, velocity norm, and surface vorticity for the top layer.
+ */
 
 event outputs (t += day)
 {
@@ -464,6 +475,11 @@ event outputs (t += day)
 ## Real-time display on GPUs */
 
 #if _GPU && SHOW
+/**
+ * @brief Displays real-time visualizations of free-surface height and velocity norm.
+ *
+ * Generates and outputs PPM images of the free-surface height and velocity magnitude for the top ocean layer, masking out land and dry regions. The images are updated at each time step for real-time monitoring.
+ */
 event display (i++)
 {
   scalar etad[], m[], nu[];
@@ -511,10 +527,10 @@ event fluxes1 (t += day)
   output_fluxes (fluxes, h, u);
 
 /**
-## Monthly snapshots 
-
-We dump all fields (and the vorticity). This can be used for
-post-processing and/or to restart the simulation. */
+ * @brief Saves monthly snapshots of all simulation fields and vorticity.
+ *
+ * Dumps the current state of all fields, including the computed vorticity of the topmost velocity layer, for post-processing or simulation restart.
+ */
 
 event snapshots (t += month)
 {

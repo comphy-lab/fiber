@@ -63,6 +63,13 @@ void recursive (Point point)
     stage = stack[_s].stage; _s--; }
 #endif
 
+/**
+ * @brief Iteratively traverses all cells in the tree rooted at the given point.
+ *
+ * Replaces recursive tree traversal with an explicit stack-based approach, visiting each allocated cell in the subtree rooted at `root`. Supports 1D, 2D, and 3D grids, adapting the traversal order and child expansion according to the grid dimension. User-defined operations can be inserted at each visited cell.
+ *
+ * @param root The root point from which to begin traversal.
+ */
 macro2 foreach_cell_root (Point root)
 {
   {
@@ -122,6 +129,11 @@ macro2 foreach_cell_root (Point root)
   }
 }
 
+/**
+ * @brief Iterates over all cells in the grid starting from the canonical root.
+ *
+ * Initializes the root point at the standard ghost cell offset for the current grid dimension and traverses the entire cell tree using an explicit stack-based approach. User-defined operations can be performed on each visited cell within the traversal body.
+ */
 macro2 foreach_cell()
 {
   {
@@ -137,6 +149,11 @@ macro2 foreach_cell()
   }
 }
 
+/**
+ * @brief Iterates over all root cells in the grid and traverses their subtrees.
+ *
+ * For each root cell within the specified range in all dimensions, performs a stack-based tree traversal starting from that root. User-defined operations can be inserted within the traversal body.
+ */
 macro2 foreach_cell_all() {
   {
     Point root = {0};
@@ -152,6 +169,14 @@ macro2 foreach_cell_all() {
   }
 }
 
+/**
+ * @brief Performs a post-order traversal of the grid tree starting from a specified root cell, with optional conditional descent into child cells.
+ *
+ * This macro iteratively traverses the grid tree in post-order, using an explicit stack to avoid recursion. At each cell, it descends into child cells only if the provided condition is true. When a leaf cell is reached, or after all children have been processed, user-defined code can be executed at the designated placeholder.
+ *
+ * @param condition Boolean expression controlling whether to traverse into child cells.
+ * @param root The root cell from which traversal begins.
+ */
 macro2 foreach_cell_post_root (bool condition, Point root)
 {
   {
@@ -282,6 +307,11 @@ macro2 foreach_cell_post_all (bool condition)
   }
 }
 
+/**
+ * @brief Iterates over all active, local leaf cells in the grid.
+ *
+ * Executes the user-defined code block for each cell that is a leaf, active, and local. Non-leaf cells and inactive or non-local leaves are skipped.
+ */
 macro2 foreach_leaf()
 {
   foreach_cell()

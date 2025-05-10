@@ -54,30 +54,69 @@ double dirichlet (double expr, Point point = point, scalar s = _s)
   return 2.*expr - s[];
 }
 
+/**
+ * @brief Applies a homogeneous Dirichlet boundary condition.
+ *
+ * Returns the value for a boundary cell such that the field is zero at the boundary (homogeneous Dirichlet condition).
+ *
+ * @return double Value to assign at the boundary cell.
+ */
 static inline
 double dirichlet_homogeneous (double expr, Point point = point, scalar s = _s)
 {
   return - s[];
 }
 
+/**
+ * @brief Applies a Dirichlet boundary condition on a face by returning the specified value.
+ *
+ * @param expr The value to enforce at the boundary face.
+ * @return The value of expr.
+ */
 static inline
 double dirichlet_face (double expr)
 {
   return expr;
 }
 
+/**
+ * @brief Returns the homogeneous Dirichlet boundary value for a face.
+ *
+ * Always returns zero, representing a homogeneous Dirichlet condition on a face.
+ *
+ * @param expr Ignored expression value.
+ * @return double Zero.
+ */
 static inline
 double dirichlet_face_homogeneous (double expr)
 {
   return 0.;
 }
 
+/**
+ * @brief Applies a Neumann boundary condition for a scalar field.
+ *
+ * Computes the value at a ghost cell to enforce a specified normal derivative (Neumann condition) at the boundary.
+ *
+ * @param expr The prescribed normal derivative at the boundary.
+ * @return The value to assign at the ghost cell to satisfy the Neumann condition.
+ */
 static inline
 double neumann (double expr, Point point = point, scalar s = _s)
 {
   return Delta*expr + s[];
 }
 
+/**
+ * @brief Applies a homogeneous Neumann boundary condition.
+ *
+ * Returns the value of the scalar field at the current point, representing zero normal derivative at the boundary.
+ *
+ * @param expr Unused expression parameter (for interface consistency).
+ * @param point The grid point at the boundary (default: current point).
+ * @param s The scalar field (default: current scalar).
+ * @return double The value of the scalar field at the boundary point.
+ */
 static inline
 double neumann_homogeneous (double expr, Point point = point, scalar s = _s)
 {
@@ -93,6 +132,12 @@ KHASH_MAP_INIT_INT64(PTR, External)
 
 static khash_t(PTR) * _functions = NULL;
   
+/**
+ * @brief Retrieves the registered GPU external function associated with a pointer.
+ *
+ * @param ptr The pointer key identifying the external function.
+ * @return Pointer to the External structure if found, or NULL if not registered.
+ */
 static External * _get_function (long ptr)
 {
   if (!_functions)
@@ -103,6 +148,17 @@ static External * _get_function (long ptr)
   return &kh_value (_functions, k);
 }
 
+/**
+ * @brief Registers a GPU function and its metadata for later retrieval and execution.
+ *
+ * Associates a function pointer with its name, kernel source, and external dependencies in the GPU function registry.
+ * Copies the list of external dependencies for safe storage. Each registered function is assigned a unique index.
+ *
+ * @param ptr Pointer to the function to register.
+ * @param name Name of the function.
+ * @param kernel Kernel source code or data associated with the function.
+ * @param externals Array of external dependencies required by the function, terminated by a null name.
+ */
 static void register_function (void (* ptr) (void), const char * name,
 			       const char * kernel, const void * externals)
 {
@@ -138,9 +194,16 @@ static void register_function (void (* ptr) (void), const char * name,
 #endif // _GPU
 
 /**
-# Field allocation
-
-If this routine is modified, do not forget to update [/src/ast/interpreter/overload.h](). */
+ * @brief Initializes a scalar block with a constructed name and block index.
+ *
+ * Sets the name and block index for the given scalar, appending it to global lists for block and scalar management. The name is constructed by combining the base name, optional index, and extension.
+ *
+ * @param sb Scalar to initialize.
+ * @param name Base name for the scalar.
+ * @param ext Extension to append to the name.
+ * @param n Index for the block; if zero, no index is appended.
+ * @param block Block index or identifier.
+ */
 
 static void init_block_scalar (scalar sb, const char * name, const char * ext,
 			       int n, int block)
@@ -159,7 +222,17 @@ static void init_block_scalar (scalar sb, const char * name, const char * ext,
   all = list_append (all, sb);
 }
 
-@define interpreter_set_int(...)
+@/**
+ * @brief Allocates a block of scalar fields, reusing freed slots if available.
+ *
+ * Searches for a contiguous block of freed scalar slots of the requested size and initializes them; if none are available, expands the attribute array and allocates new slots. Returns the first scalar in the allocated block.
+ *
+ * @param name Name prefix for the scalar block.
+ * @param ext Optional extension for the scalar name.
+ * @param block Number of contiguous scalar slots to allocate.
+ * @return scalar The first scalar in the allocated block.
+ */
+define interpreter_set_int(...)
 @define interpreter_reset_scalar(...)
 
 scalar alloc_block_scalar (const char * name, const char * ext, int block)
@@ -317,6 +390,15 @@ tensor new_symmetric_tensor (const char * name)
 
 static int nconst = 0;
 
+/**
+ * @brief Initializes a constant scalar field with a specified value.
+ *
+ * Sets the value of a constant scalar and ensures the internal constant array is properly sized and initialized.
+ *
+ * @param s Scalar to initialize as a constant.
+ * @param name Name of the constant scalar (unused in this function).
+ * @param val Value to assign to the constant scalar.
+ */
 void init_const_scalar (scalar s, const char * name, double val)
 {
   if (s.i - _NVARMAX >= nconst) {
@@ -350,6 +432,14 @@ vector new_const_vector (const char * name, int i, double * val)
   return v;
 }
 
+/**
+ * @brief Copies scalar attributes and boundary conditions from a source scalar to a clone.
+ *
+ * Copies the attribute structure, boundary condition functions, and dependency list from the source scalar to the clone, preserving the clone's name and boundary arrays.
+ *
+ * @param clone The scalar to receive the copied attributes and boundary conditions.
+ * @param src The source scalar from which to copy attributes and boundary conditions.
+ */
 static void cartesian_scalar_clone (scalar clone, scalar src)
 {
   char * cname = clone.name;
@@ -368,7 +458,15 @@ static void cartesian_scalar_clone (scalar clone, scalar src)
   clone.depends = list_copy (src.depends);
 }
 
-scalar * list_clone (scalar * l)
+/**
+       * @brief Clones a list of scalar fields, preserving block structure and dependencies.
+       *
+       * Allocates new scalar fields for each entry in the input list, copies their attributes and boundary conditions, and remaps internal indices to maintain correct dependencies between cloned fields.
+       *
+       * @param l The list of scalar fields to clone.
+       * @return scalar* A new list containing the cloned scalar fields.
+       */
+      scalar * list_clone (scalar * l)
 {
   scalar * list = NULL;
   int nvar = datasize/sizeof(real), map[nvar];
@@ -1091,6 +1189,13 @@ void stencil_val (Point p, scalar s, int i, int j, int k,
   }
 }
 
+/**
+ * @brief Marks a scalar field as written at the current grid point and validates write access.
+ *
+ * Checks that the write to the scalar field `s` at the given point `p` and stencil offset `(i, j, k)` is legal (i.e., only at the central point), and updates input/output flags for stencil analysis. Aborts execution if attempting to write to a constant, undefined, or deleted field, or if the write is not at the central stencil location.
+ *
+ * @param input If true and the field is not already marked as output, also marks the field as input.
+ */
 void stencil_val_a (Point p, scalar s, int i, int j, int k, bool input,
 		    const char * file, int line)
 {

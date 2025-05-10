@@ -1,5 +1,10 @@
 /**
-# Dimensions of array elements are identical */
+ * @brief Tests that array element dimensions are handled identically.
+ *
+ * Initializes a grid and verifies that arithmetic operations involving elements of double and float arrays with `L0` are processed without dimension mismatches.
+ *
+ * @return int Exit status code.
+ */
 
 int main()
 {

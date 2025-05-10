@@ -125,6 +125,11 @@ Optionally, we can make a "stroboscopic" movie of the wave field. This
 is useful to check the amount of waves reflected from the outflow. */
 
 #if 0
+/**
+ * @brief Outputs a PPM image of the free surface elevation every second.
+ *
+ * Generates a visualization of the `eta` field with values mapped between -0.04 and 0.04, using a 512×512 grid, at one-second intervals.
+ */
 event movie (t += 1) {
   output_ppm (eta, min = -0.04, max = 0.04, n = 512);
 }

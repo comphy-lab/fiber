@@ -14,6 +14,15 @@ AstTerminal
   ast_function = { {sym_function_definition}, .start = "ast_function", .file = __FILE__, .line = __LINE__ },
   ast_bool = { {sym_BOOL}, .start = "ast_bool", .file = __FILE__, .line = __LINE__ };
 
+/**
+ * @brief Resolves and returns the base type of a given AST node.
+ *
+ * If the input node represents a typedef name or identifier, attempts to resolve its declaration and returns its type. Returns NULL if the typedef cannot be resolved. For other node types, returns the node itself.
+ *
+ * @param type The AST node representing a type or identifier.
+ * @param d Optional dimensions structure for type information.
+ * @return Ast* The resolved base type node, or NULL if unresolved.
+ */
 Ast * ast_base_type (Ast * type, AstDimensions * d, Stack * stack)
 {
   if (type && (type->sym == sym_TYPEDEF_NAME || type->sym == sym_IDENTIFIER)) {

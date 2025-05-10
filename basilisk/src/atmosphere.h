@@ -11,6 +11,12 @@ double G = 1.;
 // Viscosity
 double NU = 0.;
 
+/**
+ * @brief Computes the centered finite difference advection of a scalar field.
+ *
+ * Calculates the advection term for the scalar field @p f using the velocity field @p u,
+ * applying a centered (symmetric) finite difference scheme. The result is stored in @p df.
+ */
 trace
 void advection_centered (scalar f, vector u, scalar df)
 {
@@ -21,6 +27,11 @@ void advection_centered (scalar f, vector u, scalar df)
 	    (f[] + f[0,1])*u.y[0,1])/(2.*Delta);
 }
 
+/**
+ * @brief Computes the upwind finite difference advection of a scalar field.
+ *
+ * Calculates the advection term for the scalar field `f` using the upwind scheme based on the velocity field `u`, and stores the result in `df`. The upwind direction is chosen according to the sign of each velocity component to enhance numerical stability.
+ */
 trace
 void advection_upwind (scalar f, vector u, scalar df)
 {
@@ -32,7 +43,14 @@ void advection_upwind (scalar f, vector u, scalar df)
 }
 
 trace
-double timestep (void)
+double /**
+ * @brief Computes the maximum stable timestep for the shallow water system based on CFL conditions.
+ *
+ * Evaluates the timestep constraints imposed by gravity wave speed and local velocity magnitudes across all grid cells, returning the largest permissible timestep that maintains numerical stability.
+ *
+ * @return double The computed stable timestep.
+ */
+timestep (void)
 {
   double dtmax = DT/CFL;
   dtmax *= dtmax;
@@ -84,6 +102,15 @@ void momentum (vector u, scalar h, vector du)
       + NU*(d.x[] - d.x[-1,0])/Delta;
 }
 
+/**
+ * @brief Computes time derivatives of velocity and height fields for one time step.
+ *
+ * Calculates the advection of the height field and the momentum update for the velocity field, storing the resulting derivatives in the provided arrays.
+ *
+ * @param t Current simulation time.
+ * @param f Array of state variables (velocity components and height).
+ * @param df Array to store computed time derivatives of the state variables.
+ */
 trace
 void advance (double t, scalar * f, scalar * df)
 {

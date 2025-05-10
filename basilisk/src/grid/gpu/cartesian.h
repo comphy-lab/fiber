@@ -23,6 +23,11 @@ static bool _gpu_done_ = false;
 #include "gpu.h"
 #include "../cartesian-common.h"
 
+/**
+ * @brief Initializes Cartesian grid methods for GPU usage.
+ *
+ * Sets up the standard Cartesian grid methods and assigns the GPU-specific boundary level handler.
+ */
 static void gpu_cartesian_methods()
 {
   cartesian_methods();

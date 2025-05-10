@@ -152,7 +152,15 @@ typedef struct {
 } Einstein_sumData;
 
 /**
-This function appends a block to an expression with a `+` sign separator. */
+ * @brief Appends an AST node to an additive expression list with a "+" operator.
+ *
+ * If the item to append is already of the specified additive type, it is added directly; otherwise, it is wrapped in a new node of the given type before appending. Updates AST parent-child relationships accordingly.
+ *
+ * @param list The existing additive expression AST node.
+ * @param item_sym The symbol representing the additive expression type.
+ * @param item The AST node to append.
+ * @return Ast* The updated additive expression AST node.
+ */
 
 Ast * ast_add_list_append (Ast * list, int item_sym, Ast * item)
 {
@@ -177,7 +185,14 @@ Ast * ast_add_list_append (Ast * list, int item_sym, Ast * item)
 }
 
 /**
-Read the input id list given to the macro. */
+ * @brief Collects single-character identifiers from the macro argument list.
+ *
+ * Traverses AST nodes to extract identifiers used as summation indices for the `einstein_sum` macro. Exits with an error if any identifier is longer than one character. Appends valid identifiers to the provided buffer.
+ *
+ * @param n AST node representing a potential identifier.
+ * @param stack Unused.
+ * @param data Pointer to a character buffer where collected identifiers are appended.
+ */
 
 static void einstein_sum_id_list (Ast * n, Stack * stack, void * data)
 {
@@ -194,6 +209,13 @@ static void einstein_sum_id_list (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Extracts the argument list of summation indices from the enclosing `einstein_sum` macro.
+ *
+ * Traverses the AST upward from the given node to locate the nearest `einstein_sum` macro statement, then collects its argument identifiers as a dynamically allocated string.
+ *
+ * @return Pointer to a newly allocated string containing the summation indices used in the macro.
+ */
 static char * get_einstein_sum_args (Ast * n, Stack * stack)
 {
   // stop when the macro einstein sum is found
@@ -239,7 +261,12 @@ static Ast * get_expression_statement (Ast * n)
 }
 
 /**
-Get all the indicies present in the block (Ast * n). */
+ * @brief Returns a dynamically allocated string of all member indices found in the AST subtree.
+ *
+ * Traverses the given AST node and collects single-character member identifiers (e.g., `.i`, `.j`) used as indices within the subtree.
+ *
+ * @return Newly allocated string containing the collected indices. Caller is responsible for freeing the memory.
+ */
 
 static char * get_expression_id (Ast * n, Stack * stack)
 {
@@ -280,7 +307,10 @@ static void einstein_sum_replace_id (Ast * n, Stack * stack, void * data)
 }
 
 /**
-Increment the _x to _y or _z and so on. */
+ * @brief Rotates the suffix of member identifiers (e.g., `_x`, `_y`, `_z`) according to the current permutation of summation indices.
+ *
+ * For each member identifier in the AST node that matches a summation index, updates its suffix to reflect the current value in the permutation array stored in `Einstein_sumData`. This enables correct permutation of tensor components during Einstein summation expansion.
+ */
 
 static void einstein_sum_rotate (Ast * n, Stack * stack, void * data)
 {
@@ -300,8 +330,15 @@ static void einstein_sum_rotate (Ast * n, Stack * stack, void * data)
 }
 
 /**
-Generate the list of all possible permutations for the indices 
-with {0,1,2} corresponding to {x,y,z}. */
+ * @brief Generates all possible index permutations for tensor components.
+ *
+ * Fills the provided array with every combination of index values for the specified number of indices and dimension.
+ * Each permutation is represented as a sequence of integers (e.g., 0, 1, 2 for x, y, z).
+ *
+ * @param LOP Pointer to an array to store the permutations. The array must have space for (dim^num_of_index) * num_of_index elements.
+ * @param num_of_index Number of indices to permute.
+ * @param dim Dimension of each index (e.g., 3 for x, y, z).
+ */
 
 static void generates_list_of_permutations(int * LOP,int num_of_index,int dim){
     int length = pow(dim,num_of_index);
@@ -317,7 +354,10 @@ static void generates_list_of_permutations(int * LOP,int num_of_index,int dim){
 }
 
 /**
-This function perform the summation step within an expression. */
+ * @brief Expands an expression by performing Einstein summation over specified indices.
+ *
+ * Identifies indices in the right-hand side of an assignment that require summation, generates all permutations for those indices, and duplicates the relevant AST subtrees for each term in the sum. The expanded terms are appended to the additive expression in the AST, implementing the Einstein summation convention for the given indices and dimension.
+ */
 
 static void einstein_sum_sum (Ast * n, Stack * stack, void * data)
 {
@@ -417,6 +457,11 @@ static void einstein_sum_replace_id_back (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Expands an assignment expression within an Einstein summation macro block.
+ *
+ * Converts member identifiers matching summation indices to suffixed forms, performs summation over indices appearing only on the right-hand side, removes duplicate indices, generates all permutations for remaining indices, and appends the resulting expanded expressions to the AST. Restores original member names after permutation.
+ */
 static void einstein_sum_expression (Ast * n, Stack * stack, void * data)
 { 
   if (n->sym == sym_assignment_expression &&
@@ -503,6 +548,13 @@ static void einstein_sum_expression (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Expands the einstein_sum macro by generating all summation and permutation terms.
+ *
+ * Processes the einstein_sum macro node in the AST, validating its arguments and ensuring the macro body is a compound statement. Traverses each expression in the macro body, applying Einstein summation and index permutation according to the specified dimension. Replaces the original macro body with the fully expanded set of statements implementing the summation convention.
+ *
+ * @param dimension The number of possible index values (e.g., 3 for x, y, z).
+ */
 void einstein_sum_global (Ast * n, Stack * stack, int dimension)
 {
   Ast * item = ast_block_list_get_item (ast_ancestor (n, 2));

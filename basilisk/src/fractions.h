@@ -351,8 +351,13 @@ void fractions (vertex scalar Phi, scalar c,
 }
 
 /**
-The convenience macros below can be used to define volume and surface
-fraction fields directly from a function. */
+ * @brief Initializes a volume fraction field from a levelset function.
+ *
+ * Evaluates the given function at cell vertices to construct a levelset field, then computes the corresponding volume fraction field.
+ *
+ * @param f The scalar field to store the computed volume fractions.
+ * @param func The function evaluated at each vertex to define the interface.
+ */
 
 macro fraction (scalar f, double func)
 {
@@ -364,6 +369,15 @@ macro fraction (scalar f, double func)
   }
 }
 
+/**
+ * @brief Initializes volume and surface fractions for a solid region defined by an implicit function.
+ *
+ * Evaluates the provided implicit function at cell vertices to construct a levelset field, then computes the corresponding volume fraction field `cs` and surface fraction field `fs` using the `fractions` function. The region where the function is positive is considered inside the solid.
+ *
+ * @param cs Scalar field to store the computed volume fractions.
+ * @param fs Face vector field to store the computed surface fractions.
+ * @param func Implicit function defining the solid region; positive values are inside the solid.
+ */
 macro solid (scalar cs, face vector fs, double func)
 {
   {
@@ -418,8 +432,43 @@ coord youngs_normal (Point point, scalar c)
 }
 
 /**
-### Normal approximation using MYC or face fractions
-*/
+ * @brief Computes the interface normal vector using face fractions if available.
+ *
+ * If the face vector `s` is specified, calculates the interface normal from face fractions to provide a continuous interface representation. Otherwise, falls back to the default interface normal approximation.
+ *
+ * @param c Volume fraction field at the current cell.
+ * @param s Face vector containing surface fractions, or a sentinel value if not available.
+ * @return coord The normalized interface normal vector.
+ */
+
+/**
+ * @brief Reconstructs the interface normal and intercept fields from a volume fraction field.
+ *
+ * For each cell, computes the interface normal vector and intercept (alpha) corresponding to the local interface geometry, using the specified normal approximation scheme. On tree grids, sets appropriate refinement and prolongation operators for the reconstructed fields.
+ *
+ * @param c Volume fraction field.
+ * @param n Output vector field for interface normals.
+ * @param alpha Output scalar field for interface intercepts.
+ */
+
+/**
+ * @brief Outputs interface facets to a file for visualization.
+ *
+ * Writes the coordinates of interface segments (1D/2D) or polygons (3D) corresponding to the reconstructed interface in each partially filled cell. The output is formatted for direct use with visualization tools such as gnuplot. If surface fractions are provided, they are used for a more continuous interface representation.
+ *
+ * @param c Volume fraction field.
+ * @param fp Output file pointer (defaults to stdout).
+ * @param s Optional face vector of surface fractions.
+ */
+
+/**
+ * @brief Estimates the total interfacial area from a volume fraction field.
+ *
+ * Sums the reconstructed interface area in all partially filled cells using the local interface geometry.
+ *
+ * @param c Volume fraction field.
+ * @return double Estimated total interface area.
+ */
 
 coord facet_normal (Point point, scalar c, face vector s)
 {
@@ -495,22 +544,16 @@ void reconstruction (const scalar c, vector n, scalar alpha)
 }
 
 /**
-## Interface output
-
-This function "draws" interface facets in a file. The segment
-endpoints are defined by pairs of coordinates. Each pair of endpoints
-is separated from the next pair by a newline, so that the resulting
-file is directly visualisable with gnuplot.
-
-The input parameters are a volume fraction field `c`, an optional file
-pointer `fp` (which defaults to stdout) and an optional face
-vector field `s` containing the surface fractions.
-
-If `s` is specified, the surface fractions are used to compute the
-interface normals which leads to a continuous interface representation
-in most cases. Otherwise the interface normals are approximated from
-the volume fraction field, which results in a piecewise continuous
-(i.e. geometric VOF) interface representation. */
+     * @brief Writes interface facets defined by a volume fraction field to a file for visualization.
+     *
+     * For each cell containing a partial interface (0 < c < 1), computes the interface geometry and outputs the coordinates of segment endpoints (1D, 2D) or polygon vertices (3D) to the specified file. Each facet is separated by a newline, producing output suitable for direct visualization with tools like gnuplot.
+     *
+     * If a surface fraction field `s` is provided, it is used to compute smoother interface normals; otherwise, normals are estimated from the volume fraction field.
+     *
+     * @param c Volume fraction field defining the interface.
+     * @param fp Output file pointer (defaults to stdout).
+     * @param s Optional face vector field of surface fractions for improved normal estimation.
+     */
 
 trace
 void output_facets (scalar c, FILE * fp = stdout, face vector s = {{-1}})

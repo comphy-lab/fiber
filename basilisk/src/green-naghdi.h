@@ -100,13 +100,16 @@ $$ */
 #define R2(h,zb,w) (h[]/2.*dx(w) + w[]*(dx(zb) + dx(h)))
 
 /**
-## Inversion of the linear system
-
-To invert the linear system which defines $D$, we need to write
-discretised versions of the residual and relaxation operators. The
-functions take generic multilevel parameters and a user-defined
-structure which contains solution-specific parameters, in our case a
-list of the $h$, $zb$ and *wet* fields. */
+ * @brief Computes the residual of the discretized Green-Naghdi linear system for the dispersive correction field.
+ *
+ * Given the current estimate of the vector field \(D\), this function calculates the residual of the linear system \(\alpha_d h \mathcal{T}(D) + h D = b\) at each grid point, where \(\mathcal{T}\) is a dispersive operator involving water depth, bathymetry, and their derivatives. The residual is set to zero in dry or partially wet cells. Returns the maximum normalized residual across all grid points.
+ *
+ * @param a Array of scalar fields representing the current solution for \(D\).
+ * @param r Array of scalar fields representing the right-hand side vector \(b\).
+ * @param resl Array of scalar fields to store the computed residual.
+ * @param data Pointer to an array containing the water depth, bathymetry, and wet mask fields.
+ * @return double Maximum residual normalized by gravity.
+ */
 
 static double residual_GN (scalar * a, scalar * r, scalar * resl, void * data)
 {
@@ -154,7 +157,17 @@ static double residual_GN (scalar * a, scalar * r, scalar * resl, void * data)
   The $y$-component is obtained by rotation of the indices. */
  
   double maxres = 0.;
-  foreach (reduction(max:maxres))
+  /**
+     * @brief Performs a relaxation step for the multigrid solver of the Green-Naghdi dispersive correction.
+     *
+     * Iteratively updates the vector field \(D\) by inverting the discretized linear operator for each grid cell, using a Gauss-Seidel or red-black scheme depending on compilation flags. The update is applied only to cells with sufficient water depth and fully wet neighbors; otherwise, \(D\) is set to zero.
+     *
+     * @param a Array of solution scalars representing the vector field \(D\).
+     * @param r Array of right-hand side scalars representing the source term \(b\).
+     * @param l Multigrid level.
+     * @param data Pointer to an array containing the water depth, bathymetry, and wet mask fields.
+     */
+    foreach (reduction(max:maxres))
     foreach_dimension() {
       if (wet[-1] == 1 && wet[] == 1 && wet[1] == 1) {
 	double hc = h[], dxh = dx(h), dxzb = dx(zb), dxeta = dxzb + dxh;

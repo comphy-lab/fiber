@@ -1,6 +1,15 @@
 #include "ast.h"
 #include "symbols.h"
 
+/**
+ * @brief Entry point for the AST parser and printer command-line tool.
+ *
+ * Parses the first command-line argument as code or an expression, constructs its abstract syntax tree (AST), and prints the AST in different formats depending on the presence of additional arguments. Exits with an error code if parsing fails.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Returns 0 on success, or 1 if usage is incorrect or parsing fails.
+ */
 int main (int argc, char * argv[])
 {
   if (argc < 2) {

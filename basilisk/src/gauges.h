@@ -15,6 +15,11 @@ typedef struct {
   FILE * fp;
 } Gauge;
 
+/**
+ * @brief Records time series data from specified gauges to output files.
+ *
+ * For each gauge in the provided array, interpolates the given scalar fields at the gauge's location and writes the current simulation time and scalar values to the gauge's output file. Output is only performed on the main process and only if valid data is available for the gauge at the current time step. Each gauge's output file is created and initialized with its description if not already open.
+ */
 trace
 void output_gauges (Gauge * gauges, scalar * list)
 {

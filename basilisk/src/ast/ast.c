@@ -102,6 +102,11 @@ static void ast_destroy_internal (Ast * n)
   }
 }
 
+/**
+ * @brief Removes an AST node from its parent's child list and frees its memory.
+ *
+ * If the node is present in its parent's child array, it is replaced with a placeholder before recursively destroying the node and its descendants.
+ */
 void ast_destroy (Ast * n)
 {
   if (!n || n == ast_placeholder)
@@ -178,6 +183,15 @@ static AstTerminal * ast_left_line (Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Replaces a child node of an AST parent with a new node, preserving file and line information.
+ *
+ * Replaces the child at the specified index in the parent's child array with the given node. If the replaced child is not a placeholder, its file and line information, as well as leading whitespace, are merged into the new child's leftmost terminal node. The old child is destroyed after replacement.
+ *
+ * @param parent The AST parent node whose child will be replaced.
+ * @param index The index of the child to replace.
+ * @param child The new AST node to insert as the child.
+ */
 void ast_replace_child (Ast * parent, int index, Ast * child)
 {
   Ast * oldchild = parent->child[index];
@@ -215,6 +229,19 @@ void ast_replace_child (Ast * parent, int index, Ast * child)
   }
 }
 
+/**
+ * @brief Replaces a terminal node with a matching string in the AST with another subtree.
+ *
+ * Searches the AST rooted at @p n for a terminal node whose start string matches @p terminal.
+ * If found, replaces the nearest ancestor node with the same symbol as @p with by @p with,
+ * destroys the replaced node, and returns the rightmost terminal of the inserted subtree.
+ * Updates line and file information for subsequent siblings as needed.
+ *
+ * @param n The root of the AST subtree to search.
+ * @param terminal The string to match against terminal node start strings.
+ * @param with The AST subtree to insert in place of the matched node.
+ * @return AstTerminal* The rightmost terminal of the inserted subtree, or NULL if no match is found.
+ */
 AstTerminal * ast_replace (Ast * n, const char * terminal, Ast * with)
 {
   AstTerminal * t = ast_terminal (n);
@@ -248,6 +275,14 @@ typedef struct {
   int line, macro;
 } File;
 
+/**
+ * @brief Updates the file name and line number in a File struct based on preprocessor directives.
+ *
+ * Scans the given string for C preprocessor line directives (e.g., `# line "file"`), updating the `file->line` and `file->name` fields accordingly. Also increments the line number for each newline character encountered.
+ *
+ * @param preproc Input string containing preprocessor output.
+ * @param file Pointer to the File struct to update.
+ */
 static void update_file_line (const char * preproc, File * file)
 {
   const char * s = preproc;
@@ -281,6 +316,11 @@ typedef struct {
   int len, size;
 } String;
 
+/**
+ * @brief Appends multiple strings to a dynamically allocated String buffer.
+ *
+ * Accepts a pointer to a String struct and a variable number of null-terminated strings, appending each to the buffer and reallocating as needed. The argument list must be terminated with a NULL pointer.
+ */
 void string_append (void * a, ...)
 {
   va_list ap;
@@ -301,6 +341,16 @@ void string_append (void * a, ...)
   va_end (ap);
 }
 
+/**
+ * @brief Checks if a string contains only whitespace and advances the line number.
+ *
+ * Determines if the input string consists solely of spaces, tabs, and line breaks. If the string advances the line number beyond that of the given terminal, returns a pointer to the character after the last line break; otherwise, returns NULL.
+ *
+ * @param s Input string to check.
+ * @param file File structure providing the starting line number.
+ * @param t Terminal node used to compare the final line number.
+ * @return const char* Pointer to the character after the last line break if the line advances past the terminal's line; otherwise, NULL.
+ */
 static const char * only_spaces (const char * s, const File * file, const AstTerminal * t)
 {
   const char * spaces = NULL;
@@ -317,6 +367,18 @@ static const char * only_spaces (const char * s, const File * file, const AstTer
   return line > t->line ? spaces : NULL;
 }
 
+/**
+ * @brief Recursively outputs the textual representation of an AST subtree with special handling for macros, whitespace, and formatting.
+ *
+ * Traverses the AST rooted at `n`, invoking the provided `output` callback to emit the corresponding source code or formatted string. Handles terminal and non-terminal nodes, manages file and line tracking, and applies special rules for macro definitions, identifiers, whitespace, and certain node types. Skips macro definitions and specific macro parameters, and selectively outputs only relevant whitespace or trailing spaces. Updates the `file` structure to reflect current file and line position during output.
+ *
+ * @param n The AST node to print.
+ * @param sym Output mode or annotation selector.
+ * @param real If nonzero, replaces floating-point literals with "real".
+ * @param file Pointer to file and line tracking structure, updated during output.
+ * @param output Callback function to receive output fragments.
+ * @param data Opaque pointer passed to the output callback.
+ */
 static void str_print_internal (const Ast * n, int sym, int real, File * file,
 				void (* output) (void *, ...), void * data)
 {
@@ -558,6 +620,17 @@ static void print_child_tree (Ast * n, FILE * fp,
   free (ind);
 }
 
+/**
+ * @brief Recursively prints the AST tree structure with indentation.
+ *
+ * Prints the AST subtree rooted at the given node to the specified file stream, using the provided indentation string. Supports optional compression of single-child chains and limits output to a maximum depth. Placeholders and truncated subtrees are indicated with special markers.
+ *
+ * @param n Root of the AST subtree to print.
+ * @param fp Output file stream.
+ * @param indent Indentation string for formatting child nodes.
+ * @param compress If true, compresses chains of single-child nodes into a single line.
+ * @param maxdepth Maximum depth to print; subtrees deeper than this are replaced with ellipsis.
+ */
 void ast_print_tree (Ast * n, FILE * fp, const char * indent,
 		     bool compress, int maxdepth)
 {
@@ -584,6 +657,15 @@ void ast_print_tree (Ast * n, FILE * fp, const char * indent,
   }
 }
 
+/**
+ * @brief Prints C code that constructs the AST subtree rooted at the given node.
+ *
+ * Outputs a constructor-like representation of the AST node `n` and its children to the specified file stream, using macros (`NCA`, `NA`, `NN`) to distinguish between single-character terminals, multi-character terminals, and non-terminal nodes. Indentation is applied for readability.
+ *
+ * @param n The root AST node to print.
+ * @param fp The file stream to which the constructor code is written.
+ * @param indent Optional indentation string for formatting nested nodes.
+ */
 void ast_print_constructor (Ast * n, FILE * fp, const char * indent)
 {
   if (indent)
@@ -609,6 +691,16 @@ void ast_print_constructor (Ast * n, FILE * fp, const char * indent)
   }
 }
 
+/**
+ * @brief Creates a new terminal AST node as a child of the given parent.
+ *
+ * Allocates and initializes a new AstTerminal node with the specified symbol and start string, setting its parent pointer and inheriting file and line information from the leftmost terminal of the parent.
+ *
+ * @param parent The parent AST node to attach the new terminal to.
+ * @param symbol The symbol value for the new terminal node.
+ * @param start The string representing the start token for the terminal.
+ * @return AstTerminal* Pointer to the newly created terminal AST node.
+ */
 AstTerminal * ast_terminal_new (Ast * parent, int symbol, const char * start)
 {
   AstTerminal * t = allocate (ast_get_root (parent)->alloc,
@@ -680,6 +772,13 @@ static Ast * vast_schema_internal (const Ast * n, va_list ap)
   return (Ast *) n;
 }
 
+/**
+ * @brief Checks if an AST subtree matches a specified schema.
+ *
+ * Accepts a variable-length sequence of symbol and child index pairs to define a schema, and traverses the AST subtree rooted at `n` to find a node matching this schema. Returns the matching node if found, or NULL otherwise.
+ *
+ * @return Ast* Pointer to the matching AST node, or NULL if no match is found.
+ */
 Ast * ast_schema_internal (const Ast * n, ...)
 {
   if (!n)
@@ -691,6 +790,16 @@ Ast * ast_schema_internal (const Ast * n, ...)
   return (Ast *) n;
 }
 
+/**
+ * @brief Recursively searches the AST for a node matching a schema and optional identifier.
+ *
+ * Traverses the AST subtree rooted at `n`, returning the first node that matches the schema specified by the variadic arguments. If `identifier` is non-NULL, only terminal nodes whose start string matches `identifier` are considered a match.
+ *
+ * @param n The root of the AST subtree to search.
+ * @param identifier Optional string to match against terminal node start strings.
+ * @param ap Variadic arguments specifying the schema to match.
+ * @return Ast* Pointer to the first matching node, or NULL if none is found.
+ */
 static Ast * vast_find_internal (const Ast * n, const char * identifier, va_list ap)
 {
   if (n == ast_placeholder)
@@ -709,6 +818,15 @@ static Ast * vast_find_internal (const Ast * n, const char * identifier, va_list
   return NULL;
 }
 
+/**
+ * @brief Searches the AST subtree for a node matching a schema and optional identifier.
+ *
+ * Traverses the AST rooted at `n`, looking for a node that matches a schema specified by a variadic list of symbol and child index pairs. If `identifier` is not NULL, only terminal nodes whose start string matches `identifier` are considered. Returns the first matching node found, or NULL if none is found.
+ *
+ * @param n The root of the AST subtree to search.
+ * @param identifier Optional string to match terminal node start strings; pass NULL to ignore.
+ * @return Ast* Pointer to the matching AST node, or NULL if not found.
+ */
 Ast * ast_find_internal (const Ast * n, const char * identifier, ...)
 {
   if (!n)
@@ -805,6 +923,14 @@ static Ast * vast_copy_internal (const Ast * n, va_list ap, bool * found,
   return c;
 }
 
+/**
+ * @brief Creates a deep copy of an AST subtree, optionally stopping at a schema match.
+ *
+ * Copies the AST subtree rooted at `n`, using variadic arguments to specify an optional schema to match. If a schema match is found, copying stops at that node. The returned subtree's parent pointer is set to the original node.
+ *
+ * @param n The root of the AST subtree to copy.
+ * @return Ast* Pointer to the root of the copied subtree, or NULL if `n` is NULL.
+ */
 Ast * ast_copy_internal (const Ast * n, ...)
 {
   if (!n) return NULL;
@@ -894,6 +1020,16 @@ static const char * ignore_prefixes (const char * identifier)
   return identifier;
 }
 
+/**
+ * @brief Searches a stack for an identifier declaration between two AST nodes.
+ *
+ * Scans the stack for an identifier declaration node matching the given identifier string, starting just after the `start` node (if provided) and stopping before the `end` node (if provided). Known prefixes ("face ", "vertex ", "symmetric ") are ignored in the identifier comparison. Returns the first matching identifier declaration node found, or NULL if none is found in the specified range.
+ *
+ * @param identifier The identifier string to search for, with known prefixes ignored.
+ * @param start The AST node to start searching after (exclusive). If NULL, search starts from the beginning of the stack.
+ * @param end The AST node to stop searching before (exclusive). If NULL, search continues to the end of the stack.
+ * @return Ast* Pointer to the matching identifier declaration node, or NULL if not found.
+ */
 Ast * ast_identifier_declaration_from_to (Stack * stack, const char * identifier,
 					  const Ast * start, const Ast * end)
 {
@@ -1116,6 +1252,11 @@ static void ast_check_children (Ast * n)
     }
 }
 
+/**
+ * @brief Validates the integrity of the AST node and its ancestry.
+ *
+ * Asserts that the given AST node is correctly linked to its parent and that no cycles exist in the parent chain. Also checks that the node is present in its parent's child array.
+ */
 void ast_check (Ast * n)
 {
   ast_check_children (n);
@@ -1129,6 +1270,15 @@ void ast_check (Ast * n)
   }
 }
 
+/**
+ * @brief Sets file and line information for an AST node and its descendants.
+ *
+ * If the node or its descendants are terminals, updates their file and line fields to match those of the provided terminal node. Existing file and line information is only overwritten if the `overwrite` flag is true.
+ *
+ * @param n The AST node whose file and line information will be set.
+ * @param l The terminal node providing the file and line information.
+ * @param overwrite If true, existing file and line data will be replaced; if false, only unset fields will be updated.
+ */
 void ast_set_line (Ast * n, AstTerminal * l, bool overwrite)
 {
   if (n == ast_placeholder)
@@ -1143,6 +1293,15 @@ void ast_set_line (Ast * n, AstTerminal * l, bool overwrite)
       ast_set_line (*c, l, overwrite);
 }
 
+/**
+ * @brief Replaces whitespace and resets file/line info for all terminal nodes in an AST subtree.
+ *
+ * Sets the `before` string of each terminal node in the subtree rooted at `n` to a single space, clears the `after` string, and updates file and line information to match terminal `t`.
+ *
+ * @param n Root of the AST subtree to flatten.
+ * @param t Terminal node providing file and line information.
+ * @return Ast* The root of the modified subtree.
+ */
 Ast * ast_flatten (Ast * n, AstTerminal * t)
 {
   AstTerminal * r = ast_terminal (n);

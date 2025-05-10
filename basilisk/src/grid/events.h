@@ -271,6 +271,14 @@ void event (const char * name)
       }
 }
 
+/**
+ * @brief Adjusts the timestep to align with the next scheduled event time.
+ *
+ * Ensures the provided timestep `dt` does not overshoot the next event time (`tnext`), adjusting it if necessary to land exactly on the event or maintain numerical stability. Updates `tnext` to reflect the new step.
+ *
+ * @param dt Proposed timestep.
+ * @return The adjusted timestep that does not exceed the next event time.
+ */
 double dtnext (double dt)
 {
   if (tnext != HUGE && tnext > t) {
@@ -293,6 +301,11 @@ double dtnext (double dt)
   return dt;
 }
 
+/**
+ * @brief Initializes the solver's core data structures and event system.
+ *
+ * Allocates and sets up the global event list, attribute arrays, and scalar blocks required for the solver's operation. Also initializes external libraries or tools such as CADNA, MPI, or memory tracing if enabled.
+ */
 void init_solver()
 {
   Events = malloc (sizeof (Event));

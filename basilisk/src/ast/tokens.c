@@ -884,6 +884,18 @@ static void ompreproc (void);
 static void file_line (AstRoot * parse, const char * text);
 static int  check_type (AstRoot * parse, bool call);
 
+/**
+ * @brief Creates a new AST terminal node for a recognized token.
+ *
+ * Allocates and initializes an `AstTerminal` node representing a token, setting its symbol, source file, line number, and character range within the input.
+ *
+ * @param parse Parser state containing the allocator and current file context.
+ * @param token Token type identifier.
+ * @param line Line number at the end of the token.
+ * @param start Pointer to the start of the token in the input buffer.
+ * @param end Pointer to the character after the end of the token in the input buffer.
+ * @return Ast* Newly created AST terminal node for the token.
+ */
 static Ast * new_ast (AstRoot * parse,
 		      int token, int line, char * start, char * end)
 {
@@ -1783,12 +1795,13 @@ ECHO;
 	} /* end of user's declarations */
 } /* end of yylex */
 
-/* yy_get_next_buffer - try to read in a new buffer
+/**
+ * @brief Refills the input buffer with new data or handles end-of-buffer conditions.
  *
- * Returns a code representing an action:
- *	EOB_ACT_LAST_MATCH -
- *	EOB_ACT_CONTINUE_SCAN - continue scanning from current position
- *	EOB_ACT_END_OF_FILE - end of file
+ * Attempts to read additional input into the current buffer when the end of the buffer is reached.
+ * Returns a code indicating whether scanning should continue, a final match should be processed, or end-of-file has been reached.
+ *
+ * @return int One of EOB_ACT_CONTINUE_SCAN, EOB_ACT_LAST_MATCH, or EOB_ACT_END_OF_FILE.
  */
 static int yy_get_next_buffer (void)
 {
@@ -1896,7 +1909,13 @@ static int yy_get_next_buffer (void)
 	return ret_val;
 }
 
-/* yy_get_previous_state - get the state just before the EOB char was reached */
+/**
+ * @brief Determines the scanner state prior to encountering the end-of-buffer character.
+ *
+ * Iterates through the current token text to reconstruct the DFA state immediately before the end-of-buffer (EOB) was reached, updating the state buffer accordingly.
+ *
+ * @return The DFA state just before the EOB character.
+ */
 
     static yy_state_type yy_get_previous_state (void)
 {
@@ -1925,10 +1944,13 @@ static int yy_get_next_buffer (void)
 	return yy_current_state;
 }
 
-/* yy_try_NUL_trans - try to make a transition on the NUL character
+/**
+ * @brief Attempts a state transition on the NUL character in the lexer DFA.
  *
- * synopsis
- *	next_state = yy_try_NUL_trans( current_state );
+ * Used to determine the next state when a NUL (end-of-buffer) character is encountered during scanning. Updates the state buffer if a valid transition exists.
+ *
+ * @param yy_current_state The current DFA state.
+ * @return The next state if a transition exists, or 0 if the transition jams (no valid state).
  */
     static yy_state_type yy_try_NUL_trans  (yy_state_type yy_current_state )
 {
@@ -2489,6 +2511,13 @@ void yyset_debug (int  _bdebug )
         yy_flex_debug = _bdebug ;
 }
 
+/**
+ * @brief Initializes global variables for the lexical scanner.
+ *
+ * Resets scanner state and buffer pointers to their default values, preparing the scanner for use or cleanup.
+ *
+ * @return 0 on successful initialization.
+ */
 static int yy_init_globals (void)
 {
         /* Initialization is the same as for the non-reentrant scanner.
@@ -2525,7 +2554,14 @@ static int yy_init_globals (void)
     return 0;
 }
 
-/* yylex_destroy is for both reentrant and non-reentrant scanners. */
+/**
+ * @brief Cleans up and deallocates all resources used by the lexer.
+ *
+ * Frees input buffers, state buffers, and resets global variables to allow for safe reinitialization of the scanner.
+ * Should be called when the lexer is no longer needed to prevent memory leaks.
+ *
+ * @return 0 on successful cleanup.
+ */
 int yylex_destroy  (void)
 {
     
@@ -2603,6 +2639,11 @@ void yyfree (void * ptr )
 #line 174 "tokens.lex"
 
 
+/**
+ * @brief Consumes and skips a C-style block comment from the input.
+ *
+ * Reads characters until the closing '*/' is found or end of input is reached, ignoring all content within the comment.
+ */
 static void comment (void)
 {
   int c;  
@@ -2655,6 +2696,14 @@ static void ompreproc (void)
   //  yyerror ("unterminated OMP");
 }
 
+/**
+ * @brief Updates the parser's file name and line number from a `#line` directive.
+ *
+ * Parses a `#line` directive from the given text, setting the parser's current file name and line number accordingly.
+ *
+ * @param parse Parser state to update.
+ * @param text Input string containing the `#line` directive.
+ */
 static void file_line (AstRoot * parse, const char * text)
 {
   char * s = strchr (text, '#') + 1;
@@ -2666,6 +2715,15 @@ static void file_line (AstRoot * parse, const char * text)
   //  fprintf (stderr, "%s: \"%s\" %d\n", text, file, yylineno);
 }
 
+/**
+ * @brief Determines the token type for the current lexer text.
+ *
+ * Checks if the current token text matches a known C or Basilisk C keyword, a macro definition, or an identifier, and returns the corresponding token type. If the token is not a recognized keyword or macro, it delegates to `ast_identifier_parse_type` to determine if it is a type name or identifier, considering the parser state.
+ *
+ * @param parse Parser state used for context and type resolution.
+ * @param call Indicates whether to invoke type parsing logic for identifiers.
+ * @return int Token type corresponding to the current lexer text.
+ */
 static int check_type (AstRoot * parse, bool call)
 {
   typedef struct {
@@ -2743,6 +2801,14 @@ static int check_type (AstRoot * parse, bool call)
   return ast_identifier_parse_type (parse->stack, yytext, call, parse->file, yylineno);
 }
 
+/**
+ * @brief Initializes the lexer to scan from a given memory buffer.
+ *
+ * Sets the starting line number and prepares the lexer to tokenize input from the specified buffer of given length.
+ *
+ * @param buffer Pointer to the input buffer to scan.
+ * @param len Length of the input buffer in bytes.
+ */
 void lexer_setup (char * buffer, size_t len)
 {
   yylineno = 1;

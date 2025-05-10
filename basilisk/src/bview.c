@@ -20,6 +20,15 @@ activity. */
 #define DISPLAY_NO_CONTROLS
 #include "display.h"
 
+/**
+ * @brief Entry point for the Basilisk View server.
+ *
+ * Parses command-line arguments to set the dump file and enable debug mode, restores the dump data, applies restrictions, computes field statistics, and initializes the interactive display server. Runs an event loop to handle display updates until termination.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Exit status code (never returns under normal operation).
+ */
 int main (int argc, char * argv[])
 {
   char * file = "dump"; argc--; argv++;

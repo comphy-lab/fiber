@@ -1,12 +1,14 @@
 /**
-# Bell-Collela-Glaz advection scheme
-
-The function below implements the 2nd-order, unsplit, upwind scheme of
-[Bell-Collela-Glaz, 1989](references.bib#bell89). Given a centered
-scalar field *f*, a face vector field *uf* (possibly weighted by a
-face metric), a timestep *dt* and a source term field *src*, it fills
-the face vector field *flux* with the components of the advection
-fluxes of *f*. */
+ * @brief Computes advection fluxes for a scalar field using the 2nd-order Bell-Collela-Glaz scheme.
+ *
+ * Fills the face-centered flux vector with advection fluxes of the scalar field `f`, using the face-centered velocity field `uf`, timestep `dt`, and source term `src`. The method applies a 2nd-order, unsplit, upwind scheme suitable for structured grid CFD applications.
+ *
+ * @param f Cell-centered scalar field to be advected.
+ * @param uf Face-centered velocity field.
+ * @param flux Output face-centered flux vector.
+ * @param dt Timestep size.
+ * @param src Source term scalar field.
+ */
 
 trace
 void tracer_fluxes (scalar f,

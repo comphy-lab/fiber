@@ -32,6 +32,11 @@ specified in H&H, 2000 (see Note b of Table 2 in H&H, 2000). */
 #define northern_flux() (x > -50 && x < - 40 && y > 50.5 && val(zbs,0,0,0) < -4000)
 #define southern_flux() (x > -60 && x < - 50 && y < 9.5 && val(zbs,0,0,0) < - 4000)
 
+/**
+ * @brief Applies prescribed volume fluxes at the northern and southern boundary ports for each vertical layer.
+ *
+ * This event enforces boundary fluxes representing large-scale ocean circulation features, such as the Deep Western Boundary Current and the Atlantic Meridional Overturning Circulation, by distributing specified fluxes across the northern and southern port regions. For each vertical layer, the total port volume is computed, and the flux is distributed proportionally to local cell thickness. The thickness of each grid cell within the port regions is updated accordingly, ensuring non-negative values.
+ */
 event viscous_term (i++)
 {
 

@@ -56,12 +56,85 @@ macro2 foreach_face_generic (char flags = 0, Reduce reductions = None,
   }
 }
 
+/**
+ * @brief Marks the current face as an x-direction face in 1D grid iterations.
+ *
+ * Intended for use within face iteration macros to indicate operations on x-direction faces.
+ */
 macro1 is_face_x() {{ int ig = -1; NOT_UNUSED(ig); {...} }}
 
 // ghost cell coordinates for each direction
 static int _ig[] = {1,-1};
 
-// Box boundaries
+/**
+ * @brief Applies normal (non-periodic) box boundary conditions to ghost cells at a specified boundary.
+ *
+ * For each scalar in the provided list, sets the value in the ghost cell adjacent to the specified boundary using the scalar's boundary condition function. Only applies to scalars with non-periodic boundary conditions.
+ *
+ * @param b Pointer to the boundary structure specifying which boundary to apply.
+ * @param list List of scalars to which the boundary condition should be applied.
+ * @param l Grid refinement level (unused in this function).
+ */
+
+/**
+ * @brief Applies box boundary conditions to scalars at a specified boundary.
+ *
+ * Separates scalars into centered and face-centered groups, applies their respective boundary conditions to ghost cells, and delegates normal face-centered scalars to the normal boundary handler. Ignores scalars with periodic boundary conditions.
+ *
+ * @param b Pointer to the boundary structure specifying which boundary to apply.
+ * @param list List of scalars to which the boundary condition should be applied.
+ * @param l Grid refinement level (unused in this function).
+ */
+
+/**
+ * @brief Applies periodic boundary conditions in the x-direction for eligible scalars.
+ *
+ * For each scalar in the list with a periodic boundary condition at the right boundary, copies values from the opposite end of the grid to the ghost cells to enforce periodicity.
+ *
+ * @param b Pointer to the boundary structure (unused).
+ * @param list List of scalars to which the periodic boundary should be applied.
+ * @param l Grid refinement level (unused in this function).
+ */
+
+/**
+ * @brief Frees all memory associated with the current grid and its boundaries.
+ *
+ * After calling this function, the global grid pointer is set to NULL.
+ */
+
+/**
+ * @brief Sets all values of the specified scalars to a given value across the entire grid, including ghost cells.
+ *
+ * @param alist List of scalars whose values will be set.
+ * @param val Value to assign to each scalar element.
+ */
+
+/**
+ * @brief Initializes a 1D Cartesian grid of the specified size.
+ *
+ * Allocates memory for the grid and its data, initializes all scalar values to zero, and sets up box and periodic boundary conditions. If a grid of the same size already exists, no action is taken.
+ *
+ * @param n Number of grid points (excluding ghost cells).
+ */
+
+/**
+ * @brief Reallocates the scalar data array to accommodate additional scalar fields.
+ *
+ * Adjusts the memory layout to insert new scalar data and updates the global data size accordingly.
+ *
+ * @param size Size in bytes to add for each new scalar.
+ */
+
+/**
+ * @brief Locates the grid point corresponding to a given physical x-coordinate.
+ *
+ * Computes the grid index and level for the provided x-coordinate. The y and z coordinates are ignored in 1D.
+ *
+ * @param xp Physical x-coordinate.
+ * @param yp Physical y-coordinate (ignored).
+ * @param zp Physical z-coordinate (ignored).
+ * @return Point structure with computed grid index and level.
+ */
 
 static void box_boundary_level_normal (const Boundary * b, scalar * list, int l)
 {
@@ -200,6 +273,13 @@ void init_grid (int n)
   grid->n = grid->tn = n;
 }
 
+/**
+ * @brief Expands the data array to accommodate additional scalar fields.
+ *
+ * Increases the storage size for each grid point by the specified number of bytes, shifting existing data as needed to make room for new scalar variables.
+ *
+ * @param size Number of bytes to add per grid point for new scalar data.
+ */
 void realloc_scalar (int size)
 {
   Cartesian * p = cartesian;
@@ -232,6 +312,11 @@ macro2 foreach_vertex (char flags = 0, Reduce reductions = None)
   }
 }
 
+/**
+ * @brief Initializes method pointers for the 1D Cartesian grid.
+ *
+ * Sets up the function table for grid operations specific to the 1D Cartesian implementation.
+ */
 void cartesian1D_methods()
 {
   cartesian_methods();

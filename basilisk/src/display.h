@@ -101,6 +101,11 @@ static struct {
   bool debug;
 } Display = { .sock = -1 };
 
+/**
+ * @brief Prints debug information about current display objects and their connected clients.
+ *
+ * Outputs the list of active display commands and the file descriptors and iteration counts of their associated clients for debugging purposes.
+ */
 static void display_display()
 {
   debug ("**************************\n");
@@ -200,6 +205,18 @@ static void display_command (const char * command)
   }
 }
 
+/**
+ * @brief Sends an array of data to a WebSocket client, handling MPI data gathering and index adjustment.
+ *
+ * In MPI mode, gathers array data from all processes, adjusts indices for concatenation if needed, and sends the combined data to the client on the master process. In non-MPI mode, sends the array directly. Updates the status to indicate success or failure of the send operation.
+ *
+ * @param fd File descriptor of the WebSocket client.
+ * @param a Pointer to the array to send.
+ * @param status Current status code; updated based on send result.
+ * @param type Array type: 0 for position (shifts indices), 1 for index (adjusts indices for concatenation).
+ * @param shift Array used to track index shifts for each MPI process.
+ * @return int Updated status code indicating success (non-negative) or failure (negative).
+ */
 static int ws_send_array (int fd, Array * a, int status, int type,
 			  unsigned int * shift)
 {
@@ -243,6 +260,15 @@ static int ws_send_array (int fd, Array * a, int status, int type,
   return status;
 }
 
+/**
+ * @brief Sends display data or error information for a given command to a client over WebSocket.
+ *
+ * Constructs and transmits a binary WebSocket message containing the specified display command, any associated error message, and vertex buffer data to the client identified by the given file descriptor. In parallel (MPI) mode, aggregates data across all processes before sending. Returns a status code indicating success or failure.
+ *
+ * @param command The display command string to send.
+ * @param fd The file descriptor of the client to send data to.
+ * @return int Status code: 0 on success, -1 on failure.
+ */
 static int display_send (const char * command, int fd)
 {
   int status = 0;
@@ -537,6 +563,13 @@ void display_onmessage (int fd, const char * msg, size_t size, int type)
 	     type);
 }
 
+/**
+ * @brief Handles a new client connection by sending interface and control data.
+ *
+ * Sends the current interface JSON, controls JSON, and default display commands to the connected client. Closes the connection if any transmission fails.
+ *
+ * @param fd File descriptor of the client connection.
+ */
 void display_onopen (int fd)
 {
   char * interface = bview_interface_json();
@@ -564,6 +597,13 @@ void display_onopen (int fd)
   }
 }
 
+/**
+ * @brief Updates and sends display data to clients for the given iteration.
+ *
+ * For each display command, checks if any connected client requires an update for the specified iteration. If so, processes the command, sends updated display data to those clients, and handles errors or disconnections. Cleans up display objects with errors.
+ *
+ * @param i The current iteration number for which to update displays.
+ */
 static void display_update (int i)
 {
   for (khiter_t k = kh_begin (Display.objects); k != kh_end (Display.objects);
@@ -607,6 +647,14 @@ static void display_update (int i)
 }
 
 #if _MPI
+/**
+ * @brief Packs an array of WebSocket messages into a contiguous buffer.
+ *
+ * Serializes an array of `ws_message` structures and their payloads into a single `Array` buffer for efficient transmission, typically for MPI broadcast.
+ *
+ * @param messages Pointer to the first element of a null-terminated array of `ws_message` structures.
+ * @return Array* Pointer to the packed buffer containing all messages and their data.
+ */
 static Array * pack_messages (struct ws_message * messages)
 {
   struct ws_message * msg = messages;
@@ -619,6 +667,15 @@ static Array * pack_messages (struct ws_message * messages)
   return packed;
 }
 
+/**
+ * @brief Unpacks a buffer of packed WebSocket messages into an array of ws_message structures.
+ *
+ * Allocates and copies each message from the packed buffer, ensuring message data is null-terminated.
+ * The returned array is terminated with a sentinel ws_message structure with fd set to -1.
+ *
+ * @param packed Pointer to an Array containing the packed messages.
+ * @return Pointer to the unpacked array of ws_message structures, terminated by a sentinel.
+ */
 static struct ws_message * unpack_messages (Array * packed)
 {
   Array * array = array_new();
@@ -640,6 +697,14 @@ static struct ws_message * unpack_messages (Array * packed)
 }
 #endif
 		 
+/**
+ * @brief Polls the WebSocket server for incoming client messages and processes them.
+ *
+ * Waits for and handles new client connections, messages, and disconnections on the display server socket. In MPI mode, synchronizes and broadcasts messages across all processes. Returns the number of messages processed during the poll.
+ *
+ * @param timeout Timeout in milliseconds to wait for incoming messages.
+ * @return int Number of messages processed.
+ */
 int display_poll (int timeout)
 {
   struct ws_message * messages = NULL, * msg;
@@ -692,6 +757,13 @@ int display_poll (int timeout)
   return nmsg;
 }
 
+/**
+ * @brief Writes the display client URL to the specified file.
+ *
+ * Resolves the current host name and writes the WebSocket URL for the display client interface to the given file stream. If host resolution fails, defaults to "127.0.0.1" and prints a warning to stderr.
+ *
+ * @param fp Output file stream where the URL will be written.
+ */
 void display_url (FILE * fp)
 {
   char hostname[1024];
@@ -792,6 +864,11 @@ void display_init()
 #endif
 }
 
+/**
+ * @brief Handles periodic display refresh and client polling for interactive visualization.
+ *
+ * This event updates the display state and processes incoming client messages, controlling the refresh rate based on the `display_play` state and the configured display usage percentage. In parallel (MPI) environments, the refresh decision is synchronized across all processes.
+ */
 event refresh_display (i++, last)
 {
   do {

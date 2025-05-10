@@ -132,6 +132,12 @@ Ast * ast_new_children_internal (Ast * parent, ...);
 void ast_set_child (Ast * parent, int index, Ast * child);
 void ast_replace_child (Ast * parent, int index, Ast * child);
 
+/**
+ * @brief Returns the index of a node among its parent's children.
+ *
+ * @param n The AST node whose index is to be determined. Must have a parent.
+ * @return int The zero-based index of the node within its parent's child array, or -1 if not found.
+ */
 static inline int ast_child_index (const Ast * n)
 {
   assert (n->parent);
@@ -141,6 +147,15 @@ static inline int ast_child_index (const Ast * n)
   return *c == n ? index : - 1;
 }
 
+/**
+ * @brief Returns the ancestor node at a specified level above the given AST node.
+ *
+ * Traverses up the parent chain of the AST node `n` by `i` levels and returns the resulting ancestor node, or NULL if the root is reached before completing `i` steps.
+ *
+ * @param n The starting AST node.
+ * @param i The number of ancestor levels to ascend.
+ * @return Ast* The ancestor node at the specified level, or NULL if not found.
+ */
 static inline Ast * ast_ancestor (const Ast * n, int i)
 {
   while (n && i)

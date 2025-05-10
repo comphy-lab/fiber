@@ -14,10 +14,14 @@ typedef struct {
 } KernelData;
 
 /**
-## Implicit type casting
-
-GLSL does not support implicit type casting, so we insert the
-necessary explicit casts using the function below. */
+ * @brief Inserts an explicit type cast for an AST node.
+ *
+ * Wraps the given AST node in a function call representing a cast to the specified type, replacing the original node in its parent with the cast node.
+ *
+ * @param n The AST node to be cast.
+ * @param type The target type for the cast.
+ * @return Ast* The new AST node representing the explicit type cast.
+ */
 
 static
 Ast * type_cast (Ast * n, const char * type)
@@ -35,6 +39,15 @@ Ast * type_cast (Ast * n, const char * type)
   return call;
 }
 
+/**
+ * @brief Recursively inserts explicit type casts in the AST to ensure type correctness for GLSL.
+ *
+ * Traverses the given AST node and its children, determining the required types for expressions and inserting explicit casts where GLSL would otherwise require them. Handles constants, identifiers, expressions, function calls, and various statement types, ensuring that boolean, integer, and floating-point types are correctly cast to match GLSL's stricter type system. Returns the determined type AST node for the given subtree, or NULL if no type is applicable.
+ *
+ * @param n The AST node to process.
+ * @param stack The stack used for symbol resolution and type lookup.
+ * @return Ast* The AST node representing the determined type, or NULL if not applicable.
+ */
 static
 Ast * implicit_type_cast (Ast * n, Stack * stack)
 {
@@ -205,6 +218,11 @@ Ast * implicit_type_cast (Ast * n, Stack * stack)
   return type;
 }
 
+/**
+ * @brief Traverses and transforms AST nodes for GLSL kernel code generation.
+ *
+ * Applies syntax and semantic transformations to AST nodes to adapt C-like code to GLSL kernel requirements. Handles explicit type casting, identifier renaming, pointer and array adjustments, macro processing, and special-case rewrites for constructs such as function pointers, attribute access, and loop statements. Modifies the AST in place and sets error messages in the provided KernelData structure if unsupported or undeclared functions are encountered.
+ */
 static
 void kernel (Ast * n, Stack * stack, void * data)
 {
@@ -663,6 +681,16 @@ void kernel (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Converts an AST subtree into a GLSL-compatible string with proper escaping.
+ *
+ * Escapes special characters such as newlines, backslashes, and quotes, and comments out preprocessor directives. Optionally removes or modifies `#line` directives if `nolineno` is true. Frees the AST after stringification.
+ *
+ * @param n The root of the AST subtree to stringify.
+ * @param output The buffer to append the resulting string to.
+ * @param nolineno If true, suppresses or modifies line number directives.
+ * @return The updated output buffer containing the GLSL-compatible string.
+ */
 static
 char * stringify (Ast * n, char * output, bool nolineno)
 {
@@ -698,6 +726,11 @@ char * stringify (Ast * n, char * output, bool nolineno)
   return output;
 }
 
+/**
+ * @brief Applies macro replacements to statement and function call AST nodes.
+ *
+ * For AST nodes representing statements or function calls, invokes macro replacement logic to expand or transform macros as needed.
+ */
 static void postmacros (Ast * n, Stack * stack, void * data)
 {
   if (n->sym == sym_statement || n->sym == sym_function_call) {
@@ -706,6 +739,17 @@ static void postmacros (Ast * n, Stack * stack, void * data)
   }
 }
 
+/**
+ * @brief Processes an AST node representing a kernel or function and generates a GLSL-compatible source string.
+ *
+ * Copies the relevant AST subtree, applies macro replacements and kernel-specific transformations, and converts the result into a properly escaped GLSL source string. If an error occurs during processing, appends the error message to the output string instead.
+ *
+ * @param n The AST node representing a function definition or statement to process.
+ * @param argument The output string to which the resulting GLSL code or error message will be appended.
+ * @param nolineno If true, suppresses line number directives in the output.
+ * @param macroscope The AST node representing the macro scope for macro expansion.
+ * @return The updated output string containing the transformed GLSL code or an error message.
+ */
 char * ast_kernel (Ast * n, char * argument, bool nolineno, Ast * macroscope)
 {
   AstRoot * root = ast_get_root (n);

@@ -351,6 +351,15 @@ static void glnormal3d (bview * view, double x, double y, double z) {
     glNormal3d (x, y, z);
 }
 
+/**
+ * @brief Iterates over 3D grid cells that are both visible in the current view and intersected by a specified plane.
+ *
+ * The macro normalizes the input plane (defined by normal vector `n1` and offset `alpha1`), sets the OpenGL normal for lighting, and loops over all cells. Only cells that are active, local, visible in the view frustum, and sufficiently close to the plane are included. Intended for use in 3D rendering routines that require processing only those cells intersected by a given plane.
+ *
+ * @param view Pointer to the current bview object.
+ * @param n1 Normal vector of the plane.
+ * @param alpha1 Offset of the plane from the origin.
+ */
 macro2 foreach_visible_plane (bview * view, coord n1, double alpha1)
 {
   {
@@ -384,6 +393,11 @@ macro2 foreach_visible_plane (bview * view, coord n1, double alpha1)
 }
 #endif // dimension == 3
 
+/**
+ * @brief Sets up OpenGL state for drawing colored lines with specified width.
+ *
+ * Applies projection matrix translation, color, and line width, temporarily disables view reversal, and executes the enclosed drawing commands. Restores OpenGL and view state after drawing.
+ */
 macro draw_lines (bview * view, float color[3], float lw)
 {
   {
@@ -401,6 +415,14 @@ macro draw_lines (bview * view, float color[3], float lw)
   }
 }
 
+/**
+ * @brief Linearly interpolates a scalar field at a fractional offset within a cell.
+ *
+ * @param point The current grid cell location.
+ * @param p Fractional offset from the cell center, in cell-size units.
+ * @param col The scalar field to interpolate.
+ * @return Interpolated scalar value at the specified offset.
+ */
 static inline double interp (Point point, coord p, scalar col) {
   return interpolate_linear (point, col,
 			     x + p.x*Delta, y + p.y*Delta, z + p.z*Delta);
@@ -611,6 +633,16 @@ static scalar compile_expression (char * expr, bool * isexpr)
     }									\
   }
 
+/**
+ * @brief Sets up color mapping and OpenGL state for colorized drawing.
+ *
+ * Configures OpenGL to use either a constant color or a 1D texture colormap for subsequent drawing commands. Enables texture mapping if requested, uploads the colormap as a texture, and applies the specified color mode to all enclosed drawing operations. Disables the texture after drawing.
+ *
+ * @param fc RGB color to use if constant coloring is enabled.
+ * @param constant_color If true, uses the constant color; otherwise, uses the colormap.
+ * @param cmap Colormap array for mapping scalar values to colors.
+ * @param use_texture If true, enables 1D texture mapping for colorization.
+ */
 macro colorized (float fc[3], bool constant_color,
 		 double cmap[NCMAP][3], bool use_texture)
 {
@@ -1267,7 +1299,12 @@ bool squares (char * color,
 #if dimension == 2
       if (Z.i < 0) {
 	glNormal3d (0, 0, view->reversed ? -1 : 1);
-	foreach_visible (view)
+	/**
+	   * @brief Draws a colored quadrilateral for each visible cell using bilinear interpolation of a scalar field.
+	   *
+	   * For each visible cell where the scalar field is valid, renders a filled quad with vertex colors determined by local averages of the field, producing smooth shading. The quad is drawn as a triangle fan in 2D, with color interpolation at each vertex.
+	   */
+	  foreach_visible (view)
 	  if (f.i < 0 || f[] != nodata) {
 	    glBegin (GL_TRIANGLE_FAN);
 	    color_vertex ((4.*f[] +
@@ -1346,7 +1383,12 @@ bool squares (char * color,
 #if dimension == 2
     glNormal3d (0, 0, view->reversed ? -1 : 1);
     glBegin (GL_QUADS);
-    foreach_visible (view)
+    /**
+       * @brief Draws colored quadrilaterals for each visible cell of a scalar field in 2D.
+       *
+       * For each visible cell where the scalar field is valid, sets the facet color and emits the four vertices of the cell as a quadrilateral using OpenGL, incrementing the drawn cell count.
+       */
+      foreach_visible (view)
       if (f.i < 0 || f[] != nodata) {
 	color_facet();
 	glvertex2d (view, x - Delta_x/2., y - Delta_y/2.);

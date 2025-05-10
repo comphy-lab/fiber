@@ -1,8 +1,11 @@
 /**
-## Optional arguments for function calls
-
-Transforms a list of arguments ('argument_expression_list') into a
-list of initializers ('initializer_list'). */
+ * @brief Converts an argument expression list to an initializer list in the AST.
+ *
+ * Transforms a list of argument expressions (`sym_argument_expression_list`) into a corresponding list of initializers (`sym_initializer_list`), restructuring AST nodes to represent named initializers with designators when applicable. This enables support for named and optional arguments in function or macro calls by converting argument lists into initializer lists with appropriate assignment and designation structures.
+ *
+ * @param list The root AST node of the argument expression list to be transformed.
+ * @return The root AST node of the resulting initializer list.
+ */
 
 Ast * ast_initializer_list (Ast * list)
 {
@@ -70,6 +73,14 @@ Ast * ast_initializer_list (Ast * list)
   return start;
 }
 
+/**
+ * @brief Detects obsolete optional argument syntax using a single struct parameter in a function declaration.
+ *
+ * Checks if the given type node represents a function declaration with exactly one parameter, which is a struct with an identifier. If so, returns the struct name node; otherwise, returns NULL.
+ *
+ * @param type The AST node representing the function type to inspect.
+ * @return Ast* The struct name node if obsolete syntax is detected, or NULL otherwise.
+ */
 static Ast * obsolete_function_declaration (const Ast * type)
 {
   Ast * parameters = ast_find (type, sym_parameter_list);
@@ -93,6 +104,14 @@ static Ast * obsolete_function_declaration (const Ast * type)
     return NULL;
 }
 
+/**
+ * @brief Converts a declarator AST node into an abstract declarator.
+ *
+ * Recursively transforms a declarator or direct declarator node and its children into their abstract declarator equivalents, removing identifier nodes. Returns the modified node, or NULL if the result is empty.
+ *
+ * @param n The declarator AST node to convert.
+ * @return Ast* The resulting abstract declarator node, or NULL if no abstract declarator remains.
+ */
 static Ast * abstract_declarator_from_declarator (Ast * n)
 {
   switch (n->sym) {
@@ -118,6 +137,11 @@ static Ast * abstract_declarator_from_declarator (Ast * n)
   return n;
 }
 
+/**
+ * @brief Processes optional and named arguments in function or macro calls within the AST.
+ *
+ * Examines the call node to resolve the corresponding function or macro declaration, then transforms the argument list to support optional and named arguments. Handles legacy struct-based optional argument syntax, synthesizes missing arguments with default initializers, matches named arguments to parameters, and reports errors for unknown, missing, or excessive arguments. Updates the AST to reflect the completed argument list, including default values and named initializers.
+ */
 static void optional_arguments (Ast * call, Stack * stack)
 {
   AstTerminal * t = ast_terminal (call->sym == sym_function_call ? ast_function_call_identifier (call) :

@@ -19,12 +19,22 @@
 @define trash(x)  // data trashing is disabled by default. Turn it on with
                   // -DTRASH=1
 
+/**
+ * @brief Placeholder macro for interpreter-overloaded constructs.
+ *
+ * This macro is intended to be replaced or expanded by the interpreter and has no effect in standard C compilation.
+ */
 auto macro2 BEGIN_FOREACH() {{...}}
 
 #if _OPENMP
 @ include <omp.h>
 @ define OMP(x) Pragma(#x)
 
+/**
+ * @brief Temporarily disables OpenMP parallelization by redefining OMP macros as no-ops.
+ *
+ * This macro block undefines and redefines the OMP macro to disable OpenMP pragmas within its scope, then restores the original OMP macro definition after the block.
+ */
 macro OMP_SERIAL()
 {
   @undef OMP
@@ -38,7 +48,12 @@ macro OMP_SERIAL()
    
 #elif _MPI
 
-@ define OMP(x)
+@ /**
+ * @brief Macro for OpenMP pragma insertion.
+ *
+ * Expands to an OpenMP pragma if OpenMP is enabled; otherwise, expands to nothing.
+ */
+define OMP(x)
 macro OMP_SERIAL() {{...}}
 
 @ include <mpi.h>
@@ -49,7 +64,14 @@ static int mpi_rank, mpi_npe;
 
 #else // not MPI, not OpenMP
 
-@ define OMP(x)
+@ /**
+ * @brief Macro for OpenMP pragma insertion.
+ *
+ * Expands to the specified OpenMP pragma if OpenMP is enabled; otherwise, expands to nothing.
+ *
+ * @param x The OpenMP pragma directive (without the `#pragma` keyword).
+ */
+define OMP(x)
 macro OMP_SERIAL() {{...}}
 
 #endif // _MPI
@@ -76,7 +98,12 @@ macro OMP_SERIAL() {{...}}
 FILE * qstderr (void);
 FILE * qstdout (void);
 FILE * ferr = NULL, * fout = NULL;
-@ def not_mpi_compatible()
+@ /**
+ * @brief Exits the program if running with multiple MPI processes.
+ *
+ * Prints an error message and terminates execution if the number of processing elements is greater than one, indicating the function is not yet compatible with MPI.
+ */
+def not_mpi_compatible()
 do {
   if (npe() > 1) {
     fprintf (ferr, "%s() is not compatible with MPI (yet)\n", __func__);
@@ -93,7 +120,15 @@ do {
 @ define not_mpi_compatible()
 #endif
 
-// redirect assert
+/**
+ * @brief Handles failed assertions by printing an error message and aborting execution.
+ *
+ * Prints the file name, line number, and failed condition to standard error, then terminates the program.
+ *
+ * @param file Source file where the assertion failed.
+ * @param line Line number of the failed assertion.
+ * @param cond String representation of the failed condition.
+ */
 static inline void qassert (const char * file, int line, const char * cond) {
   fprintf (stderr, "%s:%d: Assertion `%s' failed.\n", file, line, cond);
   abort();
@@ -147,6 +182,15 @@ Trace trace_mpi_func = {
   60000011,
 };
 
+/**
+ * @brief Finds the index of a function name in an array or appends it if not found.
+ *
+ * Searches for the given function name in the provided array of strings. If found, returns its 1-based index. If not found, appends the function name to the array and returns the new length of the array.
+ *
+ * @param a Pointer to an Array structure containing function names as strings.
+ * @param func The function name to search for or append.
+ * @return int The 1-based index of the function name if found, or the new length of the array after appending.
+ */
 static int lookup_func (Array * a, const char * func)
 {
   for (int i = 0; i < a->len/sizeof(char *); i++) {
@@ -159,6 +203,14 @@ static int lookup_func (Array * a, const char * func)
   return a->len;
 }
 
+/**
+ * @brief Records the entry of a function call in the tracing stack.
+ *
+ * Looks up the function identifier, emits a tracing event, and pushes the function onto the trace stack.
+ *
+ * @param t Pointer to the Trace structure managing the current tracing context.
+ * @param func Name of the function being entered.
+ */
 static void trace_push (Trace * t, const char * func)
 {
   int value = lookup_func (&t->index, func);
@@ -166,6 +218,14 @@ static void trace_push (Trace * t, const char * func)
   array_append (&t->stack, &value, sizeof(int));
 }
 
+/**
+ * @brief Pops the most recent function from the trace stack and updates the tracing event.
+ *
+ * Removes the top entry from the trace stack and signals the tracing system to update the current event context.
+ *
+ * @param t Pointer to the Trace structure managing the stack and event type.
+ * @param func Name of the function being exited (unused in this implementation).
+ */
 static void trace_pop (Trace * t, const char * func)
 {
   assert (t->stack.len > 0);
@@ -175,6 +235,14 @@ static void trace_pop (Trace * t, const char * func)
   Extrae_eventandcounters (t->type, value);
 }
 
+/**
+ * @brief Defines a new Extrae event type for function tracing.
+ *
+ * Registers a set of function names and their corresponding values as a new event type in the Extrae tracing system, using the provided description. The first event is labeled "OTHER" with value 0, followed by each function in the trace index.
+ *
+ * @param t Pointer to the Trace structure containing the function index.
+ * @param description Description for the event type.
+ */
 static void trace_define (Trace * t, char * description)
 {
   if (t->index.len > 0) {
@@ -192,6 +260,13 @@ static void trace_define (Trace * t, char * description)
   }
 }
 
+/**
+ * @brief Frees all memory associated with a Trace structure.
+ *
+ * Releases memory for function name strings, the function index array, and the call stack within the given Trace object.
+ *
+ * @param t Pointer to the Trace structure to be deallocated.
+ */
 static void trace_free (Trace * t)
 {
   char ** func = (char **) t->index.p;
@@ -201,6 +276,11 @@ static void trace_free (Trace * t)
   free (t->stack.p);
 }
 
+/**
+ * @brief Finalizes and frees resources used for function tracing.
+ *
+ * This function defines and then releases tracing resources for both general and MPI-related Basilisk functions.
+ */
 static void trace_off()
 {
   trace_define (&trace_func, "Basilisk functions");
@@ -236,6 +316,17 @@ struct {
   -1
 };
 
+/**
+ * @brief Records or updates profiling statistics for a function call in the tracing system.
+ *
+ * If the function, file, and line combination is new, adds a new entry to the trace index; otherwise, updates the existing entry with additional call count and timing information.
+ *
+ * @param func Name of the function being traced.
+ * @param file Source file where the function is located.
+ * @param line Line number in the source file.
+ * @param total Total time spent in the function (including callees).
+ * @param self Time spent exclusively in the function (excluding callees).
+ */
 static void trace_add (const char * func, const char * file, int line,
 		       double total, double self)
 {
@@ -252,6 +343,15 @@ static void trace_add (const char * func, const char * file, int line,
     t->calls++, t->total += total, t->self += self;
 }
 
+/**
+ * @brief Records the entry of a function for built-in tracing and profiling.
+ *
+ * Captures the current wall-clock time and pushes it onto the trace stack to mark the start of a function call. Also initiates an NVTX profiling range if enabled.
+ *
+ * @param func Name of the function being entered.
+ * @param file Source file name where the function is called.
+ * @param line Line number in the source file.
+ */
 static void tracing (const char * func, const char * file, int line)
 {
   struct timeval tv;
@@ -269,6 +369,15 @@ static void tracing (const char * func, const char * file, int line)
 #endif
 }
 
+/**
+ * @brief Marks the end of a traced function call and updates profiling statistics.
+ *
+ * Records the elapsed time since the corresponding tracing entry, updates the trace stack, and aggregates timing data for profiling. Also handles NVTX range pop if enabled.
+ *
+ * @param func Name of the function ending tracing.
+ * @param file Source file name where tracing ends.
+ * @param line Line number in the source file where tracing ends.
+ */
 static void end_tracing (const char * func, const char * file, int line)
 {
   struct timeval tv;
@@ -293,6 +402,15 @@ static void end_tracing (const char * func, const char * file, int line)
 #endif
 }
 
+/**
+ * @brief Comparison function for sorting TraceIndex structures by self time.
+ *
+ * Returns a value indicating the ordering of two TraceIndex pointers based on their self time.
+ *
+ * @param p1 Pointer to the first TraceIndex.
+ * @param p2 Pointer to the second TraceIndex.
+ * @return int Negative if t1->self < t2->self, zero if equal, positive otherwise.
+ */
 static int compar_self (const void * p1, const void * p2)
 {
   const TraceIndex * t1 = p1, * t2 = p2;
@@ -300,6 +418,15 @@ static int compar_self (const void * p1, const void * p2)
 }
 
 #if _MPI
+/**
+ * @brief Comparison function for sorting TraceIndex structures by line number and file name.
+ *
+ * Compares two TraceIndex structures first by their line number, and if equal, by their file name using strcmp.
+ *
+ * @param p1 Pointer to the first TraceIndex structure.
+ * @param p2 Pointer to the second TraceIndex structure.
+ * @return Negative value if p1 < p2, zero if equal, positive if p1 > p2.
+ */
 static int compar_func (const void * p1, const void * p2)
 {
   const TraceIndex * t1 = p1, * t2 = p2;
@@ -309,6 +436,14 @@ static int compar_func (const void * p1, const void * p2)
 }
 #endif
 
+/**
+ * @brief Prints a summary of function call profiling data exceeding a threshold.
+ *
+ * Outputs a table of traced function calls, including call counts, total and self times, and percentage of total time, to the specified file stream. Only functions whose self time exceeds the given percentage threshold are included. In MPI environments, aggregates and displays min/max statistics across all ranks.
+ *
+ * @param fp Output file stream.
+ * @param threshold Minimum percentage of total self time for a function to be reported.
+ */
 void trace_print (FILE * fp, double threshold)
 {
   int i, len = Trace.index.len/sizeof(TraceIndex);
@@ -350,6 +485,11 @@ void trace_print (FILE * fp, double threshold)
     t->calls = t->total = t->self = 0.;
 }
 
+/**
+ * @brief Finalizes tracing and frees all associated resources.
+ *
+ * Outputs the collected trace summary and releases memory used for trace indices and stack data.
+ */
 static void trace_off()
 {
   trace_print (fout, 0.);
@@ -400,7 +540,19 @@ static double prof_start, _prof;
 #if FAKE_MPI
 @define mpi_all_reduce(v,type,op)
 @define mpi_all_reduce_array(v,type,op,elem)
-#else // !FAKE_MPI
+#else /**
+ * @brief Performs an MPI all-reduce operation on the provided buffer.
+ *
+ * Calls MPI_Allreduce to combine values from all processes and distribute the result to all processes in the communicator.
+ *
+ * @param sendbuf Pointer to the input buffer.
+ * @param recvbuf Pointer to the output buffer where the result is stored.
+ * @param count Number of elements in the buffer.
+ * @param datatype MPI data type of buffer elements.
+ * @param op MPI operation to perform (e.g., MPI_SUM, MPI_MAX).
+ * @param comm MPI communicator.
+ * @return int Result of the MPI_Allreduce call (MPI_SUCCESS on success).
+ */
 trace
 int mpi_all_reduce0 (void *sendbuf, void *recvbuf, int count,
 		     MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
@@ -408,7 +560,12 @@ int mpi_all_reduce0 (void *sendbuf, void *recvbuf, int count,
   return MPI_Allreduce (sendbuf, recvbuf, count, datatype, op, comm);
 }
 
-@def mpi_all_reduce(v,type,op) {
+@/**
+ * @brief Performs an MPI all-reduce operation on a single variable with profiling.
+ *
+ * Collectively reduces the value of a single variable across all MPI processes using the specified operation and data type, storing the result back in the original variable. Profiling is performed for the duration of the operation.
+ */
+def mpi_all_reduce(v,type,op) {
   prof_start ("mpi_all_reduce");
   union { int a; float b; double c;} global;
   mpi_all_reduce0 (&(v), &global, 1, type, op, MPI_COMM_WORLD);
@@ -417,6 +574,16 @@ int mpi_all_reduce0 (void *sendbuf, void *recvbuf, int count,
 }
 @
 
+/**
+ * @brief Performs an MPI all-reduce operation on an array.
+ *
+ * Applies the specified MPI reduction operation to an array of elements across all processes in MPI_COMM_WORLD, storing the result back into the input array. Aborts if the data type is not supported.
+ *
+ * @param v Pointer to the array to be reduced. The result overwrites the input.
+ * @param datatype MPI data type of the array elements (supports MPI_DOUBLE, MPI_INT, MPI_LONG, MPI_C_BOOL, MPI_UNSIGNED_CHAR).
+ * @param op MPI reduction operation (e.g., MPI_SUM, MPI_MAX).
+ * @param elem Number of elements in the array.
+ */
 trace
 void mpi_all_reduce_array (void * v, MPI_Datatype datatype, MPI_Op op, int elem)
 {
@@ -439,7 +606,14 @@ void mpi_all_reduce_array (void * v, MPI_Datatype datatype, MPI_Op op, int elem)
 }
 #endif // !FAKE_MPI
 
-@define QFILE FILE // a dirty trick to avoid qcc 'static FILE *' rule
+@define QFILE /**
+ * @brief Returns a FILE pointer for error output, redirected per MPI rank.
+ *
+ * On MPI rank 0, returns the system standard error stream. On other ranks, opens and returns a rank-specific log file for error output.
+ *
+ * @return FILE* Pointer to the appropriate error output stream for the current MPI rank.
+ */
+FILE // a dirty trick to avoid qcc 'static FILE *' rule
 
 FILE * qstderr (void)
 {
@@ -456,6 +630,13 @@ FILE * qstderr (void)
   return fp;
 }
 
+/**
+ * @brief Returns a FILE pointer for standard output, redirecting to a rank-specific file in MPI environments.
+ *
+ * For MPI ranks greater than zero, output is written to a file named "out-<rank>". For rank zero or non-MPI environments, returns the standard output stream.
+ *
+ * @return FILE* Pointer to the appropriate output stream for the current process.
+ */
 FILE * qstdout (void)
 {
   static QFILE * fp = NULL;
@@ -471,11 +652,21 @@ FILE * qstdout (void)
   return fp;
 }
 
+/**
+ * @brief Finalizes the MPI environment.
+ *
+ * Calls MPI_Finalize to cleanly shut down the MPI execution environment.
+ */
 static void finalize (void)
 {
   MPI_Finalize();
 }
 
+/**
+ * @brief Initializes the MPI environment and configures process-specific resources.
+ *
+ * Sets up MPI if not already initialized, assigns process rank and size, seeds the random number generator per rank, and redirects standard output and error streams for non-root ranks. Also configures memory tracing files per rank if enabled.
+ */
 void mpi_init()
 {
   int initialized;
@@ -527,7 +718,11 @@ void mpi_init()
 @define mpi_all_reduce(v,type,op)
 @define mpi_all_reduce_array(v,type,op,elem)
 
-#endif // not MPI, not OpenMP
+#endif /**
+ * @brief Placeholder macro for OpenMP parallel regions in non-parallel builds.
+ *
+ * Expands to an empty block when neither MPI nor OpenMP is enabled, allowing code to compile without parallelism.
+ */
 
 macro2 OMP_PARALLEL() {{...}}
 @define OMP_PARALLEL(...) OMP(omp parallel S__VA_ARGS__)
@@ -554,7 +749,12 @@ double undefined;
 @   include "fp_osx.h"
 @ endif
 @if _GPU
-@  define enable_fpe(flags)
+@  /**
+ * @brief Initializes the global undefined value as a signaling NaN and enables floating-point exceptions.
+ *
+ * Sets the global `undefined` variable to a signaling NaN bit pattern and enables floating-point exceptions for division by zero and invalid operations.
+ */
+define enable_fpe(flags)
 @else
 @  define enable_fpe(flags)  feenableexcept (flags)
 @endif
@@ -566,7 +766,12 @@ static void set_fpe (void) {
   enable_fpe (FE_DIVBYZERO|FE_INVALID);
 }
 @else // !((_GNU_SOURCE || __APPLE__) && !_OPENMP && !_CADNA && !_GPU)
-@  define undefined ((double) DBL_MAX)
+@  /**
+ * @brief No-op function for setting floating-point exception handling.
+ *
+ * This function is a placeholder and does not modify floating-point exception settings.
+ */
+define undefined ((double) DBL_MAX)
 @  define enable_fpe(flags)
 @  define disable_fpe(flags)
 static void set_fpe (void) {}
@@ -576,6 +781,15 @@ static void set_fpe (void) {}
 
 static FILE ** qpopen_pipes = NULL;
 
+/****
+ * @brief Opens a pipe to a process, disabling pipes on non-root MPI ranks.
+ *
+ * On MPI rank 0, opens a pipe to the specified command using popen(). On other ranks, opens /dev/null instead. Tracks opened pipes for later cleanup.
+ *
+ * @param command Shell command to execute.
+ * @param type Mode string as for popen(), e.g., "r" or "w".
+ * @return FILE* Pointer to the opened pipe or file, or NULL on failure.
+ */
 FILE * qpopen (const char * command, const char * type)
 {
   if (pid() > 0)
@@ -592,6 +806,14 @@ FILE * qpopen (const char * command, const char * type)
   return fp;
 }
 
+/**
+ * @brief Closes a pipe opened by qpopen, tracking it for later cleanup.
+ *
+ * On non-root MPI ranks, closes the file as a regular file stream. On the root rank, marks the pipe as closed in the internal tracking list and closes it using pclose.
+ *
+ * @param fp Pointer to the FILE stream to close.
+ * @return The result of fclose or pclose, depending on the process rank.
+ */
 int qpclose (FILE * fp)
 {
   if (pid() > 0)
@@ -605,6 +827,11 @@ int qpclose (FILE * fp)
   return pclose (fp);
 }
 
+/**
+ * @brief Closes all pipes opened by qpopen and frees associated resources.
+ *
+ * Iterates through the list of open pipes created by qpopen, closes each one, and releases the memory used to track them.
+ */
 static void qpclose_all()
 {
   FILE ** i = qpopen_pipes;
@@ -620,7 +847,15 @@ static void qpclose_all()
 #define popen  qpopen
 #define pclose qpclose
 
-// files with pid
+/**
+ * @brief Opens a file with the process ID appended to its name.
+ *
+ * Constructs a filename by appending the current process ID to the given name, then opens the file with the specified mode.
+ *
+ * @param name Base filename to which the process ID will be appended.
+ * @param mode File access mode (as in fopen).
+ * @return FILE* Pointer to the opened file, or NULL if the file cannot be opened.
+ */
 
 FILE * lfopen (const char * name, const char * mode)
 {
@@ -651,7 +886,18 @@ typedef int Reduce;
 macro2 foreach_face (char flags = 0, Reduce reductions = None,
 			const char * order = "xyz")
 {{...}}
+/**
+ * @brief Placeholder macro for Einstein summation notation.
+ *
+ * This macro is intended to be overloaded or implemented by an interpreter to support Einstein summation operations in mathematical expressions. By default, it has no effect.
+ */
 macro2 einstein_sum() {{...}}
+/**
+ * @brief Placeholder macro for diagonalization, intended for interpreter overloading.
+ *
+ * This macro is defined as a no-op in C and is expected to be overloaded by an interpreter
+ * to provide diagonalization functionality when needed.
+ */
 macro2 diagonalize (int a) {{...}}
 
 /**

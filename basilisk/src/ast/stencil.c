@@ -63,6 +63,15 @@ static Ast * is_point_function_call (Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Determines whether an AST node represents a stencil field access.
+ *
+ * Returns true if the node corresponds to an array access of a scalar, a recognized stencil-related function call (such as "val", "val_diagonal", "fine", "coarse", "neighbor", "aparent", "child", "_assign", "_overflow", or "r_assign"), or a point function call.
+ *
+ * @param n The AST node to check.
+ * @param stack The current stack context for type resolution.
+ * @return true if the node is a stencil field access; false otherwise.
+ */
 static bool is_field_access (Ast * n, Stack * stack)
 {  
   switch (n->sym) {
@@ -104,6 +113,16 @@ static Ast * block_list_append (Ast * list, Ast * item)
     ast_new_children (ast_new (item, list->sym), list, item);
 }
 
+/**
+ * @brief Retrieves the local variable declaration for an identifier within a given scope.
+ *
+ * If the identifier is "point", returns the node itself. Returns NULL if the identifier is part of a function call or not found.
+ *
+ * @param n AST node containing the identifier.
+ * @param stack Stack used for scope resolution.
+ * @param scope AST node representing the scope to search within.
+ * @return Ast* The local variable declaration node, the original node if the identifier is "point", or NULL if not found.
+ */
 static
 Ast * get_local_variable_reference (Ast * n, Stack * stack, Ast * scope)
 {
@@ -117,6 +136,11 @@ Ast * get_local_variable_reference (Ast * n, Stack * stack, Ast * scope)
   return ast_identifier_declaration_from_to (stack, ast_terminal (identifier)->start, NULL, scope);
 }
 
+/**
+ * @brief Cleans up conditional and jump statements in the AST.
+ *
+ * Removes jump statements, and for postfix increment/decrement or assignment expressions on non-local variables, rewrites or erases them as appropriate to ensure correct handling of side effects in stencil transformations.
+ */
 static
 void set_conditionals (Ast * n, Stack * stack, void * scope)
 {
@@ -200,7 +224,15 @@ bool has_field_arguments (Ast * function_call, Stack * stack)
 }
 
 /**
-Clean up placeholders. */
+ * @brief Cleans up and simplifies the AST by removing placeholders, empty or invalid statements, and unused nodes.
+ *
+ * Traverses the AST to erase or restructure nodes that are incomplete, redundant, or no longer needed after stencil transformation passes. Handles removal of placeholders, empty statements, unused function calls, invalid jump and labeled statements, and fixes incomplete constructs. Ensures the resulting AST is minimal and valid for further processing.
+ *
+ * @param n The AST node to clean up.
+ * @param stack The stack used for context during traversal.
+ * @param scope The current scope node.
+ * @param init_declarator Indicates whether to erase incomplete init declarators.
+ */
 
 void ast_cleanup (Ast * n, Stack * stack, Ast * scope, bool init_declarator)
 {
@@ -677,6 +709,16 @@ static inline bool is_undefined (Ast * n, Ast * scope)
   return ast_terminal (n)->value == scope;
 }
 
+/**
+ * @brief Retrieves the declaration AST node for an identifier referenced in an expression.
+ *
+ * Searches for the declaration of an identifier within the given scope, returning NULL if the identifier is a placeholder, part of a function call, or is the special "point" identifier. Exits with an error if the identifier is undeclared.
+ *
+ * @param n The AST node containing the identifier reference.
+ * @param stack The stack used for scope resolution.
+ * @param scope The scope in which to search for the declaration.
+ * @return Ast* The AST node representing the identifier's declaration, or NULL if not applicable.
+ */
 static Ast * get_variable_reference (Ast * n, Stack * stack, Ast * scope)
 {
   Ast * identifier = ast_find (n, sym_postfix_expression,
@@ -746,6 +788,16 @@ static Ast * is_undefined_parameter (const Ast * n)
   return NULL;
 }
 
+/**
+ * @brief Determines if an AST node represents a local variable declaration within a given scope.
+ *
+ * Returns true if the node corresponds to the special identifier "point" or if it is found in the stack before reaching the specified scope node.
+ *
+ * @param n The AST node to check.
+ * @param stack The stack representing the current scope chain.
+ * @param scope The scope boundary node.
+ * @return true if the node is a local declaration within the given scope, false otherwise.
+ */
 static
 bool is_local_declaration (Ast * n, Stack * stack, Ast * scope)
 {
@@ -760,6 +812,13 @@ bool is_local_declaration (Ast * n, Stack * stack, Ast * scope)
   return false;
 }
 
+/**
+ * @brief Returns the nearest enclosing foreach statement from the stack.
+ *
+ * Traverses the stack from top to bottom and returns the first AST node that is a foreach statement.
+ *
+ * @return Ast* Pointer to the nearest foreach statement AST node.
+ */
 static
 Ast * calling_foreach (Stack * stack)
 {
@@ -771,6 +830,15 @@ Ast * calling_foreach (Stack * stack)
   return NULL;
 }
 
+/**
+ * @brief Reports an error if a non-local variable modified in a foreach loop or point function is not handled by a reduction.
+ *
+ * Checks whether the given variable is included in the reduction list of the enclosing foreach loop or point function. If not, prints an error message and terminates the program.
+ *
+ * @param n AST node representing the variable being modified.
+ * @param stack Current AST traversal stack.
+ * @param scope The enclosing foreach statement or function definition.
+ */
 static
 void check_missing_reductions (Ast * n, Stack * stack, Ast * scope)
 {
@@ -811,6 +879,15 @@ void check_missing_reductions (Ast * n, Stack * stack, Ast * scope)
   exit (1);
 }
 
+/**
+ * @brief Determines if the given AST node refers to a point variable.
+ *
+ * Checks whether the provided AST node is an identifier corresponding to "POINT_VARIABLES"
+ * within the context of a function definition.
+ *
+ * @param ref AST node to check.
+ * @return true if the node refers to a point variable, false otherwise.
+ */
 static
 bool is_point_variable (const Ast * ref)
 {
@@ -825,6 +902,14 @@ bool is_point_variable (const Ast * ref)
   return identifier && !strcmp (ast_terminal (identifier)->start, "POINT_VARIABLES");
 }
 
+/**
+ * @brief Determines if a node is a parameter of a foreach statement.
+ *
+ * Checks whether the given AST node is part of the argument list of a foreach statement.
+ *
+ * @param n The AST node to check.
+ * @return true if the node is a foreach parameter, false otherwise.
+ */
 bool ast_is_foreach_parameter (Ast * n)
 {
   n = ast_parent (n, sym_argument_expression_list);
@@ -833,6 +918,11 @@ bool ast_is_foreach_parameter (Ast * n)
   return ast_is_foreach_statement (n);
 }
 
+/**
+ * @brief Propagates and removes undefined variables from the AST.
+ *
+ * Traverses the AST to identify variables that are undefined or illegally modified, especially in parallel contexts. Removes or marks as undefined any variable that is undeclared, explicitly undefined, incremented/decremented outside local scope, or passed by address to point functions. Also handles cleanup of incomplete or invalid loop constructs and erases corresponding AST nodes as needed.
+ */
 static
 void undefined_variables (Ast * n, Stack * stack, void * data)
 {
@@ -1079,6 +1169,16 @@ Ast * identifier_function_declaration (Stack * stack, char * name,
   return n;
 }
 
+/**
+ * @brief Retrieves the function definition AST node for a given identifier.
+ *
+ * Searches for the function definition corresponding to the provided identifier, starting from the given declaration node and traversing parent nodes as needed. Returns NULL if no matching function definition is found.
+ *
+ * @param stack The AST traversal stack.
+ * @param identifier The identifier node whose function definition is sought.
+ * @param declaration The starting declaration node for the search.
+ * @return Ast* The function definition node if found, or NULL otherwise.
+ */
 Ast * ast_get_function_definition (Stack * stack, Ast * identifier, Ast * declaration)
 {
   if (!identifier)
@@ -1108,6 +1208,11 @@ Ast * ast_get_function_definition (Stack * stack, Ast * identifier, Ast * declar
   return ast_get_function_definition (stack, identifier, declaration1);
 }
 
+/**
+ * @brief Appends a function declaration to the appropriate AST block.
+ *
+ * Depending on the parent node's type, inserts the function declaration either directly into the external declaration block or wraps it within a foreach dimension block before appending. Asserts if the parent node is not of a recognized type.
+ */
 static void append_function_declaration (Ast * parent, Ast * declaration)
 {
   if (parent->parent->sym == sym_external_declaration)
@@ -1127,6 +1232,11 @@ static void append_function_declaration (Ast * parent, Ast * declaration)
     assert (false);
 }
 
+/**
+ * @brief Replaces a point function call with a default stencil call in the AST.
+ *
+ * Transforms the given AST node representing a point function call into a call to the "default_stencil" function, constructing the appropriate argument and initializer lists for stencil processing. If no field arguments are present, the node is destroyed.
+ */
 static void default_stencil (Ast * n, Stack * stack, void * scope)
 {
   Ast * initializer = NN (n, sym_postfix_initializer,
@@ -1527,6 +1637,11 @@ void remove_undefined (Ast * n, Stack * stack, void * scope)
     ast_cleanup (n, stack, scope, true);
 }
 
+/**
+ * @brief Removes unused identifiers and replaces unused point function parameters with an undefined type.
+ *
+ * Traverses the AST to erase identifiers that are declared or initialized but unused within the current scope. If an unused identifier is a point function parameter, its type is set to undefined instead of erasing it. Otherwise, recursively cleans up the AST node.
+ */
 static
 void remove_unused (Ast * n, Stack * stack, void * data)
 {
@@ -1580,13 +1695,16 @@ void remove_unused (Ast * n, Stack * stack, void * data)
 }
 
 /**
-## The `ast_stencil()` function
-
-The parameters are the input foreach loop or point function and the
-tuning options. 
-
-The function may return a NULL pointer, for example when the loop body
-does not contain any field access. */
+ * @brief Transforms a foreach loop or point function AST into a stencil AST for boundary condition handling.
+ *
+ * Performs a multi-pass transformation on the input AST to isolate stencil field accesses, propagate undefined variables, replace point function calls with stencil equivalents, and clean up unused or undefined variables. Returns a simplified AST that records stencil read/write accesses, or NULL if no field accesses are present.
+ *
+ * @param n The AST node representing a foreach loop or point function.
+ * @param parallel Indicates whether the transformation should consider parallel execution.
+ * @param overflow Enables handling of overflow conditions during transformation.
+ * @param nowarning Suppresses warning messages if set to true.
+ * @return Ast* The transformed stencil AST, or NULL if no field accesses are detected.
+ */
 
 Ast * ast_stencil (Ast * n, bool parallel, bool overflow, bool nowarning)
 {

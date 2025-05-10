@@ -81,6 +81,11 @@ macro1 is_face_x (Point p = point) {
   }
 }
 
+/**
+ * @brief Determines if a point corresponds to a y-oriented face in the grid.
+ *
+ * Returns true if the given point lies on a y-oriented face, i.e., if its i-index is within the grid bounds.
+ */
 macro1 is_face_y (Point p = point) {
   if (p.i <= p.n) {
     int jg = -1; NOT_UNUSED(jg);
@@ -95,6 +100,14 @@ macro1 is_face_y (Point p = point) {
 
 #include "neighbors.h"
 
+/**
+ * @brief Sets all non-constant scalar values in the grid to a specified value.
+ *
+ * Iterates over each scalar in the provided list and assigns the given value to every grid cell, including ghost cells, except for scalars marked as constant.
+ *
+ * @param alist Pointer to a list of scalar variables to reset.
+ * @param val The value to assign to each grid cell of the non-constant scalars.
+ */
 void reset (void * alist, double val)
 {
   scalar * list = (scalar *) alist;
@@ -105,7 +118,14 @@ void reset (void * alist, double val)
 	((real *)cartesian->d)[i + s.i*len] = val;
 }
 
-// Boundaries
+/**
+   * @brief Iterates in parallel over all boundary cells in a specified direction and level.
+   *
+   * Executes a parallel loop over the ghost cell layer adjacent to the domain boundary in the given direction (`left`, `right`, `bottom`, or `top`) at grid level `l`. The macro sets up the appropriate indices and ghost cell offsets for boundary processing.
+   *
+   * @param l Grid level to process.
+   * @param d Boundary direction (left, right, bottom, or top).
+   */
 
 macro2 foreach_boundary_dir (int l, int d)
 {
@@ -141,7 +161,17 @@ macro2 foreach_boundary_dir (int l, int d)
   }
 }
 
-@define neighbor(o,p,q) ((Point){point.i+o, point.j+p, point.level, point.n})
+@/**
+ * @brief Applies normal boundary conditions to ghost cells for a set of scalars on a box boundary.
+ *
+ * For each scalar in the list, sets the ghost cell values adjacent to the specified box boundary direction
+ * by invoking the corresponding normal boundary function. Operates in parallel over the relevant boundary region.
+ *
+ * @param b Pointer to the box boundary structure specifying the direction.
+ * @param list List of scalars to which the boundary condition is applied.
+ * @param l Grid refinement level (unused in this function).
+ */
+define neighbor(o,p,q) ((Point){point.i+o, point.j+p, point.level, point.n})
 @def is_boundary(point) (point.i < GHOSTS || point.i >= point.n + GHOSTS ||
 			 point.j < GHOSTS || point.j >= point.n + GHOSTS)
 @
@@ -176,6 +206,16 @@ static void box_boundary_level_normal (const Boundary * b, scalar * list, int l)
   }
 }
 
+/**
+ * @brief Applies tangent boundary conditions to scalars on a specified boundary level.
+ *
+ * For each scalar in the list, sets ghost cell values on the boundary in direction `d`
+ * using the tangent boundary function associated with each scalar.
+ *
+ * @param b Pointer to the boundary descriptor specifying direction and properties.
+ * @param list List of scalars to which the tangent boundary condition is applied.
+ * @param l Grid refinement level (unused in this implementation).
+ */
 static void box_boundary_level_tangent (const Boundary * b, 
 					scalar * list, int l)
 {
@@ -203,6 +243,13 @@ static void box_boundary_level_tangent (const Boundary * b,
 extern double (* default_scalar_bc[]) (Point, Point, scalar, bool *);
 static double periodic_bc (Point point, Point neighbor, scalar s, bool * data);
 
+/**
+ * @brief Iterates over all non-periodic boundary cells in the specified direction.
+ *
+ * Executes the loop body for each grid cell on the boundary in direction `b`, excluding periodic boundaries and ghost cells outside the domain.
+ *
+ * @param b Boundary direction index (e.g., left, right, bottom, top).
+ */
 macro2 foreach_boundary (int b)
 {
   if (default_scalar_bc[b] != periodic_bc)

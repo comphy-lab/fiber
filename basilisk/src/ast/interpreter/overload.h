@@ -101,7 +101,10 @@ bool overload_event()
 }
 
 /**
-Foreach variables */
+ * @brief Declares variables for use in foreach loops over grid points.
+ *
+ * Defines a `Point` structure and integer indices for grid traversal.
+ */
 
 void _Variables() {
   Point point;
@@ -119,6 +122,11 @@ void unset_double (double * x)
   *flags = unset;
 }
 
+/**
+ * @brief Initializes point index variables to zero.
+ *
+ * Sets the global point indices `ig`, `jg`, and `kg` to zero for use in grid-based computations.
+ */
 void _init_point_variables (void)
 {
   ig = jg = kg = 0;
@@ -142,6 +150,11 @@ void free_grid (void)
   }
 }
 
+/**
+ * @brief Resets all scalar fields in the provided list to zero within the grid.
+ *
+ * Iterates over each scalar in the list and resets its field values for all associated blocks using the grid's data buffer.
+ */
 void reset (void * alist, double val)
 {
   Intergrid * igrid = (Intergrid *) grid;
@@ -258,6 +271,11 @@ void init_grid (int n)
     nl = 2;
 }
 
+/**
+ * @brief Resets the data and status of a scalar field in the grid.
+ *
+ * Sets the scalar's data to zero and marks it as unset within the grid's data buffer.
+ */
 static
 void interpreter_reset_scalar (scalar s)
 {
@@ -268,6 +286,15 @@ void interpreter_reset_scalar (scalar s)
   *flags = unset;
 }
 
+/**
+ * @brief Sets the data for a scalar field to zero in the grid.
+ *
+ * This function accesses the data buffer for the given scalar field and sets its value to zero. The `leaves` parameter is currently unused.
+ *
+ * @param s The scalar field whose data is to be reset.
+ * @param leaves Unused parameter.
+ * @return Always returns zero.
+ */
 double z_indexing (scalar s, bool leaves)
 {
   Intergrid * p = (Intergrid *) grid;
@@ -275,6 +302,17 @@ double z_indexing (scalar s, bool leaves)
   *c = 0[0];
 }
 
+/**
+ * @brief Initializes metadata for a scalar block and appends it to relevant lists.
+ *
+ * Constructs the scalar's name from the provided base and extension, sets its block index, and adds it to the baseblock or all list as appropriate.
+ *
+ * @param sb Scalar to initialize.
+ * @param name Base name for the scalar.
+ * @param ext Extension to append to the base name.
+ * @param n Index of the scalar within the block; if zero, marks as baseblock.
+ * @param block Block index to assign if n is zero.
+ */
 static void init_block_scalar (scalar sb, const char * name, const char * ext,
 			       int n, int block)
 {
@@ -290,6 +328,13 @@ static void init_block_scalar (scalar sb, const char * name, const char * ext,
   _attribute[sb.i].name = strdup(bname); all = list_append (all, sb);
 }
 
+/**
+ * @brief Increases the size of the grid data buffer by a specified amount.
+ *
+ * Reallocates the data buffer for the current grid to accommodate additional data and updates the total data size.
+ *
+ * @param size Number of bytes to add to the existing data buffer.
+ */
 void realloc_scalar (int size)
 {
   Intergrid * p = (Intergrid *) grid;
@@ -310,15 +355,41 @@ scalar new_const_scalar (const char * name, int i, double val)
 }
 
 void is_face_x() {}
+/**
+ * @brief Placeholder function for Y-face operations.
+ *
+ * This function is a stub and does not perform any action. It may be used as a placeholder for operations related to Y-oriented faces in grid or field management.
+ */
 void is_face_y() {}
+/**
+ * @brief Placeholder function for Z-face operations.
+ *
+ * This function is a stub and does not perform any actions. It may be used as a placeholder for future Z-face related logic in grid or field operations.
+ */
 void is_face_z() {}
 
+/**
+ * @brief Returns a pointer to the data value of a scalar field at the specified grid indices.
+ *
+ * @param s The scalar field.
+ * @param i Grid index in the x-direction.
+ * @param j Grid index in the y-direction.
+ * @param k Grid index in the z-direction.
+ * @return real* Pointer to the scalar's data at the given indices.
+ */
 real * val (scalar s, int i, int j, int k)
 {
   Intergrid * igrid = (Intergrid *) grid;
   return (real *)(igrid->d + s.i*sizeof(real));
 }
 
+/**
+ * @brief Returns an unset Point structure.
+ *
+ * This function creates and returns a Point structure that is not initialized to any specific coordinates or values.
+ *
+ * @return Point An unset Point.
+ */
 Point locate (double xp, double yp, double zp)
 {
   Point point; // unset
@@ -349,6 +420,18 @@ typedef struct {
   int nc, nf;
 } astats;
 
+/**
+ * @brief Copies scalar field values to a max array for wavelet adaptation.
+ *
+ * If both the scalar list and max array are provided, assigns each scalar's value from the grid to the corresponding element in the max array. Returns unset adaptation statistics.
+ *
+ * @param slist List of scalar fields to process, terminated by a scalar with negative index.
+ * @param max Array to receive the scalar values.
+ * @param maxlevel Maximum refinement level (unused).
+ * @param minlevel Minimum refinement level (unused).
+ * @param list Additional scalar list (unused).
+ * @return astats Unset adaptation statistics.
+ */
 astats adapt_wavelet (scalar * slist, double * max,
 		      int maxlevel, int minlevel, scalar * list)
 {
@@ -370,17 +453,33 @@ void output_field (scalar * list, FILE * fp, int n, bool linear,
 		   double box[2][2])
 {}
 
+/**
+ * @brief Stub function for outputting a scalar field as a PPM image.
+ *
+ * This function is a placeholder and does not perform any output or processing.
+ */
 void output_ppm (scalar f, FILE * fp, int n, char * file,
 		 double min, double max, double spread,
 		 double z, bool linear, double box[2][2],
 		 scalar mask, colormap map, char * opt)
 {}
 
+/**
+ * @brief Placeholder for recursively coarsening a cell and its children.
+ *
+ * This function is a stub and does not perform any operations.
+ */
 void coarsen_cell_recursive (Point point, scalar * list)
 {}
 
 /**
-Helper functions for dimensions */
+ * @brief Initializes a grid dimension value at the specified index.
+ *
+ * Copies the given dimension value into the grid's data buffer at the provided index.
+ *
+ * @param index Index in the grid data buffer where the dimension value will be set.
+ * @param dimension The dimension value to store.
+ */
 
 void _init_dimension (int index, long dimension)
 {
@@ -397,17 +496,61 @@ bool is_constant (scalar s)
   return s.i >= _NVARMAX;
 }
 
+/**
+ * @brief Returns the constant value associated with a scalar, or a large default if not constant.
+ *
+ * If the scalar is marked as constant, retrieves its value from the constant array; otherwise, returns 1e30.
+ *
+ * @param s Scalar to query.
+ * @return double The constant value for the scalar, or 1e30 if the scalar is not constant.
+ */
 double constant (scalar s)
 {
   return is_constant(s) ? _constant[s.i - _NVARMAX] : 1e30;
 }
 
+/**
+ * @brief Returns an undefined or uninitialized depth value.
+ *
+ * This function serves as a stub and does not provide a meaningful depth value.
+ * @return int Undefined depth.
+ */
 int depth() { int undef; return undef; }
+/**
+ * @brief Returns an undefined process identifier.
+ *
+ * This function is a stub and does not provide a valid process ID.
+ *
+ * @return int Undefined value representing the process ID.
+ */
 int pid()   { int undef; return undef; }
+/**
+ * @brief Returns an undefined thread identifier.
+ *
+ * This function is a stub and does not provide a valid thread ID.
+ * @return int Undefined value.
+ */
 int tid()   { int undef; return undef; }
+/**
+ * @brief Returns an undefined value for the number of processing elements.
+ *
+ * This function serves as a stub and does not provide a valid count of processing elements.
+ *
+ * @return int Undefined value.
+ */
 int npe()   { int undef; return undef; }
 
+/**
+ * @brief Placeholder for dimension-related operations.
+ *
+ * This function currently performs no action and serves as a stub for future dimension handling logic.
+ */
 void dimensional (int a) {}
+/**
+ * @brief Placeholder function for displaying or processing a dimension value.
+ *
+ * This function currently has no implementation and serves as a stub for future dimension-related operations.
+ */
 void show_dimension_internal (double a) {}
 
 /**
@@ -416,9 +559,35 @@ void show_dimension_internal (double a) {}
 const double M_PI = 3.14159265358979 [0];
 const int RAND_MAX = 1;
 
+/**
+ * @brief Returns the greater of two double-precision values.
+ *
+ * @param a First value to compare.
+ * @param b Second value to compare.
+ * @return The maximum of a and b.
+ */
 double fmax (double a, double b) { return a > b ? a : b; }
+/**
+ * @brief Returns the smaller of two double-precision values.
+ *
+ * @param a First value.
+ * @param b Second value.
+ * @return The minimum of a and b.
+ */
 double fmin (double a, double b) { return a < b ? a : b; }
+/**
+ * @brief Returns the absolute value of an integer.
+ *
+ * @param i The integer whose absolute value is to be computed.
+ * @return int The non-negative value of the input integer.
+ */
 int abs (int i) { return i < 0 ? - i : i; }
+/**
+ * @brief Returns an undefined pseudo-random integer value.
+ *
+ * This stub implementation does not generate a true random number and always returns an undefined value.
+ * @return int Undefined integer value.
+ */
 int rand() { int undef; return undef; }
 
 /**
@@ -466,6 +635,13 @@ int events (bool action)
   return 1;
 }
 
+/**
+ * @brief Clears the highest byte of an integer to zero.
+ *
+ * Sets the most significant byte of the integer pointed to by @p i to zero, which may be used to clear flag bits or metadata stored in that byte.
+ *
+ * @param i Pointer to the integer to modify.
+ */
 void interpreter_set_int (int * i)
 {
   char * flags = i;
@@ -474,24 +650,62 @@ void interpreter_set_int (int * i)
 }
 
 /**
-GPU-specific functions */
+ * @brief Initializes the grid for GPU operations with the specified size.
+ *
+ * Calls the standard grid initialization routine for use in GPU contexts.
+ *
+ * @param n The number of grid points or cells to initialize.
+ */
 
 void gpu_init_grid (int n) { init_grid (n); }
 
+/**
+ * @brief Constructs a 4-component vector from four float values.
+ *
+ * @param r Red component.
+ * @param g Green component.
+ * @param b Blue component.
+ * @param a Alpha component.
+ * @return vec4 A vector containing the specified components.
+ */
 vec4 Vec4 (float r, float g, float b, float a)
 {
   return (vec4){r, g, b, a};
 }
 
+/**
+ * @brief Registers a function pointer for use in the interpreter environment.
+ *
+ * This function allows associating a function pointer with a name and optional non-local context.
+ * The implementation is a stub and does not perform any registration.
+ *
+ * @param ptr Function pointer to register.
+ * @param name Name to associate with the function pointer.
+ * @param nonlocals Optional context for the function pointer.
+ */
 void register_fpointer (void (* ptr) (void), const char * name, const void * nonlocals) {}
 
+/**
+ * @brief Resets all scalar fields in the provided list to a specified value on the GPU.
+ *
+ * Calls the reset function for the given list of scalars, setting each field to the provided value.
+ *
+ * @param alist List of scalar fields to reset.
+ * @param val Value to assign to each scalar field.
+ */
 void reset_gpu (void * alist, double val)
 {
   reset (alist, val);
 }
 
 /**
-Other functions */
+ * @brief Searches for a scalar field by name.
+ *
+ * Looks up a scalar field with the specified name in the global scalar lists. If not found, also checks for block scalars whose names match the prefix of the input name followed by a numeric suffix. Returns an invalid scalar if no match is found.
+ *
+ * @param name Name of the scalar field to search for.
+ * @return scalar The matching scalar field, or an invalid scalar if not found.
+ */
 
 scalar lookup_field (const char * name)
 {
@@ -513,6 +727,14 @@ scalar lookup_field (const char * name)
   return (scalar){-1};
 }
 
+/**
+ * @brief Searches for a vector field by name and returns its vector handle.
+ *
+ * Attempts to locate a vector field whose base name matches the provided string, appending ".x" to search for the x-component. If not found, also checks for names with numeric suffixes. Returns an invalid vector if no match is found.
+ *
+ * @param name The base name of the vector field to search for.
+ * @return vector The found vector handle, or an invalid vector if not found.
+ */
 vector lookup_vector (const char * name)
 {
   if (name) {

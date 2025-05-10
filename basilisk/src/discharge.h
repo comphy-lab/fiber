@@ -44,14 +44,17 @@ static double bflux (struct Eta_b p, double eta_b)
 }
 
 /**
-To find the water level $\eta_b$ corresponding to the flow rate $Q_b$
-we want to impose, we need to invert the function above i.e. find
-$\eta_b$ such that
-$$
-Q[z_b,u_n](\eta_b) = Q_b
-$$
-We do this using the [false position
-method](http://en.wikipedia.org/wiki/False_position_method). */
+ * @brief Finds the water level that yields a specified boundary flow rate using the false position method.
+ *
+ * Uses the regula falsi (false position) root-finding algorithm to solve for the water level \(\eta_b\) such that the computed flow rate at the boundary matches the target \(Q_b\). Iteratively updates the bounds until the relative error is within the specified precision or a maximum number of iterations is reached. Prints a warning if convergence is not achieved.
+ *
+ * @param p Struct containing boundary and target flow parameters.
+ * @param binf Lower bound for water level.
+ * @param qinf Flow rate at lower bound.
+ * @param bsup Upper bound for water level.
+ * @param qsup Flow rate at upper bound.
+ * @return Estimated water level \(\eta_b\) that produces the desired flow rate.
+ */
 
 static double falsepos (struct Eta_b p,
 			double binf, double qinf,

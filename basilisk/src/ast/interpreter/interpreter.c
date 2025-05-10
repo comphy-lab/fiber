@@ -1452,6 +1452,16 @@ Ast * direct_declarator_type (Ast * direct_declarator, Dimensions * d, Stack * s
   return NULL;
 }
 
+/**
+ * @brief Determines the type of an identifier from its AST node.
+ *
+ * Resolves and returns the type AST node corresponding to the given identifier node, handling typedefs, structs/unions, and base types. Returns NULL if the type cannot be determined.
+ *
+ * @param n The AST node representing the identifier.
+ * @param d Optional pointer to dimensions for array or function types.
+ * @param stack The interpreter stack for context.
+ * @return Ast* The AST node representing the identifier's type, or NULL if not found.
+ */
 static
 Ast * identifier_type (Ast * n, Dimensions * d, Stack * stack)
 {
@@ -1474,6 +1484,16 @@ Ast * identifier_type (Ast * n, Dimensions * d, Stack * stack)
   return base_type (type, d, stack);
 }
 
+/**
+ * @brief Extracts the return type and pointer depth from a function declaration AST node.
+ *
+ * Traverses the given function declaration AST to determine the base return type and updates the provided Dimensions structure with the pointer level. Handles arrays and pointer declarators, and resolves struct or union types as needed.
+ *
+ * @param function_declaration The AST node representing the function declaration.
+ * @param d Pointer to a Dimensions structure to be updated with pointer depth.
+ * @param stack The interpreter stack used for type resolution.
+ * @return Ast* The AST node representing the base return type, or NULL if the type cannot be determined.
+ */
 static
 Ast * return_type (Ast * function_declaration, Dimensions * d, Stack * stack)
 {
@@ -1507,6 +1527,16 @@ Ast * return_type (Ast * function_declaration, Dimensions * d, Stack * stack)
   return base_type (type, d, stack);
 }
 
+/**
+ * @brief Determines the base type and pointer depth from a type name AST node.
+ *
+ * Traverses the given type name AST node to extract its base type and updates the provided Dimensions structure with the pointer level. Handles arrays and abstract declarators, and resolves struct or union types to their definitions if necessary.
+ *
+ * @param type_name The AST node representing the type name.
+ * @param d Pointer to a Dimensions structure to be updated with pointer depth.
+ * @param stack The interpreter stack used for type resolution.
+ * @return Ast* The AST node representing the base type, or NULL if the type is invalid.
+ */
 static
 Ast * type_name_type (Ast * type_name, Dimensions * d, Stack * stack)
 {
@@ -2017,6 +2047,15 @@ void * static_calloc (size_t nmemb, size_t size, Stack * stack)
   return p;
 }
 
+/**
+ * @brief Reallocates memory using the interpreter's static allocator.
+ *
+ * Resizes a previously allocated memory block, copying its contents to a new block if necessary. If the new size is zero, the memory is freed and NULL is returned. If the pointer is NULL, behaves like static_malloc. The amount of data copied is limited to the smaller of the old and new sizes.
+ *
+ * @param ptr Pointer to the previously allocated memory block.
+ * @param size New size in bytes for the memory block.
+ * @return Pointer to the reallocated memory block, or NULL if size is zero or allocation fails.
+ */
 static
 void * static_realloc (void * ptr, size_t size, Stack * stack)
 {
@@ -2034,6 +2073,16 @@ void * static_realloc (void * ptr, size_t size, Stack * stack)
   return p;
 }
 
+/**
+ * @brief Determines whether a loop should continue based on the remaining iteration count.
+ *
+ * Issues a warning and returns false if the maximum number of allowed iterations has been reached; otherwise, returns true.
+ *
+ * @param n The AST node representing the loop statement.
+ * @param iter The number of remaining iterations allowed.
+ * @param calls The current number of interpreter calls (used for recursion/loop control).
+ * @return true if the loop may continue; false if the iteration limit has been reached.
+ */
 static
 bool continue_iterations (Ast * n, Stack * stack, int iter, int calls)
 {
@@ -2064,6 +2113,17 @@ bool continue_iterations (Ast * n, Stack * stack, int iter, int calls)
 #endif
 }
 
+/**
+ * @brief Handles evaluation of internal (built-in) functions in the interpreter.
+ *
+ * Evaluates calls to recognized internal functions such as memory management (`malloc`, `calloc`, `realloc`, `free`), string operations (`strdup`, `strlen`, `strcpy`, `strcat`, `strcmp`, `strncmp`), memory operations (`memset`, `memcpy`), mathematical functions (`fabs`, `sqrt`, `exp`, etc.), and interpreter control functions (`interpreter_verbosity`, `interpreter_maximum_iterations`). Returns the computed value or updates interpreter state as appropriate. For unrecognized function names, attempts to match and evaluate supported math functions.
+ *
+ * @param call The AST node representing the function call.
+ * @param identifier The AST node for the function identifier.
+ * @param parameters Array of AST nodes for the function arguments.
+ * @param constant_arguments Indicates if all arguments are constant expressions.
+ * @return Value* The result of the function call, or NULL if the function does not return a value.
+ */
 static
 Value * internal_functions (Ast * call, Ast * identifier, Ast ** parameters, bool constant_arguments, Stack * stack)
 {
@@ -2470,6 +2530,15 @@ Value * (* ast_choose_hook) (Ast *, Stack *, Value *, Value *) = NULL;
 
 Value * (* run) (Ast *, Stack *) = ast_run_node;
 
+/**
+ * @brief Recursively interprets an AST node and returns its evaluated value.
+ *
+ * Evaluates a single Abstract Syntax Tree (AST) node within the current interpreter stack context, supporting the full range of C language constructs, including expressions, statements, function calls, control flow, memory operations, and type conversions. Handles scope management, value propagation, error and warning reporting, and supports hooks for custom interpreter behavior. Returns the computed Value for the node, or NULL if the node does not produce a value.
+ *
+ * @param n The AST node to interpret.
+ * @param stack The interpreter stack containing execution state and context.
+ * @return Value* The evaluated value of the AST node, or NULL if not applicable.
+ */
 Value * ast_run_node (Ast * n, Stack * stack)
 {
   if (!n)

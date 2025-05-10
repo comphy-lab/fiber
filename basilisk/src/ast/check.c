@@ -11,19 +11,15 @@ static bool check (Ast * n)
 }
 
 /**
-If `stencils` is true the "hack" grammatical expression:
-
-~~~
-foreach_statement
-├─FOREACH
-├─'('
-.
-├─')'
-├─statement
-└─foreach_statement
-~~~
-
-used for constructing stencils in [/src/ast/translate.c](), is authorized. */
+ * @brief Checks the grammar correctness of an AST node, with optional recursion and stencil exceptions.
+ *
+ * Validates that the AST node `n` conforms to the expected grammar. If `stencils` is true, allows a special-case recursive pattern for `macro_statement` nodes used in stencil code generation. If `recursive` is true, recursively checks all child nodes and asserts correct parent pointers. Aborts the program and prints the subtree if a grammatical error is detected.
+ *
+ * @param n The AST node to check.
+ * @param recursive Whether to recursively check all child nodes.
+ * @param stencils Whether to permit the special stencil macro_statement grammar pattern.
+ * @return The original AST node pointer if checks pass, or NULL if `n` is NULL.
+ */
 
 Ast * ast_check_grammar (Ast * n, bool recursive, bool stencils)
 {

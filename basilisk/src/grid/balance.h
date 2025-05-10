@@ -11,7 +11,16 @@ typedef struct {
 @ define is_newpid() (!isnan(val(newpid,0,0,0)) && NEWPID()->pid > 0)
 @else
 @ define is_newpid() (NEWPID()->pid > 0)
-@endif
+@/**
+ * @brief Constructs a linearized array of cells marked for communication during load balancing.
+ *
+ * Iterates over all cells, marking parent cells if any children are flagged for sending or as neighbors. Appends cells flagged for sending to the output array, handling refined cells by checking for prolongation children and temporarily marking as leaf if necessary. Clears relevant flags after processing. Returns an array containing the cells to be sent for load balancing.
+ *
+ * @param size The size in bytes of each cell structure to append.
+ * @param newpid Scalar field containing new process IDs and cell metadata.
+ * @return Array* Pointer to the array of cells to be communicated.
+ */
+endif
 
 Array * linear_tree (size_t size, scalar newpid)
 {
@@ -62,6 +71,17 @@ Array * linear_tree (size_t size, scalar newpid)
   return a;
 }
 
+/**
+ * @brief Iterates over a linearized array of tree cells for load balancing operations.
+ *
+ * For each cell in the provided array, executes a user-defined block if the cell is marked for sending.
+ * Handles refinement and prolongation allocation for cells flagged as neighbors to be updated.
+ *
+ * @param t Linearized array of cells to process.
+ * @param size Size in bytes of each serialized cell entry.
+ * @param list List of scalars to be updated during refinement.
+ * @param newpid Scalar field containing new process IDs for load balancing.
+ */
 macro2 foreach_tree (Array * t, size_t size, scalar * list, scalar newpid = newpid)
 {
   {
@@ -92,6 +112,16 @@ macro2 foreach_tree (Array * t, size_t size, scalar * list, scalar newpid = newp
   }
 }
 
+/**
+ * @brief Identifies and marks cells neighboring a target process for communication during load balancing.
+ *
+ * Marks root and child cells that are adjacent to the specified process (`nextpid`) and have a new process ID assigned, setting their `sent` flag for later communication. Optionally logs information about these cells to the provided file pointer. Returns a linearized array of the marked cells for MPI exchange.
+ *
+ * @param newpid Scalar field containing new process IDs for cells.
+ * @param nextpid Target process ID whose neighborhood is being identified.
+ * @param fp Optional file pointer for logging cell information; may be NULL.
+ * @return Array* Linearized array of cells marked for sending.
+ */
 Array * neighborhood (scalar newpid, int nextpid, FILE * fp)
 {
   const unsigned short sent = 1 << user;

@@ -4,12 +4,63 @@ typedef double number; // used in macros to indicate "any numeric type"
 #define HUGE 1e30f
 #define nodata HUGE
 
+/**
+ * @brief Returns the greater of two numbers.
+ *
+ * @param a First number.
+ * @param b Second number.
+ * @return The maximum of a and b.
+ */
 macro number max (number a, number b) { return a > b ? a : b; }
+/**
+ * @brief Returns the smaller of two numbers.
+ *
+ * @param a First number.
+ * @param b Second number.
+ * @return The minimum of a and b.
+ */
 macro number min (number a, number b) { return a < b ? a : b; }
+/**
+ * @brief Computes the square of a number.
+ *
+ * @param x The value to be squared.
+ * @return number The square of x.
+ */
 macro number sq (number x) { return x*x; }
+/**
+ * @brief Computes the cube of a number.
+ *
+ * @param x The value to be cubed.
+ * @return number The result of x raised to the third power.
+ */
 macro number cube (number x) { return x*x*x; }
+/**
+ * @brief Returns the sign of a number as +1 or -1.
+ *
+ * @param x The input value.
+ * @return int 1 if x is positive, -1 otherwise.
+ */
 macro int sign (number x) { return (int)(x > 0 ? 1 : -1); }
+/**
+ * @brief Returns the sign of a number as an integer.
+ *
+ * @param x The input value.
+ * @return int 1 if x > 0, -1 if x < 0, 0 if x == 0.
+ */
 macro int sign2 (number x) { return (int)(x > 0 ? 1 : x < 0 ? -1 : 0); }
+/**
+ * @brief Restricts a value to lie within a specified range.
+ *
+ * Returns the value of x clamped between the lower bound a and upper bound b.
+ *
+ * @param x Value to be clamped.
+ * @param a Lower bound.
+ * @param b Upper bound.
+ * @return number The clamped value.
+ *
+ * @example
+ * double y = clamp(5.0, 1.0, 3.0); // returns 3.0
+ */
 macro number clamp (number x, number a, number b) {
   return x < a ? a : x > b ? b : x;
 }
@@ -18,6 +69,11 @@ macro number clamp (number x, number a, number b) {
 
 #include "grid/config.h"
 
+/**
+ * @brief Returns a random double uniformly distributed in the range [-1, 1].
+ *
+ * @return double Random value between -1 and 1.
+ */
 static inline double noise() { return 1. - 2.*rand()/(double)RAND_MAX; }
 
 // the grid
@@ -402,7 +458,19 @@ const scalar zeroc[] = 0.;
 #define face_value(a,i)      ((a[i] + a[i-1])/2.)
 #define center_gradient(a)   ((a[1] - a[-1])/(2.*Delta))
 
-// matrices
+/**
+ * @brief Allocates a contiguous 2D matrix with specified element size.
+ *
+ * Creates a matrix with `n` rows and `p` columns, where each element has the given `size` in bytes.
+ * The matrix data is stored in a single contiguous memory block for efficient access.
+ *
+ * @param n Number of rows.
+ * @param p Number of columns.
+ * @param size Size in bytes of each matrix element.
+ * @return Pointer to an array of row pointers, each pointing to the start of a row.
+ *
+ * @note The returned pointer should be freed using `matrix_free()`.
+ */
 
 void * matrix_new (int n, int p, size_t size)
 {

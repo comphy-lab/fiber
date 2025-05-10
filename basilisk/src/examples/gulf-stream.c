@@ -80,26 +80,14 @@ representation proposed by [Hurlburt & Hogan,
 #endif
 
 /**
-## main() 
-
-The simulation can be run in OpenMP/serial/GPU or with MPI. With MPI
-the number of processes must be of the form 2^(i+1) i.e.: 8, 32, 128,
-512, 2048 etc. (see [Tips](/src/Tips#non-cubic-domains) for
-explanations). This can be done using the
-[Makefile](/Tutorial#using-makefiles) with:
-
-~~~bash
-CC='mpicc -D_MPI=8' CFLAGS=-disable-dimensions make gulf-stream.tst
-~~~
-
-it can also be run on GPUs using e.g.
-
-~~~bash
-OMP_NUM_THREADS=8 CFLAGS=-DSHOW make gulf-stream.gpu.tst
-~~~
-
-Command-line parameters can be passed to the code to change the
-spatial resolution and/or the timestep. */
+ * @brief Initializes and runs the Gulf Stream ocean model simulation.
+ *
+ * Sets up the computational domain, physical parameters, and numerical configuration for a five-layer isopycnal ocean model simulating Gulf Stream circulation in the North Atlantic. The function configures domain geometry, grid resolution, timestep, spinup time, and solver parameters, with options to override defaults via command-line arguments. Supports execution in serial, OpenMP, GPU, or MPI environments.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings. The first argument (optional) sets horizontal resolution, the second sets timestep (seconds), and the third sets spinup time (years).
+ * @return int Returns 0 on successful completion.
+ */
 
 int main (int argc, char * argv[])
 {

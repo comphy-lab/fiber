@@ -7,9 +7,14 @@ vorticity--streamfunction formulation. */
 #include "navier-stokes/stream.h"
 
 /**
-The domain is square of size unity by default. The default resolution
-is constant at $256^2$ but can be change using command line
-arguments. */
+ * @brief Initializes the simulation grid and starts the two-dimensional turbulence simulation.
+ *
+ * The domain is a unit square. The grid resolution is set by the first command-line argument, or defaults to 256 if not specified.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Exit status code.
+ */
 
 int main (int argc, char * argv[]) {
   init_grid (argc > 1 ? atoi(argv[1]) : 256);

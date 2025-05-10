@@ -250,16 +250,12 @@ void equilibrium_tide_constituents (const char * date = "2000-01-01 12:00:00",
 }
 
 /**
-## Computes surface elevation associated with the equilibrium tide 
-
-Assumes that the coordinate system is longitude in degrees (x) and
-latitude in degrees (y). 
-
-Note that the tidal constituents must first be defined by calling
-equilibrium_tide_constituents().
-
-The time `t` given (in seconds) is relative to the date/time specified
-when calling equilibrium_tide_constituents(). */
+ * @brief Computes the equilibrium tide surface elevation at each grid point.
+ *
+ * Calculates the static sea surface elevation (in meters) due to the equilibrium tide, as a sum of major diurnal and semi-diurnal tidal constituents, at each grid point defined by longitude (`x`, degrees) and latitude (`y`, degrees). The calculation uses the time `t` (in seconds) relative to the reference date specified in `equilibrium_tide_constituents()`. Tidal constituents must be initialized before calling this function.
+ *
+ * The result is stored in the provided `tide` scalar field.
+ */
 
 void equilibrium_tide (scalar tide, double t)
 {

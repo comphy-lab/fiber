@@ -22,7 +22,19 @@
 
 // REQUIREMENTS: OpenGL version with the KHR_debug extension available.
 
-// Callback function for printing debug statements
+/**
+ * @brief Callback for handling and printing OpenGL debug messages.
+ *
+ * Receives debug messages from the OpenGL driver, translates their source, type, and severity enums into human-readable strings, and prints a formatted message to standard error. Intended for use with OpenGL contexts supporting the KHR_debug extension to aid in diagnostics and troubleshooting.
+ *
+ * @param source OpenGL enum indicating the origin of the debug message.
+ * @param type OpenGL enum specifying the type of debug message.
+ * @param id Unique identifier for the debug message.
+ * @param severity OpenGL enum indicating the severity of the message.
+ * @param length Length of the debug message string.
+ * @param msg The debug message text.
+ * @param data User-supplied data pointer (unused).
+ */
 void APIENTRY GLDebugMessageCallback(GLenum source, GLenum type, GLuint id,
                             GLenum severity, GLsizei length,
                             const GLchar *msg, const void *data)
