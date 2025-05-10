@@ -1,7 +1,7 @@
 /**
  @file filamentExt.c
  @brief This code will give an initial condition where the filament is stretched out, to be used for filament_retraction_VE.c
- The relaxation time is taken as infinity here to ensure that the polymers undergo affine deformation while stretching. 
+ The relaxation time is taken as infinity here to ensure that the polymers undergo affine deformation while stretching.
  @author Vatsal Sanjay
  @version 1.1
  @date 2025-05-09
@@ -53,7 +53,7 @@ static FILE *logFp = NULL;
 int main(int argc, char const *argv[]) {
 
   L0 = 16.;
-  
+
   // Values taken from the terminal
   MAXlevel = 10;
   tmax = 10.0;
@@ -61,7 +61,7 @@ int main(int argc, char const *argv[]) {
   Oh = 1e-1;
   Oha = 1e-5;
   De = 1e30; // 1e-1;
-  Ec = 0.0; // 1e-2;
+  Ec = 1.0; // 1e-2;
 
   init_grid (1 << 6);
 
