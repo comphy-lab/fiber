@@ -1,8 +1,5 @@
-testCases/pinchOff
-testCases/dropImpact
-testCases/src-local
-testCases/testEigenDecomposition
-testCases/dropAtomisation
+simulationCases/src-local
+**/filamentExt
 **/*.s
 **/*.tests 
 **/*.deps
