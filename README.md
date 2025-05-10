@@ -1,4 +1,4 @@
-FIBER: Flow-Induced Breakup of Elastic Rheology
+# FIBER: Flow-Induced Breakup of Elastic Rheology
 
 [![Website Status](https://img.shields.io/website?url=https%3A%2F%2Fcomphy-lab.github.io%2Ffiber%2F&style=flat-square&logo=github&label=Website)](https://comphy-lab.github.io/fiber/)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=flat-square&logo=github)](https://github.com/comphy-lab/fiber)
@@ -63,7 +63,7 @@ FIBER: Flow-Induced Breakup of Elastic Rheology
 
 **A. Vanilla Basilisk method:**
 ```sh
-qcc -O2 -Wall -I./src-local -disable-dimensions simulationCases/{CaseName}.c -o {CaseName} -lm 
+qcc -O2 -Wall -I./src-local -disable-dimensions simulationCases/{CaseName}.c -o {CaseName} -lm
 ./{CaseName}
 ```
 

@@ -26,7 +26,22 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://test.comphy-lab.org/simulationCases/Makefile.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://test.comphy-lab.org/simulationCases/cleanup.sh.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://test.comphy-lab.org/simulationCases/filamentExt.c.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://test.comphy-lab.org/simulationCases/runCases.sh.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

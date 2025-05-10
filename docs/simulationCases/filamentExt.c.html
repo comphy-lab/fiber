@@ -167,7 +167,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>simulationCases/filamentExt.c | Documentation</title>
+  <title>simulationCases/filamentExt.c | FIBER: Flow-Induced Breakup of Elastic Rheology</title>
 
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -198,7 +198,7 @@
   </style>
 
   <!-- Critical Meta Tags -->
-  <meta name="description" content="u.n[top] = neumann(0.0); 33 p[top] = dirichlet(0.0); 34 35 int MAXlevel; 36 // Bond number -> dimensionless driving... 37 // Oh -> Solvent Ohnesorge number 3...">
+  <meta name="description" content="u.n[top] = neumann(0.0); 34 p[top] = dirichlet(0.0); 35 u.n[right] = neumann(0.0); 36 p[right] = dirichlet(0.0); 37 38 39 int MAXlevel; 40 // Bond number -> ...">
   <meta name="author" content="CoMPhy Lab">
   <meta name="robots" content="index, follow">
   <meta name="keywords" content="axi.h, filamentext, log-conform-viscoelastic-scalar-2d.h, method, navier-stokes/centered.h, navier-stokes/conserving.h, reduced.h, tension.h, two-phaseve.h">
@@ -435,82 +435,86 @@
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><span class="pp">#include </span><a href="http://basilisk.fr/src/axi.h" title="Link to Basilisk source for axi.h"><span class="im">"axi.h"</span></a></span>
 <span id="cb1-2"><span class="pp">#include </span><a href="http://basilisk.fr/src/navier-stokes/centered.h" title="Link to Basilisk source for navier-stokes/centered.h"><span class="im">"navier-stokes/centered.h"</span></a></span>
-<span id="cb1-3"><span class="pp">#define FILTERED </span><span class="co">// Smear density and viscosity jumps</span></span>
-<span id="cb1-4"><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for two-phaseVE.h"><span class="im">"two-phaseVE.h"</span></a></span>
-<span id="cb1-5"></span>
-<span id="cb1-6"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-2D.h"><span class="im">"log-conform-viscoelastic-scalar-2D.h"</span></a></span>
-<span id="cb1-7"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-VE.dat&quot;</span><span class="pp"></span><span class="dv">16</span><span class="pp"></span></span>
-<span id="cb1-8"></span>
-<span id="cb1-9"><span class="pp">#include </span><a href="http://basilisk.fr/src/navier-stokes/conserving.h" title="Link to Basilisk source for navier-stokes/conserving.h"><span class="im">"navier-stokes/conserving.h"</span></a></span>
-<span id="cb1-10"><span class="pp">#include </span><a href="http://basilisk.fr/src/tension.h" title="Link to Basilisk source for tension.h"><span class="im">"tension.h"</span></a></span>
-<span id="cb1-11"><span class="pp">#include </span><a href="http://basilisk.fr/src/reduced.h" title="Link to Basilisk source for reduced.h"><span class="im">"reduced.h"</span></a></span>
-<span id="cb1-12"></span>
-<span id="cb1-13"><span class="pp">#define tsnap </span><span class="op">(</span><span class="fl">5e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">22</span><span class="pp"></span></span>
-<span id="cb1-14"></span>
-<span id="cb1-15"><span class="co">// Error tolerancs</span></span>
-<span id="cb1-16"><span class="pp">#define fErr </span><span class="op">(</span><span class="fl">1e-3</span><span class="op">)</span><span class="pp">                                 </span><span class="co">// error tolerance in f1 VOF</span></span>
-<span id="cb1-17"><span class="pp">#define KErr </span><span class="op">(</span><span class="fl">1e-6</span><span class="op">)</span><span class="pp">                                 </span><span class="co">// error tolerance in VoF curvature calculated using heigh function method (see adapt event)</span></span>
-<span id="cb1-18"><span class="pp">#define VelErr </span><span class="op">(</span><span class="fl">1e-2</span><span class="op">)</span><span class="pp">                               </span><span class="co">// error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J</span></span>
-<span id="cb1-19"><span class="pp">#define trAErr </span><span class="op">(</span><span class="fl">1e-3</span><span class="op">)</span><span class="pp">                                </span><span class="co">// error tolerance in trace of conformation tensor</span></span>
-<span id="cb1-20"></span>
-<span id="cb1-21"><span class="pp">#define R2</span><span class="op">(</span><span class="pp">x</span><span class="op">,</span><span class="pp">y</span><span class="op">,</span><span class="pp">z</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">sqrt</span><span class="op">(</span><span class="pp">sq</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">y</span><span class="op">)))</span><span class="pp"></span><span class="dv">30</span><span class="pp"></span></span>
-<span id="cb1-22"></span>
-<span id="cb1-23"><span class="co">// boundary conditions</span></span>
-<span id="cb1-24">u<span class="op">.</span>n<span class="op">[</span>top<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
-<span id="cb1-25">p<span class="op">[</span>top<span class="op">]</span> <span class="op">=</span> dirichlet<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
-<span id="cb1-26"></span>
-<span id="cb1-27"><span class="dt">int</span> MAXlevel<span class="op">;</span></span>
-<span id="cb1-28"><span class="co">// Bond number -&gt; dimensionless driving...</span></span>
-<span id="cb1-29"><span class="co">// Oh -&gt; Solvent Ohnesorge number</span></span>
-<span id="cb1-30"><span class="co">// Oha -&gt; air Ohnesorge number</span></span>
-<span id="cb1-31"><span class="co">// De -&gt; Deborah number</span></span>
-<span id="cb1-32"><span class="co">// Ec -&gt; Elasto-capillary number</span></span>
-<span id="cb1-33"><span class="co">// for now there is no viscoelasticity</span></span>
-<span id="cb1-34"></span>
-<span id="cb1-35"><span class="dt">double</span> Bo<span class="op">,</span> Oh<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> tmax<span class="op">;</span></span>
-<span id="cb1-36"><span class="dt">char</span> nameOut<span class="op">[</span><span class="dv">80</span><span class="op">],</span> dumpFile<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
-<span id="cb1-37"></span>
-<span id="cb1-38"><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="dt">const</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
-<span id="cb1-39"></span>
-<span id="cb1-40">  L0 <span class="op">=</span> <span class="fl">16.</span><span class="op">;</span></span>
-<span id="cb1-41">  X0 <span class="op">=</span> <span class="op">-</span>L0<span class="op">/</span><span class="fl">2.</span><span class="op">;</span></span>
+<span id="cb1-3"></span>
+<span id="cb1-4"><span class="pp">#include </span><a href="../src-local/log-conform-viscoelastic-scalar-2D.h.html" title="Link to local documentation for log-conform-viscoelastic-scalar-2D.h"><span class="im">"log-conform-viscoelastic-scalar-2D.h"</span></a></span>
+<span id="cb1-5"><span class="pp">#define logFile </span><span class="st">&quot;logAxi-scalar.dat&quot;</span><span class="pp"></span><span class="dv">14</span><span class="pp"></span></span>
+<span id="cb1-6"></span>
+<span id="cb1-7"><span class="pp">#define FILTERED </span><span class="co">// Smear density and viscosity jumps</span></span>
+<span id="cb1-8"><span class="pp">#include </span><a href="../src-local/two-phaseVE.h.html" title="Link to local documentation for two-phaseVE.h"><span class="im">"two-phaseVE.h"</span></a></span>
+<span id="cb1-9"></span>
+<span id="cb1-10"><span class="pp">#include </span><a href="http://basilisk.fr/src/navier-stokes/conserving.h" title="Link to Basilisk source for navier-stokes/conserving.h"><span class="im">"navier-stokes/conserving.h"</span></a></span>
+<span id="cb1-11"><span class="pp">#include </span><a href="http://basilisk.fr/src/tension.h" title="Link to Basilisk source for tension.h"><span class="im">"tension.h"</span></a></span>
+<span id="cb1-12"><span class="pp">#include </span><a href="http://basilisk.fr/src/reduced.h" title="Link to Basilisk source for reduced.h"><span class="im">"reduced.h"</span></a></span>
+<span id="cb1-13"></span>
+<span id="cb1-14"><span class="pp">#define tsnap </span><span class="op">(</span><span class="fl">5e-2</span><span class="op">)</span><span class="pp"></span><span class="dv">23</span><span class="pp"></span></span>
+<span id="cb1-15"></span>
+<span id="cb1-16"><span class="co">// Error tolerancs</span></span>
+<span id="cb1-17"><span class="pp">#define fErr </span><span class="op">(</span><span class="fl">1e-3</span><span class="op">)</span><span class="pp">                                 </span><span class="co">// error tolerance in f1 VOF</span></span>
+<span id="cb1-18"><span class="pp">#define KErr </span><span class="op">(</span><span class="fl">1e-6</span><span class="op">)</span><span class="pp">                                 </span><span class="co">// error tolerance in VoF curvature calculated using heigh function method (see adapt event)</span></span>
+<span id="cb1-19"><span class="pp">#define VelErr </span><span class="op">(</span><span class="fl">1e-2</span><span class="op">)</span><span class="pp">                               </span><span class="co">// error tolerances in velocity -- Use 1e-2 for low Oh and 1e-3 to 5e-3 for high Oh/moderate to high J</span></span>
+<span id="cb1-20"><span class="pp">#define trAErr </span><span class="op">(</span><span class="fl">1e-3</span><span class="op">)</span><span class="pp">                                </span><span class="co">// error tolerance in trace of conformation tensor</span></span>
+<span id="cb1-21"></span>
+<span id="cb1-22"><span class="pp">#define R2</span><span class="op">(</span><span class="pp">x</span><span class="op">,</span><span class="pp">y</span><span class="op">,</span><span class="pp">z</span><span class="op">)</span><span class="pp"> </span><span class="op">(</span><span class="pp">sqrt</span><span class="op">(</span><span class="pp">sq</span><span class="op">(</span><span class="pp">x</span><span class="op">)</span><span class="pp"> </span><span class="op">+</span><span class="pp"> sq</span><span class="op">(</span><span class="pp">y</span><span class="op">)))</span><span class="pp"></span><span class="dv">31</span><span class="pp"></span></span>
+<span id="cb1-23"></span>
+<span id="cb1-24"><span class="co">// boundary conditions</span></span>
+<span id="cb1-25">u<span class="op">.</span>n<span class="op">[</span>top<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
+<span id="cb1-26">p<span class="op">[</span>top<span class="op">]</span> <span class="op">=</span> dirichlet<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
+<span id="cb1-27">u<span class="op">.</span>n<span class="op">[</span>right<span class="op">]</span> <span class="op">=</span> neumann<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
+<span id="cb1-28">p<span class="op">[</span>right<span class="op">]</span> <span class="op">=</span> dirichlet<span class="op">(</span><span class="fl">0.0</span><span class="op">);</span></span>
+<span id="cb1-29"></span>
+<span id="cb1-30"></span>
+<span id="cb1-31"><span class="dt">int</span> MAXlevel<span class="op">;</span></span>
+<span id="cb1-32"><span class="co">// Bond number -&gt; dimensionless driving...</span></span>
+<span id="cb1-33"><span class="co">// Oh -&gt; Solvent Ohnesorge number</span></span>
+<span id="cb1-34"><span class="co">// Oha -&gt; air Ohnesorge number</span></span>
+<span id="cb1-35"><span class="co">// De -&gt; Deborah number</span></span>
+<span id="cb1-36"><span class="co">// Ec -&gt; Elasto-capillary number</span></span>
+<span id="cb1-37"><span class="co">// for now there is no viscoelasticity</span></span>
+<span id="cb1-38"></span>
+<span id="cb1-39"><span class="dt">double</span> Bo<span class="op">,</span> Oh<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">,</span> tmax<span class="op">;</span></span>
+<span id="cb1-40"><span class="dt">char</span> nameOut<span class="op">[</span><span class="dv">80</span><span class="op">],</span> dumpFile<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
+<span id="cb1-41"><span class="dt">static</span> <span class="dt">FILE</span> <span class="op">*</span>logFp <span class="op">=</span> NULL<span class="op">;</span></span>
 <span id="cb1-42"></span>
-<span id="cb1-43">  <span class="co">// Values taken from the terminal</span></span>
-<span id="cb1-44">  MAXlevel <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
-<span id="cb1-45">  tmax <span class="op">=</span> <span class="fl">1.75</span><span class="op">;</span></span>
-<span id="cb1-46">  Bo <span class="op">=</span> <span class="fl">1e1</span><span class="op">;</span></span>
-<span id="cb1-47">  Oh <span class="op">=</span> <span class="fl">1.25e-2</span><span class="op">;</span></span>
-<span id="cb1-48">  Oha <span class="op">=</span> <span class="fl">1e-2</span> <span class="op">*</span> Oh<span class="op">;</span></span>
-<span id="cb1-49">  De <span class="op">=</span> <span class="fl">1e30</span><span class="op">;</span> <span class="co">// 1e-1;</span></span>
-<span id="cb1-50">  Ec <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span> <span class="co">// 1e-2;</span></span>
-<span id="cb1-51"></span>
-<span id="cb1-52">  init_grid <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">6</span><span class="op">);</span></span>
-<span id="cb1-53"></span>
-<span id="cb1-54">  <span class="co">// Create a folder named intermediate where all the simulation snapshots are stored.</span></span>
-<span id="cb1-55">  <span class="dt">char</span> comm<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
-<span id="cb1-56">  sprintf <span class="op">(</span>comm<span class="op">,</span> <span class="st">&quot;mkdir -p intermediate&quot;</span><span class="op">);</span></span>
-<span id="cb1-57">  system<span class="op">(</span>comm<span class="op">);</span></span>
-<span id="cb1-58">  <span class="co">// Name of the restart file. See writingFiles event.</span></span>
-<span id="cb1-59">  sprintf <span class="op">(</span>dumpFile<span class="op">,</span> <span class="st">&quot;restart&quot;</span><span class="op">);</span></span>
-<span id="cb1-60"></span>
-<span id="cb1-61"></span>
-<span id="cb1-62">  rho1 <span class="op">=</span> <span class="fl">1.</span><span class="op">,</span> rho2 <span class="op">=</span> <span class="fl">1e-3</span><span class="op">;</span></span>
-<span id="cb1-63">  mu1 <span class="op">=</span> Oh<span class="op">,</span> mu2 <span class="op">=</span> Oha<span class="op">;</span></span>
-<span id="cb1-64">  lambda1 <span class="op">=</span> De<span class="op">,</span> lambda2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
-<span id="cb1-65">  G1 <span class="op">=</span> Ec<span class="op">,</span> G2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
-<span id="cb1-66">  G<span class="op">.</span>x <span class="op">=</span> Bo<span class="op">;</span></span>
-<span id="cb1-67">  f<span class="op">.</span>sigma <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
-<span id="cb1-68"></span>
-<span id="cb1-69">  run<span class="op">();</span></span>
-<span id="cb1-70"></span>
-<span id="cb1-71"><span class="op">}</span></span>
+<span id="cb1-43"><span class="dt">int</span> main<span class="op">(</span><span class="dt">int</span> argc<span class="op">,</span> <span class="dt">char</span> <span class="dt">const</span> <span class="op">*</span>argv<span class="op">[])</span> <span class="op">{</span></span>
+<span id="cb1-44"></span>
+<span id="cb1-45">  L0 <span class="op">=</span> <span class="fl">16.</span><span class="op">;</span></span>
+<span id="cb1-46"></span>
+<span id="cb1-47">  <span class="co">// Values taken from the terminal</span></span>
+<span id="cb1-48">  MAXlevel <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb1-49">  tmax <span class="op">=</span> <span class="fl">10.0</span><span class="op">;</span></span>
+<span id="cb1-50">  Bo <span class="op">=</span> <span class="fl">4e0</span><span class="op">;</span></span>
+<span id="cb1-51">  Oh <span class="op">=</span> <span class="fl">1e-1</span><span class="op">;</span></span>
+<span id="cb1-52">  Oha <span class="op">=</span> <span class="fl">1e-5</span><span class="op">;</span></span>
+<span id="cb1-53">  De <span class="op">=</span> <span class="fl">1e30</span><span class="op">;</span> <span class="co">// 1e-1;</span></span>
+<span id="cb1-54">  Ec <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span> <span class="co">// 1e-2;</span></span>
+<span id="cb1-55"></span>
+<span id="cb1-56">  init_grid <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">6</span><span class="op">);</span></span>
+<span id="cb1-57"></span>
+<span id="cb1-58">  <span class="co">// Create a folder named intermediate where all the simulation snapshots are stored.</span></span>
+<span id="cb1-59">  <span class="dt">char</span> comm<span class="op">[</span><span class="dv">80</span><span class="op">];</span></span>
+<span id="cb1-60">  sprintf <span class="op">(</span>comm<span class="op">,</span> <span class="st">&quot;mkdir -p intermediate&quot;</span><span class="op">);</span></span>
+<span id="cb1-61">  system<span class="op">(</span>comm<span class="op">);</span></span>
+<span id="cb1-62">  <span class="co">// Name of the restart file. See writingFiles event.</span></span>
+<span id="cb1-63">  sprintf <span class="op">(</span>dumpFile<span class="op">,</span> <span class="st">&quot;restart&quot;</span><span class="op">);</span></span>
+<span id="cb1-64"></span>
+<span id="cb1-65"></span>
+<span id="cb1-66">  rho1 <span class="op">=</span> <span class="fl">1.</span><span class="op">,</span> rho2 <span class="op">=</span> <span class="fl">1e-3</span><span class="op">;</span></span>
+<span id="cb1-67">  mu1 <span class="op">=</span> Oh<span class="op">,</span> mu2 <span class="op">=</span> Oha<span class="op">;</span></span>
+<span id="cb1-68">  lambda1 <span class="op">=</span> De<span class="op">,</span> lambda2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb1-69">  G1 <span class="op">=</span> Ec<span class="op">,</span> G2 <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb1-70">  G<span class="op">.</span>x <span class="op">=</span> Bo<span class="op">;</span></span>
+<span id="cb1-71">  f<span class="op">.</span>sigma <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
 <span id="cb1-72"></span>
-<span id="cb1-73">event init <span class="op">(</span>t <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-74">  <span class="cf">if</span> <span class="op">(!</span>restore <span class="op">(</span>file <span class="op">=</span> dumpFile<span class="op">)){</span></span>
-<span id="cb1-75">    refine<span class="op">(</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&lt;</span> <span class="op">(</span><span class="fl">1.1</span><span class="op">)</span> <span class="op">&amp;&amp;</span> R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&gt;</span> <span class="op">(</span><span class="fl">0.9</span><span class="op">)</span> <span class="op">&amp;&amp;</span> level <span class="op">&lt;</span> MAXlevel<span class="op">);</span></span>
-<span id="cb1-76">    fraction <span class="op">(</span>f<span class="op">,</span> <span class="op">(</span><span class="dv">1</span><span class="op">-</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)));</span></span>
-<span id="cb1-77">  <span class="op">}</span></span>
-<span id="cb1-78"><span class="op">}</span></span></code></pre></div></div>
+<span id="cb1-73">  run<span class="op">();</span></span>
+<span id="cb1-74"></span>
+<span id="cb1-75"><span class="op">}</span></span>
+<span id="cb1-76"></span>
+<span id="cb1-77">event init <span class="op">(</span>t <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-78">  <span class="cf">if</span> <span class="op">(!</span>restore <span class="op">(</span>file <span class="op">=</span> dumpFile<span class="op">)){</span></span>
+<span id="cb1-79">    refine<span class="op">(</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&lt;</span> <span class="op">(</span><span class="fl">1.1</span><span class="op">)</span> <span class="op">&amp;&amp;</span> R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)</span> <span class="op">&gt;</span> <span class="op">(</span><span class="fl">0.9</span><span class="op">)</span> <span class="op">&amp;&amp;</span> level <span class="op">&lt;</span> MAXlevel<span class="op">);</span></span>
+<span id="cb1-80">    fraction <span class="op">(</span>f<span class="op">,</span> <span class="op">(</span><span class="dv">1</span><span class="op">-</span>R2<span class="op">(</span>x<span class="op">,</span>y<span class="op">,</span>z<span class="op">)));</span></span>
+<span id="cb1-81">  <span class="op">}</span></span>
+<span id="cb1-82"><span class="op">}</span></span></code></pre></div></div>
                 <h2 id="adaptive-mesh-refinement">Adaptive Mesh
                 Refinement</h2>
                 <div class="code-block-container"><div class="code-block-container"><pre
@@ -535,62 +539,67 @@
                 <h2 id="ending-simulation">Ending Simulation</h2>
                 <div class="code-block-container"><div class="code-block-container"><pre
                 class="sourceCode c"><code class="sourceCode c"><span id="cb4-1">event end <span class="op">(</span>t <span class="op">=</span> end<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-2">  <span class="cf">if</span> <span class="op">(</span>pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb4-2">  <span class="cf">if</span> <span class="op">(</span>pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-3">    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Level </span><span class="sc">%d</span><span class="st">, Oh </span><span class="sc">%2.1e\n</span><span class="st">&quot;</span><span class="op">,</span> MAXlevel<span class="op">,</span> Oh<span class="op">);</span></span>
-<span id="cb4-4"><span class="op">}</span></span></code></pre></div></div>
+<span id="cb4-4"></span>
+<span id="cb4-5">    <span class="co">// Close log file</span></span>
+<span id="cb4-6">    <span class="cf">if</span> <span class="op">(</span>logFp <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-7">      fclose<span class="op">(</span>logFp<span class="op">);</span></span>
+<span id="cb4-8">      logFp <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb4-9">    <span class="op">}</span></span>
+<span id="cb4-10">  <span class="op">}</span></span>
+<span id="cb4-11"><span class="op">}</span></span></code></pre></div></div>
+                <h2 id="log-file-initialization">Log file
+                initialization</h2>
+                <div class="code-block-container"><div class="code-block-container"><pre
+                class="sourceCode c"><code class="sourceCode c"><span id="cb5-1">event logInit <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-2">  <span class="cf">if</span> <span class="op">(</span>pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3">    logFp <span class="op">=</span> fopen<span class="op">(</span>logFile<span class="op">,</span> <span class="st">&quot;w&quot;</span><span class="op">);</span></span>
+<span id="cb5-4">    <span class="cf">if</span> <span class="op">(</span>logFp <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-5">      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Error opening log file</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-6">      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-7">    <span class="op">}</span></span>
+<span id="cb5-8">    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Level </span><span class="sc">%d</span><span class="st">, Bo </span><span class="sc">%2.1e</span><span class="st">, Oh </span><span class="sc">%2.1e</span><span class="st">, Oha </span><span class="sc">%2.1e</span><span class="st">, De </span><span class="sc">%2.1e</span><span class="st">, Ec </span><span class="sc">%2.1e\n</span><span class="st">&quot;</span><span class="op">,</span> MAXlevel<span class="op">,</span> Bo<span class="op">,</span> Oh<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
+<span id="cb5-9">    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;i dt t ke</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-10">    fprintf<span class="op">(</span>logFp<span class="op">,</span> <span class="st">&quot;Level </span><span class="sc">%d</span><span class="st">, Bo </span><span class="sc">%2.1e</span><span class="st">, Oh </span><span class="sc">%2.1e</span><span class="st">, Oha </span><span class="sc">%2.1e</span><span class="st">, De </span><span class="sc">%2.1e</span><span class="st">, Ec </span><span class="sc">%2.1e\n</span><span class="st">&quot;</span><span class="op">,</span> MAXlevel<span class="op">,</span> Bo<span class="op">,</span> Oh<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
+<span id="cb5-11">    fprintf<span class="op">(</span>logFp<span class="op">,</span> <span class="st">&quot;i dt t ke</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb5-12">    fflush<span class="op">(</span>logFp<span class="op">);</span></span>
+<span id="cb5-13">  <span class="op">}</span></span>
+<span id="cb5-14"><span class="op">}</span></span></code></pre></div></div>
                 <h2 id="log-writing">Log writing</h2>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode c"><code class="sourceCode c"><span id="cb5-1">event logWriting <span class="op">(</span>i<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb5-2"></span>
-<span id="cb5-3">  <span class="dt">double</span> ke <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
-<span id="cb5-4">  foreach <span class="op">(</span>reduction<span class="op">(+:</span>ke<span class="op">)){</span></span>
-<span id="cb5-5">    ke <span class="op">+=</span> <span class="op">(</span><span class="dv">2</span><span class="op">*</span>pi<span class="op">*</span>y<span class="op">)*(</span><span class="fl">0.5</span><span class="op">*</span>rho<span class="op">(</span>f<span class="op">[])*(</span>sq<span class="op">(</span>u<span class="op">.</span>x<span class="op">[])</span> <span class="op">+</span> sq<span class="op">(</span>u<span class="op">.</span>y<span class="op">[])+</span> sq<span class="op">(</span>u<span class="op">.</span>z<span class="op">[])))*</span>sq<span class="op">(</span>Delta<span class="op">);</span></span>
-<span id="cb5-6">  <span class="op">}</span></span>
-<span id="cb5-7"></span>
-<span id="cb5-8">  <span class="dt">static</span> <span class="dt">FILE</span> <span class="op">*</span> fp<span class="op">;</span></span>
-<span id="cb5-9">  <span class="cf">if</span> <span class="op">(</span>pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-10">    <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> mode <span class="op">=</span> <span class="op">(</span>i <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">?</span> <span class="st">&quot;w&quot;</span> <span class="op">:</span> <span class="st">&quot;a&quot;</span><span class="op">;</span></span>
-<span id="cb5-11">    fp <span class="op">=</span> fopen<span class="op">(</span>logFile<span class="op">,</span> mode<span class="op">);</span></span>
-<span id="cb5-12">    <span class="cf">if</span> <span class="op">(</span>fp <span class="op">==</span> NULL<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-13">      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Error opening log file</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
-<span id="cb5-14">      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb5-15">    <span class="op">}</span></span>
-<span id="cb5-16"></span>
-<span id="cb5-17">    <span class="cf">if</span> <span class="op">(</span>i <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-18">      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;Level </span><span class="sc">%d</span><span class="st">, Bo </span><span class="sc">%2.1e</span><span class="st">, Oh </span><span class="sc">%2.1e</span><span class="st">, Oha </span><span class="sc">%2.1e</span><span class="st">, De </span><span class="sc">%2.1e</span><span class="st">, Ec </span><span class="sc">%2.1e\n</span><span class="st">&quot;</span><span class="op">,</span> MAXlevel<span class="op">,</span> Bo<span class="op">,</span> Oh<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
-<span id="cb5-19">      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;i dt t ke</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
-<span id="cb5-20">      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;Level </span><span class="sc">%d</span><span class="st">, Bo </span><span class="sc">%2.1e</span><span class="st">, Oh </span><span class="sc">%2.1e</span><span class="st">, Oha </span><span class="sc">%2.1e</span><span class="st">, De </span><span class="sc">%2.1e</span><span class="st">, Ec </span><span class="sc">%2.1e\n</span><span class="st">&quot;</span><span class="op">,</span> MAXlevel<span class="op">,</span> Bo<span class="op">,</span> Oh<span class="op">,</span> Oha<span class="op">,</span> De<span class="op">,</span> Ec<span class="op">);</span></span>
-<span id="cb5-21">      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;i dt t ke</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
-<span id="cb5-22">    <span class="op">}</span></span>
-<span id="cb5-23"></span>
-<span id="cb5-24">    fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%d</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
-<span id="cb5-25">    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%d</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
-<span id="cb5-26"></span>
-<span id="cb5-27">    fflush<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb5-28">    fclose<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb5-29">  <span class="op">}</span></span>
-<span id="cb5-30"></span>
-<span id="cb5-31">  assert<span class="op">(</span>ke <span class="op">&gt;</span> <span class="op">-</span><span class="fl">1e-10</span><span class="op">);</span></span>
-<span id="cb5-32"></span>
-<span id="cb5-33">  <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="fl">1e4</span> <span class="op">&amp;&amp;</span> pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-34">    <span class="cf">if</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span><span class="op">*</span>sq<span class="op">(</span>U0<span class="op">)</span> <span class="op">||</span> ke <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-35">      <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> message <span class="op">=</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span><span class="op">)</span> <span class="op">?</span></span>
-<span id="cb5-36">        <span class="st">&quot;The kinetic energy blew up. Stopping simulation</span><span class="sc">\n</span><span class="st">&quot;</span> <span class="op">:</span></span>
-<span id="cb5-37">        <span class="st">&quot;kinetic energy too small now! Stopping!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">;</span></span>
-<span id="cb5-38"></span>
-<span id="cb5-39">      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
-<span id="cb5-40"></span>
-<span id="cb5-41">      fp <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;log&quot;</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">);</span></span>
-<span id="cb5-42">      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
-<span id="cb5-43">      fflush<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb5-44">      fclose<span class="op">(</span>fp<span class="op">);</span></span>
-<span id="cb5-45"></span>
-<span id="cb5-46">      dump<span class="op">(</span>file<span class="op">=</span>dumpFile<span class="op">);</span></span>
-<span id="cb5-47">      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb5-48">    <span class="op">}</span></span>
-<span id="cb5-49">  <span class="op">}</span></span>
-<span id="cb5-50"></span>
-<span id="cb5-51"><span class="op">}</span></span></code></pre></div></div>
+                class="sourceCode c"><code class="sourceCode c"><span id="cb6-1">event logWriting <span class="op">(</span>i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb6-2">  <span class="dt">double</span> ke <span class="op">=</span> <span class="fl">0.</span><span class="op">;</span></span>
+<span id="cb6-3">  foreach <span class="op">(</span>reduction<span class="op">(+:</span>ke<span class="op">)){</span></span>
+<span id="cb6-4">    ke <span class="op">+=</span> <span class="op">(</span><span class="dv">2</span><span class="op">*</span>pi<span class="op">*</span>y<span class="op">)*(</span><span class="fl">0.5</span><span class="op">*</span>rho<span class="op">(</span>f<span class="op">[])*(</span>sq<span class="op">(</span>u<span class="op">.</span>x<span class="op">[])</span> <span class="op">+</span> sq<span class="op">(</span>u<span class="op">.</span>y<span class="op">[])+</span> sq<span class="op">(</span>u<span class="op">.</span>z<span class="op">[])))*</span>sq<span class="op">(</span>Delta<span class="op">);</span></span>
+<span id="cb6-5">  <span class="op">}</span></span>
+<span id="cb6-6"></span>
+<span id="cb6-7">  <span class="cf">if</span> <span class="op">(</span>pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-8">    fprintf<span class="op">(</span>logFp<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%d</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
+<span id="cb6-9">    fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%d</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g</span><span class="st"> </span><span class="sc">%g\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">,</span> dt<span class="op">,</span> t<span class="op">,</span> ke<span class="op">);</span></span>
+<span id="cb6-10">    fflush<span class="op">(</span>logFp<span class="op">);</span></span>
+<span id="cb6-11">  <span class="op">}</span></span>
+<span id="cb6-12"></span>
+<span id="cb6-13">  assert<span class="op">(</span>ke <span class="op">&gt;</span> <span class="op">-</span><span class="fl">1e-10</span><span class="op">);</span></span>
+<span id="cb6-14"></span>
+<span id="cb6-15">  <span class="cf">if</span> <span class="op">(</span>i <span class="op">&gt;</span> <span class="fl">1e4</span> <span class="op">&amp;&amp;</span> pid<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-16">    <span class="cf">if</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span> <span class="op">||</span> ke <span class="op">&lt;</span> <span class="fl">1e-8</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-17">      <span class="dt">const</span> <span class="dt">char</span><span class="op">*</span> message <span class="op">=</span> <span class="op">(</span>ke <span class="op">&gt;</span> <span class="fl">1e2</span><span class="op">)</span> <span class="op">?</span></span>
+<span id="cb6-18">        <span class="st">&quot;The kinetic energy blew up. Stopping simulation</span><span class="sc">\n</span><span class="st">&quot;</span> <span class="op">:</span></span>
+<span id="cb6-19">        <span class="st">&quot;kinetic energy too small now! Stopping!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">;</span></span>
+<span id="cb6-20"></span>
+<span id="cb6-21">      fprintf<span class="op">(</span>ferr<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
+<span id="cb6-22"></span>
+<span id="cb6-23">      <span class="dt">FILE</span> <span class="op">*</span>fp <span class="op">=</span> fopen<span class="op">(</span><span class="st">&quot;log&quot;</span><span class="op">,</span> <span class="st">&quot;a&quot;</span><span class="op">);</span></span>
+<span id="cb6-24">      fprintf<span class="op">(</span>fp<span class="op">,</span> <span class="st">&quot;</span><span class="sc">%s</span><span class="st">&quot;</span><span class="op">,</span> message<span class="op">);</span></span>
+<span id="cb6-25">      fflush<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb6-26">      fclose<span class="op">(</span>fp<span class="op">);</span></span>
+<span id="cb6-27"></span>
+<span id="cb6-28">      dump<span class="op">(</span>file<span class="op">=</span>dumpFile<span class="op">);</span></span>
+<span id="cb6-29">      <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-30">    <span class="op">}</span></span>
+<span id="cb6-31">  <span class="op">}</span></span>
+<span id="cb6-32"><span class="op">}</span></span></code></pre></div></div>
             </div>
         </main>
 
