@@ -47,7 +47,6 @@
 ```
 
 ## 📚 Documentation
-- [docs/](docs/) — Full HTML documentation, mathematical background, and API
 - Inline documentation in all major headers (see `src-local/`)
 - Example simulation and post-processing scripts in `simulationCases/`
 
