@@ -470,65 +470,16 @@
                 </ul>
                 <h2 id="repository-structure">🗂️ Repository
                 Structure</h2>
-                <div class="repository-structure">
-                <ul>
-                <li><strong>basilisk/src/</strong> - # Core Basilisk CFD
-                library (reference only, do not modify)</li>
-                <li><strong><a href="src-local">src-local/</a></strong>
-                - # Custom viscoelastic solvers and tensor utilities
-                <ul>
-                <li><strong><a
-                href="src-local/log-conform-viscoelastic-scalar-3D.h.html">log-conform-viscoelastic-scalar-3D.h</a></strong>
-                - # 3D log-conformation (scalar)</li>
-                <li><strong><a
-                href="src-local/log-conform-viscoelastic-scalar-2D.h.html">log-conform-viscoelastic-scalar-2D.h</a></strong>
-                - # 2D/axi log-conformation (scalar)</li>
-                <li><strong><a
-                href="src-local/log-conform-viscoelastic.h.html">log-conform-viscoelastic.h</a></strong>
-                - # 2D/axi log-conformation (tensor)</li>
-                <li><strong><a
-                href="src-local/two-phaseVE.h.html">two-phaseVE.h</a></strong>
-                - # Two-phase viscoelastic extension</li>
-                <li><strong><a
-                href="src-local/eigen_decomposition.h.html">eigen_decomposition.h</a></strong>
-                - # 3x3 symmetric eigenvalue solver</li>
-                </ul></li>
-                <li><strong><a
-                href="simulationCases">simulationCases/</a></strong> - #
-                Example/test cases and post-processing scripts
-                <ul>
-                <li><strong><a
-                href="simulationCases/dropAtomisation.c.html">dropAtomisation.c</a></strong>
-                - # 3D drop atomisation simulation</li>
-                <li><strong><a
-                href="simulationCases/pinchOff.c.html">pinchOff.c</a></strong>
-                - # Pinch-off of viscoelastic jet (2D/axi)</li>
-                <li><strong><a
-                href="simulationCases/testEigenDecomposition.c.html">testEigenDecomposition.c</a></strong>
-                - # Eigenvalue solver test/verification</li>
-                <li><strong><a
-                href="simulationCases/dropImpact.c.html">dropImpact.c</a></strong>
-                - # Drop impact simulation</li>
-                <li><strong><a
-                href="simulationCases/verifyWtihPlots.ipynb.html">verifyWtihPlots.ipynb</a></strong>
-                - # Jupyter notebook for verification/plots</li>
-                </ul></li>
-                <li><strong><a
-                href="postProcess">postProcess/</a></strong> - #
-                Project-specific post-processing tools and utilities
-                <ul>
-                <li><strong><a
-                href="postProcess/getData-elastic-scalar2D.c.html">getData-elastic-scalar2D.c</a></strong>
-                - # Data extraction utility</li>
-                <li><strong><a
-                href="postProcess/getFacet2D.c.html">getFacet2D.c</a></strong>
-                - # Facet extraction utility</li>
-                <li><strong><a
-                href="postProcess/VideoAxi.py.html">VideoAxi.py</a></strong>
-                - # Python visualization script</li>
-                </ul></li>
-                </ul>
-                </div>
+                <div class="code-block-container"><pre><code>├── basilisk/src/               # Core Basilisk CFD library (reference only, do not modify)
+├── src-local/                  # Custom viscoelastic solvers and tensor utilities
+│   ├── log-conform-viscoelastic-scalar-2D.h   # 2D/axi log-conformation (scalar)
+│   ├── two-phaseVE.h                          # Two-phase viscoelastic extension
+├── simulationCases/            # Example/test cases and post-processing scripts
+│   ├── filamentExt.c                            # Pinch-off of viscoelastic jet (2D/axi)
+├── postProcess/                # Project-specific post-processing tools and utilities
+    ├── getData-elastic-scalar2D.c            # Data extraction utility
+    ├── getFacet2D.c                          # Facet extraction utility
+    ├── VideoAxi.py                           # Python visualization script</code></pre></div>
                 <h2 id="documentation">📚 Documentation</h2>
                 <ul>
                 <li>Inline documentation in all major headers (see
@@ -549,12 +500,12 @@
                 &amp; Running Simulations</h3>
                 <p><strong>A. Vanilla Basilisk method:</strong></p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/{CaseName}.c <span class="at">-o</span> {CaseName} <span class="at">-lm</span></span>
-<span id="cb1-2"><span class="ex">./{CaseName}</span></span></code></pre></div></div>
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/{CaseName}.c <span class="at">-o</span> {CaseName} <span class="at">-lm</span></span>
+<span id="cb2-2"><span class="ex">./{CaseName}</span></span></code></pre></div></div>
                 <p><strong>B. Using the Makefile (with bview
                 browser):</strong></p>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><span class="va">CFLAGS</span><span class="op">=</span>-DDISPLAY=-1 <span class="fu">make</span> simulationCases/{CaseName}.tst</span></code></pre></div></div>
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><span class="va">CFLAGS</span><span class="op">=</span>-DDISPLAY=-1 <span class="fu">make</span> simulationCases/{CaseName}.tst</span></code></pre></div></div>
                 <ul>
                 <li>For interactive visualization, open the generated
                 <code>display.html</code> in your browser (see <a
@@ -577,8 +528,8 @@
                 id="example-running-a-3d-drop-atomisation-simulation">📝
                 Example: Running a 3D Drop Atomisation Simulation</h2>
                 <div class="code-block-container"><div class="code-block-container"><pre
-                class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/dropAtomisation.c <span class="at">-o</span> dropAtomisation <span class="at">-lm</span></span>
-<span id="cb3-2"><span class="ex">./dropAtomisation</span></span></code></pre></div></div>
+                class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><span class="ex">qcc</span> <span class="at">-O2</span> <span class="at">-Wall</span> <span class="at">-I.</span>/src-local <span class="at">-disable-dimensions</span> simulationCases/dropAtomisation.c <span class="at">-o</span> dropAtomisation <span class="at">-lm</span></span>
+<span id="cb4-2"><span class="ex">./dropAtomisation</span></span></code></pre></div></div>
                 <h2 id="technical-details">🔍 Technical Details</h2>
                 <ul>
                 <li><strong>Log-Conformation Method</strong>: See <a
@@ -661,13 +612,7 @@
                 <h3 id="src-local">src-local</h3>
                 <ul>
                 <li><a
-                href="src-local/eigen_decomposition.h.html">src-local/eigen_decomposition.h</a></li>
-                <li><a
                 href="src-local/log-conform-viscoelastic-scalar-2D.h.html">src-local/log-conform-viscoelastic-scalar-2D.h</a></li>
-                <li><a
-                href="src-local/log-conform-viscoelastic-scalar-3D.h.html">src-local/log-conform-viscoelastic-scalar-3D.h</a></li>
-                <li><a
-                href="src-local/log-conform-viscoelastic.h.html">src-local/log-conform-viscoelastic.h</a></li>
                 <li><a
                 href="src-local/two-phaseVE.h.html">src-local/two-phaseVE.h</a></li>
                 </ul>
