@@ -167,7 +167,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="base-url" content="..">
-  <title>reset_install_requirements.sh | Documentation</title>
+  <title>reset_install_requirements.sh | FIBER: Flow-Induced Breakup of Elastic Rheology</title>
   
   <!-- Critical CSS for fastest paint -->
   <style>
@@ -440,13 +440,15 @@
 <span id="cb1-15">    <span class="bu">echo</span> <span class="st">&quot;Using Linux&quot;</span></span>
 <span id="cb1-16">    <span class="fu">ln</span> <span class="at">-s</span> config.gcc config</span>
 <span id="cb1-17"><span class="cf">fi</span></span>
-<span id="cb1-18"><span class="fu">make</span></span>
-<span id="cb1-19"></span>
-<span id="cb1-20"><span class="bu">echo</span> <span class="st">&quot;export BASILISK=</span><span class="dt">\$</span><span class="st">PWD&quot;</span> <span class="op">&gt;&gt;</span> ../../.project_config</span>
-<span id="cb1-21"><span class="bu">echo</span> <span class="st">&quot;export PATH=</span><span class="dt">\\</span><span class="va">$PATH</span><span class="st">:</span><span class="dt">\\</span><span class="va">$BASILISK</span><span class="st">&quot;</span> <span class="op">&gt;&gt;</span> ../../.project_config</span>
-<span id="cb1-22"></span>
-<span id="cb1-23"><span class="bu">source</span> ../../.project_config </span>
-<span id="cb1-24"></span></code></pre></div></div>
+<span id="cb1-18"><span class="fu">make</span> <span class="at">-k</span></span>
+<span id="cb1-19"><span class="fu">make</span></span>
+<span id="cb1-20"></span>
+<span id="cb1-21"></span>
+<span id="cb1-22"><span class="bu">echo</span> <span class="st">&quot;export BASILISK=</span><span class="dt">\$</span><span class="st">PWD&quot;</span> <span class="op">&gt;&gt;</span> ../../.project_config</span>
+<span id="cb1-23"><span class="bu">echo</span> <span class="st">&quot;export PATH=</span><span class="dt">\\</span><span class="va">$PATH</span><span class="st">:</span><span class="dt">\\</span><span class="va">$BASILISK</span><span class="st">&quot;</span> <span class="op">&gt;&gt;</span> ../../.project_config</span>
+<span id="cb1-24"></span>
+<span id="cb1-25"><span class="bu">source</span> ../../.project_config </span>
+<span id="cb1-26"></span></code></pre></div></div>
             </div>
         </main>
 

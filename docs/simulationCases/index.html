@@ -414,9 +414,24 @@
 <div class="documentation-section">
 <table class="documentation-files">
 <tr>
+  <td class="file-icon"><span class="file-other"></span></td>
+  <td class="file-link" style="padding-right: 2em;"><a href="cleanup.sh.html" class="doc-link-button">cleanup.sh</a></td>
+  <td class="file-desc">rm -rf \$1</td>
+</tr>
+<tr>
   <td class="file-icon"><span class="file-c"></span></td>
   <td class="file-link" style="padding-right: 2em;"><a href="filamentExt.c.html" class="doc-link-button">filamentExt.c</a></td>
-  <td class="file-desc">u.n[top] = neumann(0.0); 33 p[top] = dirichlet(0.0); 34 35 int MAXlevel; 36 // Bond number -> dimensionless driving.....</td>
+  <td class="file-desc">u.n[top] = neumann(0.0); 34 p[top] = dirichlet(0.0); 35 u.n[right] = neumann(0.0); 36 p[right] = dirichlet(0.0); 37 3...</td>
+</tr>
+<tr>
+  <td class="file-icon"><span class="file-other"></span></td>
+  <td class="file-link" style="padding-right: 2em;"><a href="Makefile.html" class="doc-link-button">Makefile</a></td>
+  <td class="file-desc">ifeq (\$(wildcard ../.projectconfig),) \$(error '../.projectconfig not found') endif BASILISK := \$(shell . ../.proje...</td>
+</tr>
+<tr>
+  <td class="file-icon"><span class="file-other"></span></td>
+  <td class="file-link" style="padding-right: 2em;"><a href="runCases.sh.html" class="doc-link-button">runCases.sh</a></td>
+  <td class="file-desc">ORIGDIR=\$(pwd) mkdir -p \$1 cp \$1.c \$1/ cd \$1 qcc -I\${ORIGDIR}/src-local -I\${ORIGDIR}/../src-local -O2 -Wall -d...</td>
 </tr>
 </table>
 </div>
