@@ -29,17 +29,10 @@
 ```
 ├── basilisk/src/               # Core Basilisk CFD library (reference only, do not modify)
 ├── src-local/                  # Custom viscoelastic solvers and tensor utilities
-│   ├── log-conform-viscoelastic-scalar-3D.h   # 3D log-conformation (scalar)
 │   ├── log-conform-viscoelastic-scalar-2D.h   # 2D/axi log-conformation (scalar)
-│   ├── log-conform-viscoelastic.h             # 2D/axi log-conformation (tensor)
 │   ├── two-phaseVE.h                          # Two-phase viscoelastic extension
-│   └── eigen_decomposition.h                  # 3x3 symmetric eigenvalue solver
 ├── simulationCases/            # Example/test cases and post-processing scripts
-│   ├── dropAtomisation.c                     # 3D drop atomisation simulation
-│   ├── pinchOff.c                            # Pinch-off of viscoelastic jet (2D/axi)
-│   ├── testEigenDecomposition.c              # Eigenvalue solver test/verification
-│   ├── dropImpact.c                          # Drop impact simulation
-│   └── verifyWtihPlots.ipynb                 # Jupyter notebook for verification/plots
+│   ├── filamentExt.c                            # Pinch-off of viscoelastic jet (2D/axi)
 ├── postProcess/                # Project-specific post-processing tools and utilities
     ├── getData-elastic-scalar2D.c            # Data extraction utility
     ├── getFacet2D.c                          # Facet extraction utility
