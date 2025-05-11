@@ -46,6 +46,32 @@ The website generation process is handled by the `generate_docs.py` script, whic
 5. **Index Generation**: An index page is created from the README.md file.
 6. **SEO Optimization**: Robots.txt and sitemap.xml files are generated for search engines.
 
+### Directory Tree Format Requirements
+
+When including directory trees in Markdown files (especially README.md), follow these formatting rules to ensure proper conversion to clickable links:
+
+1. **Tree Characters**:
+   - Use `├──` for items that have siblings below
+   - Use `└──` for the last item in a group
+   - Use `│   ` (vertical bar + 3 spaces) for vertical lines
+   - Use exactly 4 spaces for each level of indentation
+
+2. **Format Example**:
+   ```
+   ├── directory1/              # Description of directory1
+   │   ├── file1.txt           # Description of file1
+   │   └── file2.txt           # Description of file2
+   └── directory2/              # Description of directory2
+       ├── subdir/             # Description of subdir
+       └── file3.txt           # Description of file3
+   ```
+
+3. **Important Notes**:
+   - The tree must be inside a code block (surrounded by triple backticks)
+   - Each line should follow the pattern: `[tree chars]filename/    # description`
+   - Maintain consistent indentation throughout the tree
+   - Use proper line endings and avoid trailing spaces
+
 ### Key Components
 
 #### 1. `generate_docs.py`

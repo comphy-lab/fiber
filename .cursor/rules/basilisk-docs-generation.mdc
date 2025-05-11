@@ -9,6 +9,10 @@ description: Guidelines for documentation and website generation
 globs: [".github/**/*"]
 ---
 
+## Purpose
+
+This rule provides guidance for maintaining and generating documentation for code repositories in the CoMPhy Lab, ensuring consistency and proper workflow for website generation.
+
 ## Documentation Generation
 
 - Read `.github/Website-generator-readme.md` for the website generation process.
@@ -16,9 +20,15 @@ globs: [".github/**/*"]
 - Avoid editing HTML files directly; they are generated using `.github/scripts/build.sh`, which utilizes `.github/scripts/generate_docs.py`.
 - The website is deployed at `https://comphy-lab.org/repositoryName`; refer to the `CNAME` file for configuration. Update if not done already. 
 
-## Purpose
-
-This rule provides guidance for maintaining and generating documentation for code repositories in the CoMPhy Lab, ensuring consistency and proper workflow for website generation.
+### Directory Tree Formatting
+- When creating or modifying directory trees in Markdown files:
+  - Use proper tree characters: `├──`, `└──`, and `│   `
+  - Maintain consistent 4-space indentation
+  - Place trees inside code blocks (triple backticks)
+  - Follow the pattern: `[tree chars]filename/    # description`
+  - Use `└──` for the last item in each group
+- Always refer to `.github/Website-generator-readme.md` for detailed formatting requirements
+- Test the tree rendering by running the documentation generation script
 
 ## Process Details
 

@@ -34,9 +34,9 @@
 ├── simulationCases/            # Example/test cases and post-processing scripts
 │   ├── filamentExt.c                            # Pinch-off of viscoelastic jet (2D/axi)
 ├── postProcess/                # Project-specific post-processing tools and utilities
-    ├── getData-elastic-scalar2D.c            # Data extraction utility
-    ├── getFacet2D.c                          # Facet extraction utility
-    ├── VideoAxi.py                           # Python visualization script
+│   ├── getData-elastic-scalar2D.c            # Data extraction utility
+│   ├── getFacet2D.c                          # Facet extraction utility
+│   └── VideoAxi.py                           # Python visualization script
 ```
 
 ## 📚 Documentation
