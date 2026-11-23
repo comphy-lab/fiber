@@ -46,25 +46,32 @@
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-- [Basilisk C](http://basilisk.fr/) (included as submodule in `basilisk/`)
+- [Basilisk C](http://basilisk.fr/) (use a trusted local installation; `basilisk/` is reference source)
 - C compiler (e.g., gcc)
 - Python 3 (for post-processing)
 - Optional: Jupyter for notebooks
 
 ### 2. Compiling & Running Simulations
 
-**A. Vanilla Basilisk method:**
+Configure a trusted, separately provisioned local Basilisk source directory. Do not use a legacy checked-in or pre-installed network viewer.
+
+```bash
+bash reset_install_requirements.sh /absolute/path/to/basilisk/src
+source .project_config
+```
+
+Compile without `DISPLAY`:
 ```sh
 qcc -O2 -Wall -I./src-local -disable-dimensions simulationCases/{CaseName}.c -o {CaseName} -lm
 ./{CaseName}
 ```
 
-**B. Using the Makefile (with bview browser):**
-```sh
-CFLAGS=-DDISPLAY=-1 make simulationCases/{CaseName}.tst
-```
+The network viewer is disabled in this checkout. Render saved simulation
+outputs offline. Previously installed binaries or running processes are not changed.
 
-- For interactive visualization, open the generated `display.html` in your browser (see [Basilisk bview](http://basilisk.fr/three.js/editor/index.html?ws://localhost:7100)).
+Maintainers: update the website search index only through a reviewed pull request.
+Verify the exact source revision, public content, and destination URLs before publishing;
+do not mirror an unreviewed remote index or use branch-protection bypass credentials.
 
 ### 3. Post-Processing & Analysis
 - Python scripts and Jupyter notebooks for data extraction and visualization are in `simulationCases/` (e.g., `VideoAxi.py`, `verifyWtihPlots.ipynb`).

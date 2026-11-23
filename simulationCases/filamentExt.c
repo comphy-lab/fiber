@@ -7,6 +7,12 @@
  @date 2025-05-09
 */
 
+#ifdef DISPLAY
+#error "Build Fiber without DISPLAY; use offline rendering."
+/* qcc reports the directive above and carries on: this stops the build. */
+char fiber_must_be_built_without_DISPLAY[-1];
+#endif
+
 #include "axi.h"
 #include "navier-stokes/centered.h"
 

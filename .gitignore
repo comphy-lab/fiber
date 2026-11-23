@@ -80,3 +80,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Disabled legacy network viewer binaries
+/basilisk/src/bview2D
+/basilisk/src/bview2Dm
+/basilisk/src/bview3D
