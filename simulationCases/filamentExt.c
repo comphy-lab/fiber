@@ -7,6 +7,10 @@
  @date 2025-05-09
 */
 
+#ifdef DISPLAY
+#error "Build Fiber without DISPLAY; use offline rendering."
+#endif
+
 #include "axi.h"
 #include "navier-stokes/centered.h"
 

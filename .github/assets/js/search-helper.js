@@ -6,6 +6,23 @@
 // Initialize the window.searchHelper namespace if it doesn't exist
 window.searchHelper = window.searchHelper || {};
 
+// The index is data, not authority to navigate to arbitrary destinations.
+function publicSearchDestination(value) {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    if (url.username || url.password) return null;
+    const labOrigins = new Set([
+      'https://comphy-lab.org',
+      'https://blogs.comphy-lab.org',
+      'https://comphy-lab.github.io',
+    ]);
+    return labOrigins.has(url.origin) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 // Shared search database function for command palette
 window.searchHelper.searchDatabaseForCommandPalette = async function(query) {
   // Only perform search if query is at least 3 characters long
@@ -96,14 +113,14 @@ window.searchHelper.searchDatabaseForCommandPalette = async function(query) {
         });
         
         // Return at most 5 results to avoid cluttering the command palette
-        return sortedResults.slice(0, 5).map(result => ({
+        return sortedResults
+          .map(result => ({ result, destination: publicSearchDestination(result.item.url) }))
+          .filter(({ destination }) => destination !== null)
+          .slice(0, 5)
+          .map(({ result, destination }) => ({
           id: `search-result-${result.refIndex}`,
           title: result.item.title || 'Untitled',
-          handler: () => { 
-            if (result.item.url) {
-              window.location.href = result.item.url; 
-            }
-          },
+          handler: () => { window.location.href = destination; },
           section: "Search Results",
           icon: '<i class="fa-solid fa-file-lines"></i>',
           excerpt: result.item.excerpt || (result.item.content && result.item.content.substring(0, 100) + '...') || ''
